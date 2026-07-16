@@ -1,11 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://kunp3w1u7le7"]
 
-[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://x2rc0auym4w3" path="res://scenes/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/Sidra.tscn" id="2_sidra"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1240630909]
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=2126029455]
 z_index = -1
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,8 +15,8 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
+[node name="Player" parent="." unique_id=934445238 instance=ExtResource("1_player")]
 position = Vector2(576, 324)
 
-[node name="Sidra" parent="." instance=ExtResource("2_sidra")]
+[node name="Sidra" parent="." unique_id=1633831450 instance=ExtResource("2_sidra")]
 position = Vector2(900, 324)

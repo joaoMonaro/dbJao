@@ -4,6 +4,7 @@ extends CharacterBody2D
 @export var min_direction_time: float = 1.5
 @export var max_direction_time: float = 4.0
 @export var max_health: int = 100
+@export var respawn_delay: float = 5.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var body_shape: CollisionShape2D = $CollisionShape2D
@@ -27,10 +28,12 @@ var current_direction: Vector2 = Vector2.ZERO
 var direction_timer: float = 0.0
 var current_health: int
 var is_dead: bool = false
+var spawn_position: Vector2
 var random := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	spawn_position = global_position
 	current_health = maxi(max_health, 0)
 	_update_health_bar()
 	random.randomize()
@@ -87,7 +90,26 @@ func _die() -> void:
 	hurtbox_shape.set_deferred(&"disabled", true)
 	hurtbox.set_deferred(&"monitoring", false)
 	hurtbox.set_deferred(&"monitorable", false)
-	queue_free()
+	visible = false
+
+	await get_tree().create_timer(maxf(respawn_delay, 0.0)).timeout
+	if is_inside_tree():
+		_respawn()
+
+
+func _respawn() -> void:
+	global_position = spawn_position
+	current_health = maxi(max_health, 0)
+	_update_health_bar()
+	is_dead = false
+	body_shape.set_deferred(&"disabled", false)
+	hurtbox_shape.set_deferred(&"disabled", false)
+	hurtbox.set_deferred(&"monitoring", true)
+	hurtbox.set_deferred(&"monitorable", true)
+	visible = true
+	_choose_new_direction()
+	_update_sprite_direction()
+	set_physics_process(true)
 
 
 func _get_collision_avoidance_direction() -> Vector2:
