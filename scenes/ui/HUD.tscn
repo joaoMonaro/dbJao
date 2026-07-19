@@ -168,3 +168,72 @@ tooltip_text = "Mapa"
 texture_normal = ExtResource("3_map_icon")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="MapModal" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Backdrop" type="ColorRect" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.65)
+
+[node name="MapPanel" type="PanelContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -140.0
+offset_right = 220.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MapModal/MapPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "MAPA"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="Description" type="Label" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Escolha o seu destino"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+
+[node name="CleanPathButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+text = "Ir para Clean Path"
+theme_override_font_sizes/font_size = 18
+
+[node name="CloseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "Fechar"

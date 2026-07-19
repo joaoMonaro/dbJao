@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://1ue63ryrvxy4"]
+
+[ext_resource type="Texture2D" uid="uid://bfcpdqgrgsjjl" path="res://assets/maps/clean_path.png" id="1_map"]
+[ext_resource type="PackedScene" uid="uid://x2rc0auym4w3" path="res://scenes/Player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/Pilaf.tscn" id="4_pilaf"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
+
+[node name="CleanPath" type="Node2D" unique_id=763115791]
+
+[node name="Pilaf3" parent="." unique_id=1924037912 instance=ExtResource("4_pilaf")]
+position = Vector2(1800, 2360)
+
+[node name="Map" type="Sprite2D" parent="." unique_id=236431366]
+z_index = -10
+position = Vector2(800, 450)
+scale = Vector2(0.956938, 0.956429)
+texture = ExtResource("1_map")
+
+[node name="Player" parent="." unique_id=1180962148 instance=ExtResource("2_player")]
+position = Vector2(839, 639)
+
+[node name="Pilaf" parent="." unique_id=1317923243 instance=ExtResource("4_pilaf")]
+position = Vector2(1230, 294)
+
+[node name="Pilaf2" parent="." unique_id=635162679 instance=ExtResource("4_pilaf")]
+position = Vector2(900, 1180)
+
+[node name="HUD" parent="." unique_id=562375650 instance=ExtResource("5_hud")]
