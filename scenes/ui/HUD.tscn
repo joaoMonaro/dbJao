@@ -1,6 +1,8 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/player_hub/bag_icon.png" id="2_bag_icon"]
+[ext_resource type="Texture2D" path="res://assets/player_hub/map_icon.png" id="3_map_icon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.035, 0.045, 0.065, 0.9)
@@ -146,3 +148,23 @@ text = "XP"
 label_settings = SubResource("LabelSettings_bar")
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="BagButton" type="TextureButton" parent="."]
+offset_left = 20.0
+offset_top = 130.0
+offset_right = 84.0
+offset_bottom = 194.0
+tooltip_text = "Mochila"
+texture_normal = ExtResource("2_bag_icon")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="MapButton" type="TextureButton" parent="."]
+offset_left = 20.0
+offset_top = 204.0
+offset_right = 84.0
+offset_bottom = 268.0
+tooltip_text = "Mapa"
+texture_normal = ExtResource("3_map_icon")
+ignore_texture_size = true
+stretch_mode = 5
