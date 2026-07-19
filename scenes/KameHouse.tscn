@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Texture2D" uid="uid://c1s4fwyq08bj6" path="res://assets/maps/kame_house.png" id="1_map"]
 [ext_resource type="PackedScene" uid="uid://x2rc0auym4w3" path="res://scenes/Player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/Sidra.tscn" id="3_sidra"]
 [ext_resource type="PackedScene" path="res://scenes/Pilaf.tscn" id="4_pilaf"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
 
 [node name="KameHouse" type="Node2D"]
 
@@ -21,3 +22,5 @@ position = Vector2(1250, 450)
 
 [node name="Pilaf" parent="." instance=ExtResource("4_pilaf")]
 position = Vector2(350, 450)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]

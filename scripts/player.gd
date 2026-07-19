@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+signal health_changed(current: int, maximum: int)
+signal mana_changed(current: int, maximum: int)
+signal experience_changed(current: int, maximum: int)
+
 enum PlayerState {
 	IDLE,
 	WALK,
@@ -16,6 +20,8 @@ const ATTACK_VISUAL_OFFSET := Vector2(0.0, 9.0)
 @export var attack_active_frame: int = 3
 @export var attack_offset_x: float = 46.0
 @export var max_health: int = 100
+@export var max_mana: int = 100
+@export var max_experience: int = 100
 @export var respawn_delay: float = 5.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -28,6 +34,8 @@ var current_state: PlayerState = PlayerState.IDLE
 var facing_direction: float = 1.0
 var hit_targets: Array[Node] = []
 var current_health: int
+var current_mana: int
+var current_experience: int = 0
 var is_dead: bool = false
 var spawn_position: Vector2
 
@@ -35,7 +43,11 @@ var spawn_position: Vector2
 func _ready() -> void:
 	spawn_position = global_position
 	current_health = maxi(max_health, 0)
+	current_mana = maxi(max_mana, 0)
+	current_experience = clampi(current_experience, 0, maxi(max_experience, 0))
 	_update_health_bar()
+	mana_changed.emit(current_mana, max_mana)
+	experience_changed.emit(current_experience, max_experience)
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	animated_sprite.frame_changed.connect(_on_animated_sprite_frame_changed)
 	attack_area.area_entered.connect(_on_attack_area_area_entered)
@@ -84,6 +96,7 @@ func take_damage(amount: int) -> void:
 func _update_health_bar() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = current_health
+	health_changed.emit(current_health, max_health)
 
 
 func _die() -> void:
