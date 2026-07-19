@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://x2rc0auym4w3"]
+[gd_scene load_steps=21 format=3 uid="uid://x2rc0auym4w3"]
 
 [ext_resource type="Script" uid="uid://bwhmkcwx50fs3" path="res://scripts/player.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://71u74x4ip6f4" path="res://assets/frame/goku/idle/idle_front.png" id="2_idle"]
@@ -123,7 +123,18 @@ height = 44.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(44, 36)
 
-[node name="Goku" type="CharacterBody2D" unique_id=1028236600]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_background"]
+bg_color = Color(0.08, 0.08, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_fill"]
+bg_color = Color(0.12, 0.72, 0.22, 1)
+
+[node name="Goku" type="CharacterBody2D" unique_id=1028236600 groups=["player"]]
 script = ExtResource("1_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1104005331]
@@ -145,3 +156,17 @@ monitoring = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1089717209]
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(70, 8)
+offset_left = -35.0
+offset_top = -82.0
+offset_right = 35.0
+offset_bottom = -74.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_health_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+show_percentage = false

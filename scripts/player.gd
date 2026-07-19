@@ -15,17 +15,27 @@ const ATTACK_VISUAL_OFFSET := Vector2(0.0, 9.0)
 @export var attack_damage: int = 20
 @export var attack_active_frame: int = 3
 @export var attack_offset_x: float = 46.0
+@export var max_health: int = 100
+@export var respawn_delay: float = 5.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var body_shape: CollisionShape2D = $CollisionShape2D
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_shape: CollisionShape2D = $AttackArea/CollisionShape2D
+@onready var health_bar: ProgressBar = $HealthBar
 
 var current_state: PlayerState = PlayerState.IDLE
 var facing_direction: float = 1.0
 var hit_targets: Array[Node] = []
+var current_health: int
+var is_dead: bool = false
+var spawn_position: Vector2
 
 
 func _ready() -> void:
+	spawn_position = global_position
+	current_health = maxi(max_health, 0)
+	_update_health_bar()
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	animated_sprite.frame_changed.connect(_on_animated_sprite_frame_changed)
 	attack_area.area_entered.connect(_on_attack_area_area_entered)
@@ -35,6 +45,9 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if is_dead:
+		return
+
 	if current_state == PlayerState.ATTACK:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -55,6 +68,54 @@ func _physics_process(_delta: float) -> void:
 	_update_movement_state(direction)
 	move_and_slide()
 	_clamp_to_viewport()
+
+
+func take_damage(amount: int) -> void:
+	if is_dead or amount <= 0:
+		return
+
+	current_health = maxi(current_health - amount, 0)
+	_update_health_bar()
+
+	if current_health <= 0:
+		_die()
+
+
+func _update_health_bar() -> void:
+	health_bar.max_value = max_health
+	health_bar.value = current_health
+
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	velocity = Vector2.ZERO
+	current_state = PlayerState.IDLE
+	_disable_attack_area()
+	set_physics_process(false)
+	body_shape.set_deferred(&"disabled", true)
+	visible = false
+
+	await get_tree().create_timer(maxf(respawn_delay, 0.0)).timeout
+	if is_inside_tree():
+		_respawn()
+
+
+func _respawn() -> void:
+	global_position = spawn_position
+	current_health = maxi(max_health, 0)
+	_update_health_bar()
+	current_state = PlayerState.IDLE
+	hit_targets.clear()
+	animated_sprite.scale = NORMAL_VISUAL_SCALE
+	animated_sprite.position = NORMAL_VISUAL_OFFSET
+	animated_sprite.play(&"idle")
+	body_shape.set_deferred(&"disabled", false)
+	visible = true
+	is_dead = false
+	set_physics_process(true)
 
 
 func _update_movement_state(direction: Vector2) -> void:

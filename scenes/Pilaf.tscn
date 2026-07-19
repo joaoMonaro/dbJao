@@ -1,0 +1,72 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/pilaf.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/frame/pilaf/idle/idle_front.png" id="2_texture"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_pilaf"]
+radius = 18.0
+height = 48.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(45, 112)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_damage"]
+radius = 26.0
+height = 64.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_background"]
+bg_color = Color(0.08, 0.08, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_fill"]
+bg_color = Color(0.82, 0.12, 0.12, 1)
+
+[node name="Pilaf" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 41)
+shape = SubResource("CapsuleShape2D_pilaf")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 3
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="DamageArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea"]
+position = Vector2(0, 41)
+shape = SubResource("CapsuleShape2D_damage")
+
+[node name="DamageTimer" type="Timer" parent="."]
+wait_time = 3.0
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(60, 8)
+offset_left = -30.0
+offset_top = -82.0
+offset_right = 30.0
+offset_bottom = -74.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_health_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
