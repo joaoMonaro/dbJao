@@ -15,13 +15,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="Player" parent="." unique_id=934445238 instance=ExtResource("1_player")]
-position = Vector2(576, 324)
+position = Vector2(800, 450)
 
 [node name="Sidra" parent="." unique_id=1633831450 instance=ExtResource("2_sidra")]
-visible = false
-position = Vector2(900, 324)
+position = Vector2(1250, 450)
 
 [node name="Pilaf" parent="." unique_id=1469850985 instance=ExtResource("3_pilaf")]
-position = Vector2(300, 324)
+position = Vector2(350, 450)
