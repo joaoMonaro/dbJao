@@ -17,6 +17,8 @@ func _ready() -> void:
 	damage_area.body_exited.connect(_on_damage_area_body_exited)
 	damage_timer.timeout.connect(_on_damage_timer_timeout)
 	damage_timer.wait_time = maxf(contact_damage_interval, 0.01)
+	if animated_sprite:
+		animated_sprite.animation_finished.connect(_on_animation_finished)
 	_find_target()
 
 
@@ -72,3 +74,9 @@ func _deal_contact_damage() -> void:
 
 	if contact_target.has_method(&"take_damage"):
 		contact_target.take_damage(contact_damage)
+`		if animated_sprite:
+			animated_sprite.play(&"attack")
+
+func _on_animation_finished() -> void:
+	if animated_sprite and animated_sprite.animation == &"attack":
+		animated_sprite.play(&"idle")

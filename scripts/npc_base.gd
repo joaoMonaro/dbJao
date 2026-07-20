@@ -5,7 +5,8 @@ extends CharacterBody2D
 @export var max_health: int = 100
 @export var respawn_delay: float = 5.0
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: Sprite2D = get_node_or_null("Sprite2D")
+@onready var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
 @onready var body_shape: CollisionShape2D = $CollisionShape2D
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
@@ -78,7 +79,14 @@ func _on_respawned() -> void:
 
 func _keep_inside_viewport() -> Vector2:
 	var viewport_rect: Rect2 = get_viewport_rect()
-	var half_sprite_size: Vector2 = sprite.get_rect().size * sprite.scale.abs() / 2.0
+	var half_sprite_size: Vector2
+	if sprite:
+		half_sprite_size = sprite.get_rect().size * sprite.scale.abs() / 2.0
+	elif animated_sprite:
+		var tex = animated_sprite.sprite_frames.get_frame_texture(animated_sprite.animation, animated_sprite.frame)
+		half_sprite_size = tex.get_size() * animated_sprite.scale.abs() / 2.0
+	else:
+		half_sprite_size = Vector2.ZERO
 	var minimum_position: Vector2 = viewport_rect.position + half_sprite_size
 	var maximum_position: Vector2 = viewport_rect.end - half_sprite_size
 	var inward_direction := Vector2.ZERO
@@ -99,6 +107,8 @@ func _keep_inside_viewport() -> Vector2:
 
 func _update_sprite_direction() -> void:
 	if current_direction.x > 0.0:
-		sprite.flip_h = false
+		if sprite: sprite.flip_h = false
+		if animated_sprite: animated_sprite.flip_h = false
 	elif current_direction.x < 0.0:
-		sprite.flip_h = true
+		if sprite: sprite.flip_h = true
+		if animated_sprite: animated_sprite.flip_h = true

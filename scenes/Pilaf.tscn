@@ -1,7 +1,80 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/pilaf.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/frame/pilaf/idle/idle_front.png" id="2_texture"]
+[ext_resource type="Texture2D" path="res://assets/sheets/pilaf/attack/attack.png" id="3_attack"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_1"]
+atlas = ExtResource("3_attack")
+region = Rect2(0, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_2"]
+atlas = ExtResource("3_attack")
+region = Rect2(89, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_3"]
+atlas = ExtResource("3_attack")
+region = Rect2(178, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_4"]
+atlas = ExtResource("3_attack")
+region = Rect2(267, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_5"]
+atlas = ExtResource("3_attack")
+region = Rect2(356, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_6"]
+atlas = ExtResource("3_attack")
+region = Rect2(445, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_7"]
+atlas = ExtResource("3_attack")
+region = Rect2(534, 0, 89, 401)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pilaf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_attack_7")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_texture")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 1.0
+}]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_pilaf"]
 radius = 18.0
@@ -30,9 +103,11 @@ collision_layer = 1
 collision_mask = 1
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
-texture = ExtResource("2_texture")
+sprite_frames = SubResource("SpriteFrames_pilaf")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 41)
