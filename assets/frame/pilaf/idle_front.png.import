@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bm0farn8mc8yb"
-path="res://.godot/imported/attack.png-70a8189d15ca435e8b927e9922b08298.ctex"
+uid="uid://dox1aq8mnl07f"
+path="res://.godot/imported/idle_front.png-12730d3b8ded88e1b07f26f4ab58502a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sheets/goku/attack/attack.png"
-dest_files=["res://.godot/imported/attack.png-70a8189d15ca435e8b927e9922b08298.ctex"]
+source_file="res://assets/frame/pilaf/idle_front.png"
+dest_files=["res://.godot/imported/idle_front.png-12730d3b8ded88e1b07f26f4ab58502a.ctex"]
 
 [params]
 

@@ -1,6 +1,6 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://b0nrq5xl28kcp"]
 
-[ext_resource type="Script" path="res://scripts/sidra.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cvbw5hnr75wrm" path="res://scripts/sidra.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dbr2kb1rd10tm" path="res://assets/frame/sidra/front_01.png" id="2_texture"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sidra"]
@@ -21,28 +21,26 @@ border_color = Color(0, 0, 0, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_fill"]
 bg_color = Color(0.82, 0.12, 0.12, 1)
 
-[node name="Sidra" type="CharacterBody2D"]
-collision_layer = 1
-collision_mask = 1
+[node name="Sidra" type="CharacterBody2D" unique_id=1360274843]
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1920353044]
 texture_filter = 1
 texture = ExtResource("2_texture")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2106920131]
 position = Vector2(0, 45)
 shape = SubResource("CapsuleShape2D_sidra")
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." unique_id=726644643]
 collision_layer = 3
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=758145379]
 position = Vector2(0, 7)
 shape = SubResource("RectangleShape2D_hurtbox")
 
-[node name="HealthBar" type="ProgressBar" parent="."]
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=864762940]
 custom_minimum_size = Vector2(60, 8)
 offset_left = -30.0
 offset_top = -88.0
@@ -51,7 +49,5 @@ offset_bottom = -80.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_health_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
-min_value = 0.0
-max_value = 100.0
 value = 100.0
 show_percentage = false

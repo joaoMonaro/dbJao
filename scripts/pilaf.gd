@@ -74,7 +74,7 @@ func _deal_contact_damage() -> void:
 
 	if contact_target.has_method(&"take_damage"):
 		contact_target.take_damage(contact_damage)
-`		if animated_sprite:
+		if animated_sprite:
 			animated_sprite.play(&"attack")
 
 func _on_animation_finished() -> void:
