@@ -1,5 +1,10 @@
 extends "res://scripts/npc_base.gd"
 
+const NORMAL_VISUAL_SCALE := Vector2.ONE
+const ATTACK_VISUAL_SCALE := Vector2(0.5, 0.5)
+const NORMAL_VISUAL_OFFSET := Vector2.ZERO
+const ATTACK_VISUAL_OFFSET := Vector2(0.0, 91.0)
+
 @export var target_group: StringName = &"player"
 @export var contact_damage: int = 10
 @export var contact_damage_interval: float = 3.0
@@ -75,8 +80,18 @@ func _deal_contact_damage() -> void:
 	if contact_target.has_method(&"take_damage"):
 		contact_target.take_damage(contact_damage)
 		if animated_sprite:
+			animated_sprite.scale = ATTACK_VISUAL_SCALE
+			animated_sprite.position = ATTACK_VISUAL_OFFSET
 			animated_sprite.play(&"attack")
 
 func _on_animation_finished() -> void:
 	if animated_sprite and animated_sprite.animation == &"attack":
+		animated_sprite.scale = NORMAL_VISUAL_SCALE
+		animated_sprite.position = NORMAL_VISUAL_OFFSET
+		animated_sprite.play(&"idle")
+
+func _on_respawned() -> void:
+	if animated_sprite:
+		animated_sprite.scale = NORMAL_VISUAL_SCALE
+		animated_sprite.position = NORMAL_VISUAL_OFFSET
 		animated_sprite.play(&"idle")

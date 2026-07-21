@@ -21,17 +21,17 @@ filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_4"]
 atlas = ExtResource("3_attack")
-region = Rect2(267, 0, 89, 401)
+region = Rect2(280, 0, 89, 401)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_5"]
 atlas = ExtResource("3_attack")
-region = Rect2(356, 0, 89, 401)
+region = Rect2(400, 0, 75, 401)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_6"]
 atlas = ExtResource("3_attack")
-region = Rect2(445, 0, 89, 401)
+region = Rect2(460, 0, 89, 401)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_7"]
