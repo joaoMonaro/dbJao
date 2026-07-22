@@ -23,6 +23,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private static readonly StringName AttackAnimation = new("attack");
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
+    [Export] public int OwnerPeerId { get; set; }
     [Export] public int AttackDamage { get; set; } = 20;
     [Export] public int AttackActiveFrame { get; set; } = 3;
     [Export] public float AttackOffsetX { get; set; } = 46.0f;
@@ -45,6 +46,9 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _facingDirection = 1.0f;
     private bool _isDead;
     private Vector2 _spawnPosition;
+    private Vector2 _serverInputDirection;
+    private Vector2 _lastSentDirection = new(float.NaN, float.NaN);
+    private float _inputHeartbeatElapsed;
 
     public override void _Ready()
     {
@@ -68,9 +72,37 @@ public partial class Player : CharacterBody2D, IDamageable
         DisableAttackArea();
         _animatedSprite.Play(IdleAnimation);
         ClampToViewport();
+
+        if (OwnerPeerId <= NetworkConstants.ServerPeerId && int.TryParse(Name, out int peerId))
+            OwnerPeerId = peerId;
+
+        bool isLocalPlayer =
+            !NetworkManager.RunningAsServer && OwnerPeerId == Multiplayer.GetUniqueId();
+
+        if (!NetworkManager.RunningAsServer)
+            GD.Print($"[CLIENT] Jogador replicado: {OwnerPeerId} (local: {isLocalPlayer})");
+
+        if (isLocalPlayer)
+            CreateLocalCamera();
     }
 
     public override void _PhysicsProcess(double delta)
+    {
+        if (NetworkManager.RunningAsServer)
+        {
+            ProcessAuthoritativeMovement();
+            return;
+        }
+
+        UpdateMovementState(Velocity);
+
+        if (_isDead || OwnerPeerId != Multiplayer.GetUniqueId())
+            return;
+
+        CaptureAndSendInput((float)delta);
+    }
+
+    private void ProcessAuthoritativeMovement()
     {
         if (_isDead)
             return;
@@ -83,21 +115,80 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
         }
 
-        if (Input.IsActionJustPressed("attack"))
+        Velocity = _serverInputDirection * MoveSpeed;
+        UpdateMovementState(_serverInputDirection);
+        MoveAndSlide();
+        ClampToViewport();
+    }
+
+    private void CaptureAndSendInput(float delta)
+    {
+        Vector2 direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+        direction = direction.LimitLength(1.0f);
+
+        _inputHeartbeatElapsed += delta;
+        bool directionChanged = direction.DistanceSquaredTo(_lastSentDirection) > 0.0001f;
+        if (!directionChanged && _inputHeartbeatElapsed < NetworkConstants.InputHeartbeatSeconds)
+            return;
+
+        _lastSentDirection = direction;
+        _inputHeartbeatElapsed = 0.0f;
+        RpcId(NetworkConstants.ServerPeerId, MethodName.SubmitMovementInput, direction);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.AnyPeer,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable
+    )]
+    private void SubmitMovementInput(Vector2 direction)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer())
         {
-            StartAttack();
-            ClampToViewport();
+            GD.PushWarning("[SERVER] RPC de movimento recebido fora do servidor.");
             return;
         }
 
-        Vector2 direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
-        if (direction != Vector2.Zero)
-            direction = direction.Normalized();
+        int senderId = Multiplayer.GetRemoteSenderId();
+        if (senderId <= NetworkConstants.ServerPeerId || senderId != OwnerPeerId)
+        {
+            GD.PushWarning(
+                $"[SERVER] Input rejeitado: peer {senderId} tentou controlar jogador {OwnerPeerId}."
+            );
+            return;
+        }
 
-        Velocity = direction * MoveSpeed;
-        UpdateMovementState(direction);
-        MoveAndSlide();
-        ClampToViewport();
+        Player? senderPlayer = GetParent()?.GetNodeOrNull<Player>(senderId.ToString());
+        if (senderPlayer != this)
+        {
+            GD.PushWarning($"[SERVER] Input rejeitado: jogador do peer {senderId} não existe.");
+            return;
+        }
+
+        if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y))
+        {
+            GD.PushWarning($"[SERVER] Input inválido rejeitado para o peer {senderId}.");
+            return;
+        }
+
+        _serverInputDirection = direction.LimitLength(1.0f);
+    }
+
+    private void CreateLocalCamera()
+    {
+        Rect2 viewportRect = GetViewportRect();
+        Camera2D camera = new()
+        {
+            Name = "LocalCamera",
+            Enabled = true,
+            PositionSmoothingEnabled = false,
+            LimitLeft = Mathf.RoundToInt(viewportRect.Position.X),
+            LimitTop = Mathf.RoundToInt(viewportRect.Position.Y),
+            LimitRight = Mathf.RoundToInt(viewportRect.End.X),
+            LimitBottom = Mathf.RoundToInt(viewportRect.End.Y),
+        };
+        AddChild(camera);
+        camera.MakeCurrent();
     }
 
     public void TakeDamage(int amount)

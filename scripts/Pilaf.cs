@@ -90,6 +90,9 @@ public partial class Pilaf : NpcBase
 
 	private void DealContactDamage()
 	{
+		if (Multiplayer.HasMultiplayerPeer())
+			return;
+
 		if (ContactDamage <= 0 || !GodotObject.IsInstanceValid(_contactTarget))
 			return;
 

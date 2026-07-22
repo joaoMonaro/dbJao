@@ -12,6 +12,7 @@ public partial class Hud : CanvasLayer
     private Control _mapModal = null!;
     private Button _closeMapButton = null!;
     private Button _cleanPathButton = null!;
+    private Player? _boundPlayer;
 
     public override void _Ready()
     {
@@ -40,17 +41,64 @@ public partial class Hud : CanvasLayer
         _closeMapButton.Pressed += CloseMapModal;
         _cleanPathButton.Pressed += TravelToCleanPath;
 
-        Player? player = GetTree().GetFirstNodeInGroup(PlayerGroup) as Player;
-        if (!GodotObject.IsInstanceValid(player))
+        GetTree().NodeAdded += OnNodeAdded;
+        CallDeferred(MethodName.TryBindLocalPlayer);
+    }
+
+    public override void _ExitTree()
+    {
+        GetTree().NodeAdded -= OnNodeAdded;
+        UnbindPlayer();
+    }
+
+    private void OnNodeAdded(Node node)
+    {
+        if (node is Player)
+            CallDeferred(MethodName.TryBindLocalPlayer);
+    }
+
+    private void TryBindLocalPlayer()
+    {
+        if (GodotObject.IsInstanceValid(_boundPlayer))
             return;
 
-        player!.HealthChanged += OnHealthChanged;
-        player.ManaChanged += OnManaChanged;
-        player.ExperienceChanged += OnExperienceChanged;
+        int localPeerId = Multiplayer.GetUniqueId();
+        foreach (Node node in GetTree().GetNodesInGroup(PlayerGroup))
+        {
+            if (node is not Player player || player.OwnerPeerId != localPeerId)
+                continue;
 
-        OnHealthChanged(player.CurrentHealth, player.MaxHealth);
-        OnManaChanged(player.CurrentMana, player.MaxMana);
-        OnExperienceChanged(player.CurrentExperience, player.MaxExperience);
+            _boundPlayer = player;
+            player.HealthChanged += OnHealthChanged;
+            player.ManaChanged += OnManaChanged;
+            player.ExperienceChanged += OnExperienceChanged;
+            player.TreeExiting += OnBoundPlayerExiting;
+
+            OnHealthChanged(player.CurrentHealth, player.MaxHealth);
+            OnManaChanged(player.CurrentMana, player.MaxMana);
+            OnExperienceChanged(player.CurrentExperience, player.MaxExperience);
+            return;
+        }
+    }
+
+    private void OnBoundPlayerExiting()
+    {
+        UnbindPlayer();
+    }
+
+    private void UnbindPlayer()
+    {
+        if (!GodotObject.IsInstanceValid(_boundPlayer))
+        {
+            _boundPlayer = null;
+            return;
+        }
+
+        _boundPlayer!.HealthChanged -= OnHealthChanged;
+        _boundPlayer.ManaChanged -= OnManaChanged;
+        _boundPlayer.ExperienceChanged -= OnExperienceChanged;
+        _boundPlayer.TreeExiting -= OnBoundPlayerExiting;
+        _boundPlayer = null;
     }
 
     private void OnHealthChanged(int current, int maximum)
