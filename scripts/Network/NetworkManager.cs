@@ -7,11 +7,13 @@ public partial class NetworkManager : Node2D
     [Export] public PackedScene? HudScene { get; set; }
     [Export] public NodePath PlayersPath { get; set; } = new("Players");
     [Export] public NodePath SpawnerPath { get; set; } = new("MultiplayerSpawner");
+    [Export] public NodePath NpcsPath { get; set; } = new("NPCs");
 
     public static bool RunningAsServer { get; private set; }
 
     private Node2D? _players;
     private MultiplayerSpawner? _spawner;
+    private Node2D? _npcs;
     private ENetMultiplayerPeer? _clientPeer;
     private LineEdit? _addressInput;
     private Button? _connectButton;
@@ -27,6 +29,7 @@ public partial class NetworkManager : Node2D
     {
         _players = GetNodeOrNull<Node2D>(PlayersPath);
         _spawner = GetNodeOrNull<MultiplayerSpawner>(SpawnerPath);
+        _npcs = GetNodeOrNull<Node2D>(NpcsPath);
 
         if (_players is null)
         {
@@ -45,6 +48,12 @@ public partial class NetworkManager : Node2D
         if (PlayerScene is null)
         {
             GD.PushError("[NETWORK] Cena do jogador não configurada.");
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        if (!ValidateNpcContainer())
+        {
             StopDedicatedServerAfterStartupError();
             return;
         }
@@ -324,6 +333,56 @@ public partial class NetworkManager : Node2D
 
         foreach (Node child in _players.GetChildren())
             child.QueueFree();
+    }
+
+    private bool ValidateNpcContainer()
+    {
+        if (_npcs is null)
+        {
+            GD.PushError("[NETWORK] Node NPCs não encontrado.");
+            return false;
+        }
+
+        string[] expectedNpcNames = { "Sidra", "Pilaf" };
+        bool isValid = true;
+
+        if (_npcs.GetChildCount() != expectedNpcNames.Length)
+        {
+            GD.PushError(
+                $"[NETWORK] Quantidade inválida de NPCs em {_npcs.GetPath()}: "
+                + $"esperado {expectedNpcNames.Length}, encontrado {_npcs.GetChildCount()}."
+            );
+            isValid = false;
+        }
+
+        foreach (string npcName in expectedNpcNames)
+        {
+            NpcBase? npc = _npcs.GetNodeOrNull<NpcBase>(npcName);
+            if (npc is null)
+            {
+                GD.PushError(
+                    $"[NETWORK] NPC ausente ou cena não carregada: {_npcs.GetPath()}/{npcName}"
+                );
+                isValid = false;
+                continue;
+            }
+
+            if (npc.GetMultiplayerAuthority() != NetworkConstants.ServerPeerId)
+            {
+                GD.PushError($"[NETWORK] Autoridade inválida para o NPC: {npc.GetPath()}");
+                isValid = false;
+            }
+
+            if (!npc.NetworkSetupIsValid)
+            {
+                GD.PushError(
+                    $"[NETWORK] MultiplayerSynchronizer mal configurado: {npc.GetPath()}"
+                );
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 
     private void StopDedicatedServerAfterStartupError()

@@ -25,12 +25,23 @@ public partial class Sidra : NpcBase
     public override void _Ready()
     {
         base._Ready();
+
+        if (!CanRunServerAi())
+            return;
+
         _random.Randomize();
         ChooseNewDirection();
+        LogServerAiActive();
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        if (!CanRunServerAi())
+        {
+            UpdateClientPresentation();
+            return;
+        }
+
         if (IsDead)
             return;
 
@@ -38,7 +49,7 @@ public partial class Sidra : NpcBase
         if (_directionTimer <= 0.0f)
             ChooseNewDirection();
 
-        Velocity = CurrentDirection * MoveSpeed;
+        Velocity = MovementDirection * MoveSpeed;
         MoveAndSlide();
 
         Vector2 avoidanceDirection = GetCollisionAvoidanceDirection();
@@ -49,13 +60,16 @@ public partial class Sidra : NpcBase
         else if (GetSlideCollisionCount() > 0)
             ChooseNewDirection();
 
-        UpdateSpriteDirection();
+        UpdateServerMovementState(MovementDirection);
     }
 
     protected override void OnRespawned()
     {
+        if (!CanRunServerAi())
+            return;
+
         ChooseNewDirection();
-        UpdateSpriteDirection();
+        UpdateServerMovementState(MovementDirection);
     }
 
     private Vector2 GetCollisionAvoidanceDirection()
@@ -75,6 +89,9 @@ public partial class Sidra : NpcBase
 
     private void ChooseNewDirection(Vector2 inwardDirection = default)
     {
+        if (!CanRunServerAi())
+            return;
+
         Vector2 candidate = Vector2.Zero;
         bool candidateFound = false;
 
@@ -95,7 +112,7 @@ public partial class Sidra : NpcBase
         if (!candidateFound)
             candidate = inwardDirection.Normalized();
 
-        CurrentDirection = candidate != Vector2.Zero ? candidate.Normalized() : Vector2.Zero;
+        MovementDirection = candidate != Vector2.Zero ? candidate.Normalized() : Vector2.Zero;
 
         float minimumTime = Mathf.Min(MinDirectionTime, MaxDirectionTime);
         float maximumTime = Mathf.Max(MinDirectionTime, MaxDirectionTime);

@@ -2,34 +2,103 @@ using Godot;
 
 public partial class NpcBase : CharacterBody2D, IDamageable
 {
+	public const int IdleAiState = 0;
+	public const int MovingAiState = 1;
+
 	[Export] public float MoveSpeed { get; set; } = 40.0f;
 	[Export] public int MaxHealth { get; set; } = 100;
 	[Export] public float RespawnDelay { get; set; } = 5.0f;
+	[Export] public Vector2 MovementDirection { get; set; } = Vector2.Zero;
+	[Export(PropertyHint.Enum, "Idle,Moving")] public int AiState { get; set; } = IdleAiState;
+
+	public bool NetworkSetupIsValid { get; private set; }
 
 	protected Sprite2D? Sprite;
 	protected AnimatedSprite2D? AnimatedSprite;
-	protected Vector2 CurrentDirection = Vector2.Zero;
 	protected bool IsDead;
 
-	private CollisionShape2D _bodyShape = null!;
-	private Area2D _hurtbox = null!;
-	private CollisionShape2D _hurtboxShape = null!;
-	private ProgressBar _healthBar = null!;
+	private CollisionShape2D? _bodyShape;
+	private Area2D? _hurtbox;
+	private CollisionShape2D? _hurtboxShape;
+	private ProgressBar? _healthBar;
 	private int _currentHealth;
 	private Vector2 _spawnPosition;
+	private bool _clientSynchronizationLogged;
+	private double _clientSynchronizationDelay;
+	private bool _invalidAuthorityLogged;
+
+	public override void _EnterTree()
+	{
+		SetMultiplayerAuthority(NetworkConstants.ServerPeerId);
+	}
 
 	public override void _Ready()
 	{
 		Sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		AnimatedSprite = GetNodeOrNull<AnimatedSprite2D>("AnimatedSprite2D");
-		_bodyShape = GetNode<CollisionShape2D>("CollisionShape2D");
-		_hurtbox = GetNode<Area2D>("Hurtbox");
-		_hurtboxShape = GetNode<CollisionShape2D>("Hurtbox/CollisionShape2D");
-		_healthBar = GetNode<ProgressBar>("HealthBar");
+		_bodyShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+		_hurtbox = GetNodeOrNull<Area2D>("Hurtbox");
+		_hurtboxShape = GetNodeOrNull<CollisionShape2D>("Hurtbox/CollisionShape2D");
+		_healthBar = GetNodeOrNull<ProgressBar>("HealthBar");
 
 		_spawnPosition = GlobalPosition;
 		_currentHealth = Mathf.Max(MaxHealth, 0);
 		UpdateHealthBar();
+		NetworkSetupIsValid = ValidateNetworkSetup();
+
+		if (NetworkManager.RunningAsServer)
+			GD.Print($"[SERVER] NPC inicializado: {Name}");
+	}
+
+	protected bool CanRunServerAi()
+	{
+		if (!NetworkManager.RunningAsServer)
+			return false;
+
+		if (Multiplayer.IsServer())
+			return true;
+
+		if (!_invalidAuthorityLogged)
+		{
+			_invalidAuthorityLogged = true;
+			GD.PushError($"[NPC] IA bloqueada fora do servidor: {GetPath()}");
+		}
+
+		return false;
+	}
+
+	protected void UpdateServerMovementState(Vector2 direction)
+	{
+		MovementDirection = direction.LimitLength(1.0f);
+		AiState = Velocity.LengthSquared() > 0.0001f ? MovingAiState : IdleAiState;
+		UpdateSpriteDirection();
+	}
+
+	protected void UpdateClientPresentation()
+	{
+		UpdateSpriteDirection();
+
+		if (
+			!_clientSynchronizationLogged
+			&& Multiplayer.HasMultiplayerPeer()
+			&& Multiplayer.GetUniqueId() != NetworkConstants.ServerPeerId
+		)
+		{
+			_clientSynchronizationDelay += GetPhysicsProcessDeltaTime();
+			if (_clientSynchronizationDelay < 0.5)
+				return;
+
+			_clientSynchronizationLogged = true;
+			GD.Print(
+				$"[CLIENT] NPC sincronizado: {Name} | posição: {GlobalPosition} "
+				+ $"| direção: {MovementDirection} | estado: {AiState}"
+			);
+		}
+	}
+
+	protected void LogServerAiActive()
+	{
+		GD.Print($"[SERVER] IA ativa para: {Name}");
 	}
 
 	public void TakeDamage(int amount)
@@ -46,6 +115,9 @@ public partial class NpcBase : CharacterBody2D, IDamageable
 
 	private void UpdateHealthBar()
 	{
+		if (_healthBar is null)
+			return;
+
 		_healthBar.MaxValue = MaxHealth;
 		_healthBar.Value = _currentHealth;
 	}
@@ -56,13 +128,14 @@ public partial class NpcBase : CharacterBody2D, IDamageable
 			return;
 
 		IsDead = true;
-		CurrentDirection = Vector2.Zero;
+		MovementDirection = Vector2.Zero;
+		AiState = IdleAiState;
 		Velocity = Vector2.Zero;
 		SetPhysicsProcess(false);
-		_bodyShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
-		_hurtboxShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
-		_hurtbox.SetDeferred(Area2D.PropertyName.Monitoring, false);
-		_hurtbox.SetDeferred(Area2D.PropertyName.Monitorable, false);
+		_bodyShape?.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+		_hurtboxShape?.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+		_hurtbox?.SetDeferred(Area2D.PropertyName.Monitoring, false);
+		_hurtbox?.SetDeferred(Area2D.PropertyName.Monitorable, false);
 		Visible = false;
 
 		await ToSignal(
@@ -79,10 +152,10 @@ public partial class NpcBase : CharacterBody2D, IDamageable
 		GlobalPosition = _spawnPosition;
 		_currentHealth = Mathf.Max(MaxHealth, 0);
 		UpdateHealthBar();
-		_bodyShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
-		_hurtboxShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
-		_hurtbox.SetDeferred(Area2D.PropertyName.Monitoring, true);
-		_hurtbox.SetDeferred(Area2D.PropertyName.Monitorable, true);
+		_bodyShape?.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
+		_hurtboxShape?.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
+		_hurtbox?.SetDeferred(Area2D.PropertyName.Monitoring, true);
+		_hurtbox?.SetDeferred(Area2D.PropertyName.Monitorable, true);
 		Visible = true;
 		IsDead = false;
 		OnRespawned();
@@ -135,19 +208,76 @@ public partial class NpcBase : CharacterBody2D, IDamageable
 
 	protected void UpdateSpriteDirection()
 	{
-		if (CurrentDirection.X > 0.0f)
+		if (MovementDirection.X > 0.0f)
 		{
 			if (Sprite is not null)
 				Sprite.FlipH = false;
 			if (AnimatedSprite is not null)
 				AnimatedSprite.FlipH = false;
 		}
-		else if (CurrentDirection.X < 0.0f)
+		else if (MovementDirection.X < 0.0f)
 		{
 			if (Sprite is not null)
 				Sprite.FlipH = true;
 			if (AnimatedSprite is not null)
 				AnimatedSprite.FlipH = true;
 		}
+	}
+
+	private bool ValidateNetworkSetup()
+	{
+		bool isValid = true;
+
+		if (_bodyShape is null)
+		{
+			GD.PushError($"[NPC] CollisionShape2D não encontrado: {GetPath()}");
+			isValid = false;
+		}
+
+		if (Sprite is null && AnimatedSprite is null)
+			GD.PushWarning($"[NPC] Node visual não encontrado; headless continuará ativo: {GetPath()}");
+
+		MultiplayerSynchronizer? synchronizer =
+			GetNodeOrNull<MultiplayerSynchronizer>("MultiplayerSynchronizer");
+		if (synchronizer is null)
+		{
+			GD.PushError($"[NPC] MultiplayerSynchronizer não encontrado: {GetPath()}");
+			return false;
+		}
+
+		if (synchronizer.RootPath != new NodePath(".."))
+		{
+			GD.PushError($"[NPC] RootPath inválido no MultiplayerSynchronizer: {GetPath()}");
+			isValid = false;
+		}
+
+		SceneReplicationConfig? replicationConfig = synchronizer.ReplicationConfig;
+		if (replicationConfig is null)
+		{
+			GD.PushError($"[NPC] SceneReplicationConfig ausente: {GetPath()}");
+			return false;
+		}
+
+		NodePath[] expectedProperties =
+		{
+			new(".:position"),
+			new(".:velocity"),
+			new(".:MovementDirection"),
+			new(".:AiState"),
+		};
+
+		Godot.Collections.Array<NodePath> configuredProperties = replicationConfig.GetProperties();
+		foreach (NodePath expectedProperty in expectedProperties)
+		{
+			if (configuredProperties.Contains(expectedProperty))
+				continue;
+
+			GD.PushError(
+				$"[NPC] Propriedade de replicação ausente ({expectedProperty}): {GetPath()}"
+			);
+			isValid = false;
+		}
+
+		return isValid;
 	}
 }
