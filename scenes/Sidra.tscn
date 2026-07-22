@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b0nrq5xl28kcp"]
 
-[ext_resource type="Script" uid="uid://cvbw5hnr75wrm" path="res://scripts/sidra.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/Sidra.cs" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dbr2kb1rd10tm" path="res://assets/frame/sidra/front_01.png" id="2_texture"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sidra"]
