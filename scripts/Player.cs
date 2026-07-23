@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 public partial class Player : CharacterBody2D, IDamageable
@@ -12,7 +13,12 @@ public partial class Player : CharacterBody2D, IDamageable
         Idle,
         Walk,
         Attack,
+        Dead,
     }
+
+    private const int MaximumServerDamage = 100;
+    private const float MinimumFacingDot = 0.15f;
+    private const ulong RejectionLogIntervalMsec = 1000;
 
     private static readonly Vector2 NormalVisualScale = Vector2.One;
     private static readonly Vector2 AttackVisualScale = new(0.5f, 0.5f);
@@ -25,56 +31,125 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
     [Export] public int AttackDamage { get; set; } = 20;
-    [Export] public int AttackActiveFrame { get; set; } = 3;
+    [Export] public float AttackRange { get; set; } = 80.0f;
+    [Export] public float AttackCooldown { get; set; } = 0.5f;
+    [Export] public float AttackActionDuration { get; set; } = 0.6f;
     [Export] public float AttackOffsetX { get; set; } = 46.0f;
     [Export] public int MaxHealth { get; set; } = 100;
     [Export] public int MaxMana { get; set; } = 100;
     [Export] public int MaxExperience { get; set; } = 100;
-    [Export] public float RespawnDelay { get; set; } = 5.0f;
+    [Export] public float RespawnDelay { get; set; } = 3.0f;
 
-    public int CurrentHealth { get; private set; }
+    [Export]
+    public Vector2 FacingDirection
+    {
+        get => _facingDirection;
+        set
+        {
+            if (!float.IsFinite(value.X) || !float.IsFinite(value.Y))
+                return;
+
+            Vector2 normalized = value.LimitLength(1.0f);
+            if (normalized == Vector2.Zero)
+                return;
+
+            _facingDirection = normalized;
+            UpdateSpriteDirection();
+        }
+    }
+
+    [Export]
+    public bool IsAttacking
+    {
+        get => _isAttacking;
+        set
+        {
+            if (_isAttacking == value)
+                return;
+
+            _isAttacking = value;
+            ApplyVisualState();
+        }
+    }
+
+    public int CurrentHealth => _health?.CurrentHealth ?? MaxHealth;
     public int CurrentMana { get; private set; }
     public int CurrentExperience { get; private set; }
+    public bool IsDead => _health?.IsDead ?? false;
+    public bool IsRespawning => _health?.IsRespawning ?? false;
+    public bool CanAct => _health?.CanAct ?? false;
+    public HealthComponent Health =>
+        _health ?? throw new InvalidOperationException($"Health ausente em {GetPath()}.");
 
-    private AnimatedSprite2D _animatedSprite = null!;
-    private CollisionShape2D _bodyShape = null!;
-    private Area2D _attackArea = null!;
-    private CollisionShape2D _attackShape = null!;
-    private ProgressBar _healthBar = null!;
-    private readonly List<Node> _hitTargets = new();
+    private AnimatedSprite2D? _animatedSprite;
+    private CollisionShape2D? _bodyShape;
+    private Area2D? _attackArea;
+    private CollisionShape2D? _attackShape;
+    private ProgressBar? _healthBar;
+    private HealthComponent? _health;
+    private NetworkInterpolation2D? _interpolation;
     private PlayerState _currentState = PlayerState.Idle;
-    private float _facingDirection = 1.0f;
-    private bool _isDead;
+    private Vector2 _facingDirection = Vector2.Right;
+    private bool _isAttacking;
     private Vector2 _spawnPosition;
     private Vector2 _serverInputDirection;
     private Vector2 _lastSentDirection = new(float.NaN, float.NaN);
     private float _inputHeartbeatElapsed;
+    private float _attackCooldownRemaining;
+    private float _attackActionRemaining;
+    private ulong _lastRejectionLogMsec;
+
+    public override void _EnterTree()
+    {
+        SetMultiplayerAuthority(NetworkConstants.ServerPeerId);
+    }
 
     public override void _Ready()
     {
-        _animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-        _bodyShape = GetNode<CollisionShape2D>("CollisionShape2D");
-        _attackArea = GetNode<Area2D>("AttackArea");
-        _attackShape = GetNode<CollisionShape2D>("AttackArea/CollisionShape2D");
-        _healthBar = GetNode<ProgressBar>("HealthBar");
-
-        _spawnPosition = GlobalPosition;
-        CurrentHealth = Mathf.Max(MaxHealth, 0);
-        CurrentMana = Mathf.Max(MaxMana, 0);
-        CurrentExperience = Mathf.Clamp(CurrentExperience, 0, Mathf.Max(MaxExperience, 0));
-        UpdateHealthBar();
-        EmitSignal(SignalName.ManaChanged, CurrentMana, MaxMana);
-        EmitSignal(SignalName.ExperienceChanged, CurrentExperience, MaxExperience);
-
-        _animatedSprite.AnimationFinished += OnAnimationFinished;
-        _animatedSprite.FrameChanged += OnAnimatedSpriteFrameChanged;
-        _attackArea.AreaEntered += OnAttackAreaAreaEntered;
-        DisableAttackArea();
-        _animatedSprite.Play(IdleAnimation);
-        ClampToViewport();
-
         if (OwnerPeerId <= NetworkConstants.ServerPeerId && int.TryParse(Name, out int peerId))
             OwnerPeerId = peerId;
+
+        _animatedSprite = GetNodeOrNull<AnimatedSprite2D>("VisualRoot/AnimatedSprite2D");
+        _bodyShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+        _attackArea = GetNodeOrNull<Area2D>("AttackArea");
+        _attackShape = GetNodeOrNull<CollisionShape2D>("AttackArea/CollisionShape2D");
+        _healthBar = GetNodeOrNull<ProgressBar>("VisualRoot/HealthBar");
+        _health = GetNodeOrNull<HealthComponent>("Health");
+        _interpolation = GetNodeOrNull<NetworkInterpolation2D>("NetworkInterpolation");
+
+        if (_bodyShape is null)
+            GD.PushError($"[PLAYER] CollisionShape2D ausente: {GetPath()}");
+        if (_attackArea is null || _attackShape is null)
+            GD.PushError($"[PLAYER] AttackArea/hitbox ausente: {GetPath()}");
+        if (_health is null)
+        {
+            GD.PushError($"[PLAYER] HealthComponent ausente: {GetPath()}");
+            return;
+        }
+        if (!NetworkManager.RunningAsServer && _interpolation is null)
+        {
+            GD.PushError($"[CLIENT][INTERPOLATION] Componente ausente: {GetPath()}");
+        }
+
+        _spawnPosition = GlobalPosition;
+        CurrentMana = Mathf.Max(MaxMana, 0);
+        CurrentExperience = Mathf.Clamp(CurrentExperience, 0, Mathf.Max(MaxExperience, 0));
+
+        _health.HealthChanged += OnComponentHealthChanged;
+        _health.StateChanged += OnHealthStateChanged;
+        _health.Died += OnDied;
+        _health.RespawnReady += OnRespawnReady;
+        _health.Configure($"Jogador {OwnerPeerId}", MaxHealth, RespawnDelay);
+
+        if (_animatedSprite is not null)
+            _animatedSprite.AnimationFinished += OnAnimationFinished;
+
+        DisableAttackArea();
+        ApplyHealthState();
+        ApplyVisualState();
+        ClampToViewport();
+        EmitSignal(SignalName.ManaChanged, CurrentMana, MaxMana);
+        EmitSignal(SignalName.ExperienceChanged, CurrentExperience, MaxExperience);
 
         bool isLocalPlayer =
             !NetworkManager.RunningAsServer && OwnerPeerId == Multiplayer.GetUniqueId();
@@ -86,28 +161,71 @@ public partial class Player : CharacterBody2D, IDamageable
             CreateLocalCamera();
     }
 
+    public override void _ExitTree()
+    {
+        _interpolation?.PrepareForRemoval();
+
+        if (_health is not null)
+        {
+            _health.HealthChanged -= OnComponentHealthChanged;
+            _health.StateChanged -= OnHealthStateChanged;
+            _health.Died -= OnDied;
+            _health.RespawnReady -= OnRespawnReady;
+        }
+
+        if (_animatedSprite is not null)
+            _animatedSprite.AnimationFinished -= OnAnimationFinished;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
+        float frameDelta = (float)delta;
+
         if (NetworkManager.RunningAsServer)
         {
+            ProcessAuthoritativeTimers(frameDelta);
             ProcessAuthoritativeMovement();
             return;
         }
 
-        UpdateMovementState(Velocity);
+        ApplyVisualState();
 
-        if (_isDead || OwnerPeerId != Multiplayer.GetUniqueId())
+        if (!CanAct || OwnerPeerId != Multiplayer.GetUniqueId())
             return;
 
-        CaptureAndSendInput((float)delta);
+        CaptureAndSendAttack();
+        CaptureAndSendMovement(frameDelta);
+    }
+
+    public bool ApplyServerDamage(DamageInfo damageInfo)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer() || _health is null)
+            return false;
+
+        return _health.ApplyDamage(damageInfo);
+    }
+
+    private void ProcessAuthoritativeTimers(float delta)
+    {
+        _attackCooldownRemaining = Mathf.Max(_attackCooldownRemaining - delta, 0.0f);
+
+        if (!IsAttacking)
+            return;
+
+        _attackActionRemaining = Mathf.Max(_attackActionRemaining - delta, 0.0f);
+        if (_attackActionRemaining <= 0.0f)
+            IsAttacking = false;
     }
 
     private void ProcessAuthoritativeMovement()
     {
-        if (_isDead)
+        if (!CanAct)
+        {
+            Velocity = Vector2.Zero;
             return;
+        }
 
-        if (_currentState == PlayerState.Attack)
+        if (IsAttacking)
         {
             Velocity = Vector2.Zero;
             MoveAndSlide();
@@ -116,12 +234,15 @@ public partial class Player : CharacterBody2D, IDamageable
         }
 
         Velocity = _serverInputDirection * MoveSpeed;
-        UpdateMovementState(_serverInputDirection);
+        if (Mathf.Abs(_serverInputDirection.X) > 0.001f)
+            FacingDirection = _serverInputDirection.X < 0.0f ? Vector2.Left : Vector2.Right;
+
+        UpdateMovementPresentation(Velocity);
         MoveAndSlide();
         ClampToViewport();
     }
 
-    private void CaptureAndSendInput(float delta)
+    private void CaptureAndSendMovement(float delta)
     {
         Vector2 direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         direction = direction.LimitLength(1.0f);
@@ -136,6 +257,12 @@ public partial class Player : CharacterBody2D, IDamageable
         RpcId(NetworkConstants.ServerPeerId, MethodName.SubmitMovementInput, direction);
     }
 
+    private void CaptureAndSendAttack()
+    {
+        if (Input.IsActionJustPressed("attack"))
+            RpcId(NetworkConstants.ServerPeerId, MethodName.RequestAttack);
+    }
+
     [Rpc(
         MultiplayerApi.RpcMode.AnyPeer,
         CallLocal = false,
@@ -143,27 +270,8 @@ public partial class Player : CharacterBody2D, IDamageable
     )]
     private void SubmitMovementInput(Vector2 direction)
     {
-        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer())
-        {
-            GD.PushWarning("[SERVER] RPC de movimento recebido fora do servidor.");
+        if (!TryValidateSender(out int senderId, "movimento"))
             return;
-        }
-
-        int senderId = Multiplayer.GetRemoteSenderId();
-        if (senderId <= NetworkConstants.ServerPeerId || senderId != OwnerPeerId)
-        {
-            GD.PushWarning(
-                $"[SERVER] Input rejeitado: peer {senderId} tentou controlar jogador {OwnerPeerId}."
-            );
-            return;
-        }
-
-        Player? senderPlayer = GetParent()?.GetNodeOrNull<Player>(senderId.ToString());
-        if (senderPlayer != this)
-        {
-            GD.PushWarning($"[SERVER] Input rejeitado: jogador do peer {senderId} não existe.");
-            return;
-        }
 
         if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y))
         {
@@ -171,7 +279,235 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
         }
 
+        if (!CanAct || IsAttacking)
+        {
+            _serverInputDirection = Vector2.Zero;
+            return;
+        }
+
         _serverInputDirection = direction.LimitLength(1.0f);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.AnyPeer,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Reliable
+    )]
+    private void RequestAttack()
+    {
+        if (!TryValidateSender(out int senderId, "ataque"))
+            return;
+
+        GD.Print($"[SERVER][COMBAT] Ataque solicitado pelo peer {senderId}");
+
+        if (!CanAct)
+        {
+            LogAttackRejection(senderId, "jogador morto ou em respawn");
+            return;
+        }
+
+        if (IsAttacking || _attackCooldownRemaining > 0.0f)
+        {
+            LogAttackRejection(senderId, "cooldown ativo");
+            return;
+        }
+
+        if (
+            !float.IsFinite(GlobalPosition.X)
+            || !float.IsFinite(GlobalPosition.Y)
+            || !GetViewportRect().HasPoint(GlobalPosition)
+        )
+        {
+            LogAttackRejection(senderId, "posição oficial inválida");
+            return;
+        }
+
+        if (AttackDamage <= 0 || AttackDamage > MaximumServerDamage)
+        {
+            GD.PushError($"[SERVER][COMBAT] Dano configurado inválido: {AttackDamage}");
+            return;
+        }
+
+        if (AttackRange <= 0.0f || AttackRange > 300.0f)
+        {
+            GD.PushError($"[SERVER][COMBAT] Alcance configurado inválido: {AttackRange}");
+            return;
+        }
+
+        StartServerAttack(senderId);
+    }
+
+    private bool TryValidateSender(out int senderId, string action)
+    {
+        senderId = 0;
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer())
+        {
+            GD.PushWarning($"[SERVER] RPC de {action} recebido fora do servidor.");
+            return false;
+        }
+
+        senderId = Multiplayer.GetRemoteSenderId();
+        if (senderId <= NetworkConstants.ServerPeerId || senderId != OwnerPeerId)
+        {
+            GD.PushWarning(
+                $"[SERVER] {action} rejeitado: peer {senderId} tentou usar jogador {OwnerPeerId}."
+            );
+            return false;
+        }
+
+        bool senderConnected = false;
+        foreach (int connectedPeerId in Multiplayer.GetPeers())
+        {
+            if (connectedPeerId == senderId)
+            {
+                senderConnected = true;
+                break;
+            }
+        }
+
+        Player? senderPlayer = GetParent()?.GetNodeOrNull<Player>(senderId.ToString());
+        if (!senderConnected || senderPlayer != this)
+        {
+            GD.PushWarning($"[SERVER] {action} rejeitado: jogador do peer {senderId} não existe.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void StartServerAttack(int senderId)
+    {
+        _serverInputDirection = Vector2.Zero;
+        Velocity = Vector2.Zero;
+        _attackCooldownRemaining = Mathf.Max(AttackCooldown, 0.05f);
+        _attackActionRemaining = Mathf.Max(AttackActionDuration, 0.05f);
+        IsAttacking = true;
+        GD.Print($"[SERVER][COMBAT] Ataque aceito: peer {senderId}");
+
+        int hitCount = ApplyDamageToNpcsInRange(senderId);
+        if (hitCount == 0)
+            GD.Print($"[SERVER][COMBAT] Peer {senderId}: nenhum NPC válido no alcance.");
+    }
+
+    private int ApplyDamageToNpcsInRange(int senderId)
+    {
+        Node? npcs = GetParent()?.GetParent()?.GetNodeOrNull("NPCs");
+        if (npcs is null)
+        {
+            GD.PushError("[SERVER][COMBAT] Node NPCs não encontrado durante o ataque.");
+            return 0;
+        }
+
+        Vector2 officialFacing = FacingDirection.LimitLength(1.0f);
+        if (officialFacing == Vector2.Zero)
+            officialFacing = Vector2.Right;
+
+        HashSet<ulong> hitInstanceIds = new();
+        int hitCount = 0;
+
+        foreach (Node child in npcs.GetChildren())
+        {
+            if (child is not NpcBase npc || !npc.Health.CanAct)
+                continue;
+
+            Vector2 toTarget = npc.GlobalPosition - GlobalPosition;
+            float distance = toTarget.Length();
+            if (distance > AttackRange)
+                continue;
+
+            if (distance > 0.001f && officialFacing.Dot(toTarget / distance) < MinimumFacingDot)
+                continue;
+
+            ulong instanceId = npc.GetInstanceId();
+            if (!hitInstanceIds.Add(instanceId))
+                continue;
+
+            DamageInfo damageInfo = new(
+                DamageSourceType.Player,
+                $"peer {senderId}",
+                AttackDamage,
+                GlobalPosition,
+                senderId
+            );
+
+            if (npc.ApplyServerDamage(damageInfo))
+                hitCount++;
+        }
+
+        return hitCount;
+    }
+
+    private void LogAttackRejection(int senderId, string reason)
+    {
+        ulong now = Time.GetTicksMsec();
+        if (now - _lastRejectionLogMsec < RejectionLogIntervalMsec)
+            return;
+
+        _lastRejectionLogMsec = now;
+        GD.Print($"[SERVER][COMBAT] Ataque rejeitado do peer {senderId}: {reason}.");
+    }
+
+    private void OnComponentHealthChanged(int current, int maximum)
+    {
+        if (_healthBar is not null)
+        {
+            _healthBar.MaxValue = maximum;
+            _healthBar.Value = current;
+        }
+
+        EmitSignal(SignalName.HealthChanged, current, maximum);
+    }
+
+    private void OnHealthStateChanged(bool isDead, bool isRespawning)
+    {
+        ApplyHealthState();
+    }
+
+    private void OnDied()
+    {
+        _serverInputDirection = Vector2.Zero;
+        Velocity = Vector2.Zero;
+        IsAttacking = false;
+        _attackActionRemaining = 0.0f;
+        DisableAttackArea();
+    }
+
+    private void OnRespawnReady()
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer() || _health is null)
+            return;
+
+        GlobalPosition = _spawnPosition;
+        Velocity = Vector2.Zero;
+        _serverInputDirection = Vector2.Zero;
+        _attackActionRemaining = 0.0f;
+        _attackCooldownRemaining = 0.0f;
+        IsAttacking = false;
+        _health.CompleteRespawn();
+        ClampToViewport();
+    }
+
+    private void ApplyHealthState()
+    {
+        bool unavailable = IsDead || IsRespawning;
+        if (unavailable)
+        {
+            _currentState = PlayerState.Dead;
+            Velocity = Vector2.Zero;
+            DisableAttackArea();
+        }
+
+        if (_bodyShape is not null)
+            _bodyShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, unavailable);
+
+        _interpolation?.SetSuspended(unavailable, "respawn");
+
+        Visible = !unavailable;
+        if (!unavailable)
+        {
+            _currentState = PlayerState.Idle;
+            ApplyVisualState();
+        }
     }
 
     private void CreateLocalCamera()
@@ -191,75 +527,31 @@ public partial class Player : CharacterBody2D, IDamageable
         camera.MakeCurrent();
     }
 
-    public void TakeDamage(int amount)
+    private void ApplyVisualState()
     {
-        if (_isDead || amount <= 0)
+        if (_animatedSprite is null || IsDead || IsRespawning)
             return;
 
-        CurrentHealth = Mathf.Max(CurrentHealth - amount, 0);
-        UpdateHealthBar();
+        UpdateSpriteDirection();
 
-        if (CurrentHealth <= 0)
-            Die();
-    }
-
-    private void UpdateHealthBar()
-    {
-        _healthBar.MaxValue = MaxHealth;
-        _healthBar.Value = CurrentHealth;
-        EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealth);
-    }
-
-    private async void Die()
-    {
-        if (_isDead)
+        if (IsAttacking)
+        {
+            _currentState = PlayerState.Attack;
+            _animatedSprite.Scale = AttackVisualScale;
+            _animatedSprite.Position = AttackVisualOffset;
+            if (_animatedSprite.Animation != AttackAnimation || !_animatedSprite.IsPlaying())
+                _animatedSprite.Play(AttackAnimation);
             return;
+        }
 
-        _isDead = true;
-        Velocity = Vector2.Zero;
-        _currentState = PlayerState.Idle;
-        DisableAttackArea();
-        SetPhysicsProcess(false);
-        _bodyShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
-        Visible = false;
-
-        await ToSignal(
-            GetTree().CreateTimer(Mathf.Max(RespawnDelay, 0.0f)),
-            SceneTreeTimer.SignalName.Timeout
-        );
-
-        if (IsInsideTree())
-            Respawn();
+        ResetAttackPresentation();
+        UpdateMovementPresentation(Velocity);
     }
 
-    private void Respawn()
+    private void UpdateMovementPresentation(Vector2 direction)
     {
-        GlobalPosition = _spawnPosition;
-        CurrentHealth = Mathf.Max(MaxHealth, 0);
-        UpdateHealthBar();
-        _currentState = PlayerState.Idle;
-        _hitTargets.Clear();
-        _animatedSprite.Scale = NormalVisualScale;
-        _animatedSprite.Position = NormalVisualOffset;
-        _animatedSprite.Play(IdleAnimation);
-        _bodyShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
-        Visible = true;
-        _isDead = false;
-        SetPhysicsProcess(true);
-    }
-
-    private void UpdateMovementState(Vector2 direction)
-    {
-        if (direction.X > 0.0f)
-        {
-            _facingDirection = 1.0f;
-            _animatedSprite.FlipH = false;
-        }
-        else if (direction.X < 0.0f)
-        {
-            _facingDirection = -1.0f;
-            _animatedSprite.FlipH = true;
-        }
+        if (_animatedSprite is null || IsAttacking || IsDead || IsRespawning)
+            return;
 
         if (direction != Vector2.Zero)
         {
@@ -275,96 +567,68 @@ public partial class Player : CharacterBody2D, IDamageable
         }
     }
 
-    private void StartAttack()
+    private void UpdateSpriteDirection()
     {
-        if (_currentState == PlayerState.Attack)
-            return;
+        if (_animatedSprite is not null && Mathf.Abs(FacingDirection.X) > 0.001f)
+            _animatedSprite.FlipH = FacingDirection.X < 0.0f;
 
-        _currentState = PlayerState.Attack;
-        Velocity = Vector2.Zero;
-        _hitTargets.Clear();
-        DisableAttackArea();
         UpdateAttackAreaPosition();
-        _animatedSprite.Scale = AttackVisualScale;
-        _animatedSprite.Position = AttackVisualOffset;
-        _animatedSprite.Play(AttackAnimation);
-    }
-
-    private void OnAnimatedSpriteFrameChanged()
-    {
-        if (
-            _currentState == PlayerState.Attack
-            && _animatedSprite.Animation == AttackAnimation
-            && _animatedSprite.Frame == AttackActiveFrame
-        )
-        {
-            EnableAttackArea();
-        }
-        else
-        {
-            DisableAttackArea();
-        }
-    }
-
-    private void EnableAttackArea()
-    {
-        UpdateAttackAreaPosition();
-        _attackShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
-        _attackArea.SetDeferred(Area2D.PropertyName.Monitoring, true);
     }
 
     private void DisableAttackArea()
     {
-        _attackShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
-        _attackArea.SetDeferred(Area2D.PropertyName.Monitoring, false);
+        _attackShape?.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+        _attackArea?.SetDeferred(Area2D.PropertyName.Monitoring, false);
     }
 
     private void UpdateAttackAreaPosition()
     {
+        if (_attackArea is null)
+            return;
+
         Vector2 position = _attackArea.Position;
-        position.X = AttackOffsetX * _facingDirection;
+        position.X = AttackOffsetX * (FacingDirection.X < 0.0f ? -1.0f : 1.0f);
         _attackArea.Position = position;
-    }
-
-    private void OnAttackAreaAreaEntered(Area2D area)
-    {
-        if (_currentState != PlayerState.Attack || _animatedSprite.Frame != AttackActiveFrame)
-            return;
-
-        Node target = area.GetParent();
-        if (_hitTargets.Contains(target) || target is not IDamageable damageable)
-            return;
-
-        _hitTargets.Add(target);
-        damageable.TakeDamage(AttackDamage);
     }
 
     private void OnAnimationFinished()
     {
-        if (_currentState != PlayerState.Attack || _animatedSprite.Animation != AttackAnimation)
+        if (_animatedSprite is null || _animatedSprite.Animation != AttackAnimation || IsAttacking)
             return;
 
-        DisableAttackArea();
-        _hitTargets.Clear();
-        _currentState = PlayerState.Idle;
+        ResetAttackPresentation();
+        UpdateMovementPresentation(Velocity);
+    }
+
+    private void ResetAttackPresentation()
+    {
+        if (_animatedSprite is null)
+            return;
+
         _animatedSprite.Scale = NormalVisualScale;
         _animatedSprite.Position = NormalVisualOffset;
-        _animatedSprite.Play(IdleAnimation);
-        ClampToViewport();
     }
 
     private void ClampToViewport()
     {
         Rect2 viewportRect = GetViewportRect();
-        Texture2D currentTexture = _animatedSprite.SpriteFrames.GetFrameTexture(
+        if (_animatedSprite is null)
+        {
+            GlobalPosition = GlobalPosition.Clamp(viewportRect.Position, viewportRect.End);
+            return;
+        }
+
+        Texture2D? currentTexture = _animatedSprite.SpriteFrames.GetFrameTexture(
             _animatedSprite.Animation,
             _animatedSprite.Frame
         );
+        if (currentTexture is null)
+            return;
+
         Vector2 halfSpriteSize = currentTexture.GetSize() * _animatedSprite.Scale.Abs() / 2.0f;
         Vector2 visualOffset = _animatedSprite.Position;
         Vector2 minimumPosition = viewportRect.Position + halfSpriteSize - visualOffset;
         Vector2 maximumPosition = viewportRect.End - halfSpriteSize - visualOffset;
-
         GlobalPosition = GlobalPosition.Clamp(minimumPosition, maximumPosition);
     }
 }

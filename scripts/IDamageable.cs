@@ -1,4 +1,5 @@
 public interface IDamageable
 {
-    void TakeDamage(int amount);
+    HealthComponent Health { get; }
+    bool ApplyServerDamage(DamageInfo damageInfo);
 }
