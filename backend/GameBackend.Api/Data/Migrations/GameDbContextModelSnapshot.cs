@@ -54,6 +54,11 @@ namespace GameBackend.Api.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasDefaultValue("kame_house");
 
+                    b.Property<int>("MaxHealth")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(100);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -84,8 +89,60 @@ namespace GameBackend.Api.Data.Migrations
 
                             t.HasCheckConstraint("ck_characters_experience", "\"Experience\" >= 0");
 
+                            t.HasCheckConstraint("ck_characters_health_range", "\"CurrentHealth\" <= \"MaxHealth\"");
+
                             t.HasCheckConstraint("ck_characters_level", "\"Level\" >= 1");
+
+                            t.HasCheckConstraint("ck_characters_max_health", "\"MaxHealth\" > 0");
                         });
+                });
+
+            modelBuilder.Entity("GameBackend.Api.Entities.GameSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GameServerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsConsumed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("CharacterId", "IsConsumed", "ExpiresAt");
+
+                    b.HasIndex("UserId", "IsConsumed", "ExpiresAt");
+
+                    b.ToTable("game_sessions", (string)null);
                 });
 
             modelBuilder.Entity("GameBackend.Api.Entities.User", b =>
@@ -101,6 +158,11 @@ namespace GameBackend.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("citext");
+
+                    b.Property<bool>("IsBlocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -137,9 +199,35 @@ namespace GameBackend.Api.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameBackend.Api.Entities.GameSession", b =>
+                {
+                    b.HasOne("GameBackend.Api.Entities.Character", "Character")
+                        .WithMany("GameSessions")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GameBackend.Api.Entities.User", "User")
+                        .WithMany("GameSessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameBackend.Api.Entities.Character", b =>
+                {
+                    b.Navigation("GameSessions");
+                });
+
             modelBuilder.Entity("GameBackend.Api.Entities.User", b =>
                 {
                     b.Navigation("Characters");
+
+                    b.Navigation("GameSessions");
                 });
 #pragma warning restore 612, 618
         }

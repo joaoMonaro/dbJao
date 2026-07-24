@@ -67,7 +67,7 @@ public partial class NetworkManager : Node2D
         if (RunningAsServer)
             StartServer();
         else
-            BuildClientInterface();
+            BuildAuthenticatedClientInterface();
     }
 
     public override void _ExitTree()
@@ -80,6 +80,7 @@ public partial class NetworkManager : Node2D
 
         _clientPeer?.Close();
         _clientPeer = null;
+        DisposeAuthenticationResources();
     }
 
     private static bool HasCommandLineArgument(string expectedArgument)
@@ -101,6 +102,12 @@ public partial class NetworkManager : Node2D
 
     private void StartServer()
     {
+        if (!InitializeServerAuthentication())
+        {
+            GetTree().Quit(1);
+            return;
+        }
+
         ENetMultiplayerPeer serverPeer = new();
         Error error = serverPeer.CreateServer(NetworkConstants.Port, NetworkConstants.MaxClients);
         if (error != Error.Ok)
@@ -151,8 +158,8 @@ public partial class NetworkManager : Node2D
             return;
 
         int peerId = checked((int)id);
-        GD.Print($"[SERVER] Jogador conectado: {peerId}");
-        SpawnPlayer(peerId);
+        GD.Print($"[SERVER] Peer conectado: {peerId}");
+        RegisterPendingPeer(peerId);
     }
 
     private void OnPeerDisconnected(long id)
@@ -161,46 +168,49 @@ public partial class NetworkManager : Node2D
             return;
 
         int peerId = checked((int)id);
-        GD.Print($"[SERVER] Jogador desconectado: {peerId}");
-        RemovePlayer(peerId);
+        GD.Print($"[AUTH] Peer desconectado: {peerId}");
+        bool hasPlayer = _players?.HasNode(peerId.ToString()) == true;
+        HandleAuthenticatedPeerDisconnected(peerId);
+        if (hasPlayer)
+            RemovePlayer(peerId);
     }
 
     private void OnConnectedToServer()
     {
         int peerId = Multiplayer.GetUniqueId();
-        SetClientStatus($"Conectado. PeerId: {peerId}", isError: false);
-        GD.Print($"[CLIENT] Conectado ao servidor. PeerId: {peerId}");
+        GD.Print($"[CLIENT] ENet conectado ao servidor. PeerId: {peerId}");
+        SubmitPendingSessionToken();
     }
 
     private void OnConnectionFailed()
     {
         GD.PushError("[CLIENT] Falha ao conectar ao servidor.");
-        ResetClientConnection("Falha ao conectar ao servidor.");
+        ResetAuthenticatedClientConnection("Falha ao conectar ao servidor.");
     }
 
     private void OnServerDisconnected()
     {
         GD.PrintErr("[CLIENT] Servidor desconectado.");
         ClearReplicatedPlayers();
-        ResetClientConnection("Servidor desconectado.");
+        ResetAuthenticatedClientConnection("Servidor desconectado.");
     }
 
-    private void SpawnPlayer(int peerId)
+    private bool SpawnPlayer(int peerId, AuthenticatedCharacterData character)
     {
         if (!RunningAsServer || _players is null)
-            return;
+            return false;
 
         string playerName = peerId.ToString();
         if (_players.HasNode(playerName))
         {
             GD.PushWarning($"[SERVER] Tentativa de criar jogador duplicado: {peerId}");
-            return;
+            return false;
         }
 
         if (PlayerScene is null)
         {
             GD.PushError($"[SERVER] Cena do jogador não configurada; peer {peerId} não foi criado.");
-            return;
+            return false;
         }
 
         Node instance = PlayerScene.Instantiate();
@@ -208,14 +218,29 @@ public partial class NetworkManager : Node2D
         {
             GD.PushError("[SERVER] A cena configurada não possui Player como node raiz.");
             instance.QueueFree();
-            return;
+            return false;
         }
 
         player.Name = playerName;
         player.OwnerPeerId = peerId;
-        player.Position = GetNextSpawnPosition();
+        player.AuthenticatedUserId = character.UserId.ToString("D");
+        player.CharacterId = character.CharacterId.ToString("D");
+        player.CharacterName = character.CharacterName;
+        player.CharacterLevel = Math.Max(character.Level, 1);
+        player.CharacterExperience = Math.Max(character.Experience, 0);
+        player.MapId = string.IsNullOrWhiteSpace(character.MapId)
+            ? "kame_house"
+            : character.MapId;
+        player.MaxHealth = Math.Max(character.MaxHealth, 1);
+        player.Position =
+            float.IsFinite(character.PositionX) && float.IsFinite(character.PositionY)
+                ? new Vector2(character.PositionX, character.PositionY)
+                : GetNextSpawnPosition();
         _players.AddChild(player);
-        GD.Print($"[SERVER] Jogador criado: {peerId}");
+        player.ApplyAuthenticatedInitialState(character);
+        GD.Print(
+            $"[SERVER] Jogador criado: peer {peerId}, personagem {character.CharacterId}");
+        return true;
     }
 
     private void RemovePlayer(int peerId)

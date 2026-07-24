@@ -57,4 +57,30 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
         dbContext.Characters.Add(character);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<bool> UpdateStateAsync(
+        Guid characterId,
+        Guid userId,
+        int currentHealth,
+        string mapId,
+        float positionX,
+        float positionY,
+        CancellationToken cancellationToken)
+    {
+        int affectedRows = await dbContext.Characters
+            .Where(character =>
+                character.Id == characterId
+                && character.UserId == userId
+                && currentHealth <= character.MaxHealth)
+            .ExecuteUpdateAsync(
+                updates => updates
+                    .SetProperty(character => character.CurrentHealth, currentHealth)
+                    .SetProperty(character => character.MapId, mapId)
+                    .SetProperty(character => character.PositionX, positionX)
+                    .SetProperty(character => character.PositionY, positionY)
+                    .SetProperty(character => character.UpdatedAt, DateTimeOffset.UtcNow),
+                cancellationToken);
+
+        return affectedRows == 1;
+    }
 }

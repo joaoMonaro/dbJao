@@ -8,10 +8,12 @@ public sealed class Character : IAuditableEntity
     public int Level { get; set; } = 1;
     public long Experience { get; set; }
     public int CurrentHealth { get; set; } = 100;
+    public int MaxHealth { get; set; } = 100;
     public string MapId { get; set; } = "kame_house";
     public float PositionX { get; set; }
     public float PositionY { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public User User { get; set; } = null!;
+    public ICollection<GameSession> GameSessions { get; set; } = [];
 }

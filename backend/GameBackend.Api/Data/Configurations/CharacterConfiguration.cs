@@ -28,6 +28,10 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasDefaultValue(100)
             .IsRequired();
 
+        builder.Property(character => character.MaxHealth)
+            .HasDefaultValue(100)
+            .IsRequired();
+
         builder.Property(character => character.MapId)
             .HasMaxLength(64)
             .HasDefaultValue("kame_house")
@@ -46,6 +50,10 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             table.HasCheckConstraint("ck_characters_level", "\"Level\" >= 1");
             table.HasCheckConstraint("ck_characters_experience", "\"Experience\" >= 0");
             table.HasCheckConstraint("ck_characters_current_health", "\"CurrentHealth\" >= 0");
+            table.HasCheckConstraint("ck_characters_max_health", "\"MaxHealth\" > 0");
+            table.HasCheckConstraint(
+                "ck_characters_health_range",
+                "\"CurrentHealth\" <= \"MaxHealth\"");
         });
     }
 }

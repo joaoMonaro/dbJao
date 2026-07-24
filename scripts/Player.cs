@@ -30,6 +30,12 @@ public partial class Player : CharacterBody2D, IDamageable
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
+    [Export] public string AuthenticatedUserId { get; set; } = string.Empty;
+    [Export] public string CharacterId { get; set; } = string.Empty;
+    [Export] public string CharacterName { get; set; } = string.Empty;
+    [Export] public int CharacterLevel { get; set; } = 1;
+    [Export] public long CharacterExperience { get; set; }
+    [Export] public string MapId { get; set; } = "kame_house";
     [Export] public int AttackDamage { get; set; } = 20;
     [Export] public float AttackRange { get; set; } = 80.0f;
     [Export] public float AttackCooldown { get; set; } = 0.5f;
@@ -203,6 +209,56 @@ public partial class Player : CharacterBody2D, IDamageable
             return false;
 
         return _health.ApplyDamage(damageInfo);
+    }
+
+    public void ApplyAuthenticatedInitialState(AuthenticatedCharacterData data)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer())
+        {
+            GD.PushWarning("[AUTH] Estado autenticado bloqueado fora do servidor.");
+            return;
+        }
+
+        if (_health is null)
+        {
+            GD.PushError($"[AUTH] HealthComponent ausente ao inicializar {GetPath()}.");
+            return;
+        }
+
+        AuthenticatedUserId = data.UserId.ToString("D");
+        CharacterId = data.CharacterId.ToString("D");
+        CharacterName = data.CharacterName;
+        CharacterLevel = Mathf.Max(data.Level, 1);
+        CharacterExperience = Math.Max(data.Experience, 0);
+        MapId = string.IsNullOrWhiteSpace(data.MapId) ? "kame_house" : data.MapId;
+        MaxHealth = Mathf.Max(data.MaxHealth, 1);
+        _health.Configure(CharacterName, MaxHealth, RespawnDelay);
+        _health.CurrentHealth = Mathf.Clamp(data.CurrentHealth, 0, MaxHealth);
+        _spawnPosition = GlobalPosition;
+
+        if (_health.CurrentHealth == 0)
+            _health.Kill();
+    }
+
+    public bool TryCaptureAuthenticatedState(out AuthenticatedPlayerState? state)
+    {
+        state = null;
+        if (!Guid.TryParse(AuthenticatedUserId, out Guid userId)
+            || !Guid.TryParse(CharacterId, out Guid characterId)
+            || !float.IsFinite(GlobalPosition.X)
+            || !float.IsFinite(GlobalPosition.Y))
+        {
+            return false;
+        }
+
+        state = new AuthenticatedPlayerState(
+            userId,
+            characterId,
+            CurrentHealth,
+            MapId,
+            GlobalPosition.X,
+            GlobalPosition.Y);
+        return true;
     }
 
     private void ProcessAuthoritativeTimers(float delta)

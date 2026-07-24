@@ -7,6 +7,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Character> Characters => Set<Character>();
+    public DbSet<GameSession> GameSessions => Set<GameSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,4 +1,6 @@
 using System.Text;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using GameBackend.Api.Authentication;
 using GameBackend.Api.Configuration;
 using GameBackend.Api.Data;
@@ -65,6 +67,51 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization();
         services.AddControllers();
         services.AddProblemDetails();
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("login", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
+            options.AddPolicy("game-session-create", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? context.Connection.RemoteIpAddress?.ToString()
+                        ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
+            options.AddPolicy("internal-game-server", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 240,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
+        });
+
+        services.AddOptions<GameSessionOptions>()
+            .Bind(configuration.GetSection(GameSessionOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<GameServerOptions>()
+            .Bind(configuration.GetSection(GameServerOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddSwaggerGen(options =>
         {
@@ -100,11 +147,16 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICharacterRepository, CharacterRepository>();
+        services.AddScoped<IGameSessionRepository, GameSessionRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICharacterService, CharacterService>();
         services.AddScoped<IGameSessionService, GameSessionService>();
+        services.AddScoped<ICharacterStateService, CharacterStateService>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IGameSessionTokenProtector, GameSessionTokenProtector>();
+        services.AddSingleton<IGameServerKeyValidator, GameServerKeyValidator>();
+        services.AddSingleton(TimeProvider.System);
 
         return services;
     }

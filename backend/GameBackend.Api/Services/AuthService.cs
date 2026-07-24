@@ -75,6 +75,9 @@ public sealed class AuthService(
             throw new UnauthorizedApiException("E-mail ou senha inválidos.");
         }
 
+        if (user.IsBlocked)
+            throw new UnauthorizedApiException("Usuário bloqueado.");
+
         GeneratedToken token = jwtTokenGenerator.Generate(user);
 
         logger.LogInformation(

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameBackend.Api", "GameBackend.Api\GameBackend.Api.csproj", "{0E074C23-953E-4620-B4D4-9E59528D3451}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameBackend.Api.Tests", "GameBackend.Api.Tests\GameBackend.Api.Tests.csproj", "{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{0E074C23-953E-4620-B4D4-9E59528D3451}.Release|x64.Build.0 = Release|Any CPU
 		{0E074C23-953E-4620-B4D4-9E59528D3451}.Release|x86.ActiveCfg = Release|Any CPU
 		{0E074C23-953E-4620-B4D4-9E59528D3451}.Release|x86.Build.0 = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|x64.Build.0 = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Debug|x86.Build.0 = Debug|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|x64.ActiveCfg = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|x64.Build.0 = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|x86.ActiveCfg = Release|Any CPU
+		{EF759D9A-55AC-4F66-A5BA-E5565E54D95A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

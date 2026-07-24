@@ -25,6 +25,10 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(user => user.IsBlocked)
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.Property(user => user.CreatedAt).IsRequired();
         builder.Property(user => user.UpdatedAt).IsRequired();
 

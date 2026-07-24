@@ -6,6 +6,13 @@ namespace GameBackend.Api.Repositories;
 
 public sealed class UserRepository(GameDbContext dbContext) : IUserRepository
 {
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(user => user.Id == id, cancellationToken);
+    }
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return dbContext.Users

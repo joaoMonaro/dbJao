@@ -18,6 +18,7 @@ if (app.Configuration.GetValue("Swagger:Enabled", app.Environment.IsDevelopment(
 }
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 

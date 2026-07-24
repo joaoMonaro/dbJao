@@ -23,4 +23,13 @@ public interface ICharacterRepository
     );
 
     Task AddAsync(Character character, CancellationToken cancellationToken);
+
+    Task<bool> UpdateStateAsync(
+        Guid characterId,
+        Guid userId,
+        int currentHealth,
+        string mapId,
+        float positionX,
+        float positionY,
+        CancellationToken cancellationToken);
 }
