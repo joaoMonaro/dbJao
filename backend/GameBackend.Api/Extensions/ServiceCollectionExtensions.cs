@@ -80,6 +80,16 @@ public static class ServiceCollectionExtensions
                         QueueLimit = 0,
                         AutoReplenishment = true,
                     }));
+            options.AddPolicy("password-reset", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(15),
+                        QueueLimit = 0,
+                        AutoReplenishment = true,
+                    }));
             options.AddPolicy("game-session-create", context =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     context.User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -110,6 +120,10 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
         services.AddOptions<GameServerOptions>()
             .Bind(configuration.GetSection(GameServerOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<PasswordResetOptions>()
+            .Bind(configuration.GetSection(PasswordResetOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -149,12 +163,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICharacterRepository, CharacterRepository>();
         services.AddScoped<IGameSessionRepository, GameSessionRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
+        services.AddSingleton<IEmailService, DevelopmentEmailService>();
         services.AddScoped<ICharacterService, CharacterService>();
         services.AddScoped<IGameSessionService, GameSessionService>();
         services.AddScoped<ICharacterStateService, CharacterStateService>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IGameSessionTokenProtector, GameSessionTokenProtector>();
+        services.AddSingleton<PasswordResetTokenProtector>();
         services.AddSingleton<IGameServerKeyValidator, GameServerKeyValidator>();
         services.AddSingleton(TimeProvider.System);
 

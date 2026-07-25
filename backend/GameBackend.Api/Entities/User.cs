@@ -11,4 +11,5 @@ public sealed class User : IAuditableEntity
     public DateTimeOffset UpdatedAt { get; set; }
     public ICollection<Character> Characters { get; set; } = [];
     public ICollection<GameSession> GameSessions { get; set; } = [];
+    public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = [];
 }

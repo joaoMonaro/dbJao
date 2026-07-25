@@ -8,6 +8,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
     public DbSet<User> Users => Set<User>();
     public DbSet<Character> Characters => Set<Character>();
     public DbSet<GameSession> GameSessions => Set<GameSession>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

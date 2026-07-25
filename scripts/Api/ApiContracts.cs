@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 public sealed record LoginApiRequest(string Email, string Password);
 public sealed record LoginApiResponse(string AccessToken, DateTimeOffset Expiration, string Username);
+public sealed record RegisterApiRequest(string Username, string Email, string Password);
+public sealed record RegisterApiResponse(
+    Guid Id,
+    string Username,
+    string Email,
+    DateTimeOffset CreatedAt);
+public sealed record ForgotPasswordApiRequest(string Email);
+public sealed record ForgotPasswordApiResponse(string Message, string? DevelopmentToken);
+public sealed record ResetPasswordApiRequest(string Email, string Token, string NewPassword);
+public sealed record ResetPasswordApiResponse(string Message);
 
 public sealed record CharacterApiResponse(
     Guid Id,
@@ -50,8 +60,14 @@ public sealed record SaveCharacterStateApiRequest(
     float PositionX,
     float PositionY);
 
-public sealed class ApiRequestException(string message, int statusCode = 0)
+public sealed class ApiRequestException(
+    string message,
+    int statusCode = 0,
+    string? errorCode = null,
+    TimeSpan? retryAfter = null)
     : Exception(message)
 {
     public int StatusCode { get; } = statusCode;
+    public string? ErrorCode { get; } = errorCode;
+    public TimeSpan? RetryAfter { get; } = retryAfter;
 }

@@ -21,7 +21,7 @@ public sealed class AuthService(
     )
     {
         string username = request.Username.Trim();
-        string email = request.Email.Trim();
+        string email = request.Email.Trim().ToLowerInvariant();
 
         if (string.IsNullOrWhiteSpace(username))
             throw new ApiValidationException("Username é obrigatório.");
@@ -66,7 +66,7 @@ public sealed class AuthService(
         CancellationToken cancellationToken
     )
     {
-        string email = request.Email.Trim();
+        string email = request.Email.Trim().ToLowerInvariant();
         User? user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
         if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))

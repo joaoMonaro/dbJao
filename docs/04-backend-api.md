@@ -27,6 +27,8 @@ GameBackend.Api/
 |---|---|---|
 | POST | `/api/auth/register` | pública |
 | POST | `/api/auth/login` | pública |
+| POST | `/api/auth/forgot-password` | pública, resposta genérica |
+| POST | `/api/auth/reset-password` | pública, token de uso único |
 | GET | `/api/characters` | JWT |
 | GET | `/api/characters/{id}` | JWT |
 | POST | `/api/characters` | JWT |

@@ -8,7 +8,9 @@ namespace GameBackend.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(IAuthService authService) : ControllerBase
+public sealed class AuthController(
+    IAuthService authService,
+    IPasswordResetService passwordResetService) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -40,4 +42,20 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     {
         return Ok(await authService.LoginAsync(request, cancellationToken));
     }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset")]
+    public async Task<ActionResult<ForgotPasswordResponse>> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await passwordResetService.ForgotPasswordAsync(request, cancellationToken));
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset")]
+    public async Task<ActionResult<ResetPasswordResponse>> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await passwordResetService.ResetPasswordAsync(request, cancellationToken));
 }

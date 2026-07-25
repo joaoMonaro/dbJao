@@ -1,0 +1,7 @@
+[gd_resource type="Theme" format=3]
+
+[resource]
+default_font_size = 18
+VBoxContainer/constants/separation = 12
+HBoxContainer/constants/separation = 8
+TitleLabel/font_sizes/font_size = 30

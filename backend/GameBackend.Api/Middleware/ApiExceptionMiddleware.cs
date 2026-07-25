@@ -75,6 +75,8 @@ public sealed class ApiExceptionMiddleware(
             Instance = context.Request.Path,
         };
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        if (exception is ApiValidationException { ErrorCode: not null } validation)
+            problemDetails.Extensions["errorCode"] = validation.ErrorCode;
 
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/problem+json";

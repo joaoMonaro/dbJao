@@ -36,6 +36,7 @@ public partial class NetworkManager
     private Button? _createCharacterButton;
     private Button? _enterGameButton;
     private OptionButton? _characterOptions;
+    private AuthRoot? _authRoot;
 
     public override void _Process(double delta)
     {
@@ -252,8 +253,7 @@ public partial class NetworkManager
 
         _pendingSessionToken = null;
         SetClientStatus($"Autenticado como {characterName}.", isError: false);
-        if (_authenticationPanel is not null)
-            _authenticationPanel.Visible = false;
+        _authRoot?.CompleteGameAuthentication();
         GD.Print($"[AUTH] Autenticação concluída para personagem {characterId}");
     }
 
@@ -335,90 +335,23 @@ public partial class NetworkManager
 
     private void BuildAuthenticatedClientInterface()
     {
-        string apiUrl = GetEnvironmentOrDefault("GAME_API_URL", "http://127.0.0.1:5000");
         try
         {
-            _apiClient = new ApiClient(apiUrl);
-            _authManager = new AuthManager(_apiClient);
-            _characterSelection = new CharacterSelectionManager(_apiClient, _authManager);
             _gameConnection = new GameConnectionManager();
+            PackedScene authScene = GD.Load<PackedScene>(
+                "res://scenes/UI/Auth/AuthRoot.tscn");
+            _authRoot = authScene.Instantiate<AuthRoot>();
+            _authRoot.Name = "AuthRoot";
+            _authRoot.SessionCreated += BeginGameConnection;
+            CanvasLayer clientUi = new() { Name = "ClientUI", Layer = 100 };
+            AddChild(clientUi);
+            clientUi.AddChild(_authRoot);
         }
         catch (ArgumentException exception)
         {
             GD.PushError($"[CLIENT][API] {exception.Message}");
             return;
         }
-
-        CanvasLayer clientUi = new() { Name = "ClientUI", Layer = 100 };
-        AddChild(clientUi);
-        _authenticationPanel = new PanelContainer
-        {
-            Name = "AuthenticationPanel",
-            Position = new Vector2(1110.0f, 20.0f),
-            CustomMinimumSize = new Vector2(470.0f, 390.0f),
-        };
-        clientUi.AddChild(_authenticationPanel);
-
-        VBoxContainer content = new() { Name = "Content" };
-        content.AddThemeConstantOverride("separation", 8);
-        _authenticationPanel.AddChild(content);
-
-        Label title = new() { Text = "Entrar no jogo" };
-        title.AddThemeFontSizeOverride("font_size", 20);
-        content.AddChild(title);
-        content.AddChild(new Label { Text = $"API: {apiUrl}" });
-
-        _emailInput = new LineEdit { PlaceholderText = "E-mail" };
-        _passwordInput = new LineEdit
-        {
-            PlaceholderText = "Senha",
-            Secret = true,
-        };
-        content.AddChild(_emailInput);
-        content.AddChild(_passwordInput);
-
-        _loginButton = new Button { Text = "Login" };
-        _loginButton.Pressed += () => _ = LoginAndLoadCharactersAsync();
-        content.AddChild(_loginButton);
-
-        _characterOptions = new OptionButton();
-        _characterOptions.ItemSelected += OnCharacterSelected;
-        content.AddChild(_characterOptions);
-
-        _refreshCharactersButton = new Button
-        {
-            Text = "Atualizar personagens",
-            Disabled = true,
-        };
-        _refreshCharactersButton.Pressed += () => _ = RefreshCharactersAsync();
-        content.AddChild(_refreshCharactersButton);
-
-        HBoxContainer createRow = new();
-        _characterNameInput = new LineEdit
-        {
-            PlaceholderText = "Nome do novo personagem",
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
-        _createCharacterButton = new Button
-        {
-            Text = "Criar",
-            Disabled = true,
-        };
-        _createCharacterButton.Pressed += () => _ = CreateCharacterAsync();
-        createRow.AddChild(_characterNameInput);
-        createRow.AddChild(_createCharacterButton);
-        content.AddChild(createRow);
-
-        _enterGameButton = new Button
-        {
-            Text = "Selecionar e entrar",
-            Disabled = true,
-        };
-        _enterGameButton.Pressed += () => _ = CreateSessionAndConnectAsync();
-        content.AddChild(_enterGameButton);
-
-        _statusLabel = new Label { Text = "Faça login para continuar." };
-        content.AddChild(_statusLabel);
 
         if (HudScene is not null)
         {
@@ -430,6 +363,30 @@ public partial class NetworkManager
         {
             GD.PushWarning("[CLIENT] Cena do HUD não configurada.");
         }
+    }
+
+    private void BeginGameConnection(CreateGameSessionApiResponse session)
+    {
+        if (_gameConnection is null)
+            return;
+
+        _pendingSessionToken = session.SessionToken;
+        _pendingSessionExpiration = session.ExpiresAt;
+        Error error = _gameConnection.Connect(
+            Multiplayer,
+            session.GameServerHost,
+            session.GameServerPort);
+        if (error == Error.Ok)
+        {
+            SetClientStatus(
+                $"Conectando a {session.GameServerHost}:{session.GameServerPort}...",
+                isError: false);
+            return;
+        }
+
+        _pendingSessionToken = null;
+        _authRoot?.ShowAfterConnectionFailure(
+            "Não foi possível conectar ao servidor do jogo.");
     }
 
     private async Task LoginAndLoadCharactersAsync()
@@ -630,8 +587,7 @@ public partial class NetworkManager
         _gameConnection?.Close();
         _pendingSessionToken = null;
         SetAuthenticationUiBusy(false);
-        if (_authenticationPanel is not null)
-            _authenticationPanel.Visible = true;
+        _authRoot?.ShowAfterConnectionFailure(message);
         SetClientStatus(message, isError: true);
     }
 
@@ -647,6 +603,8 @@ public partial class NetworkManager
         _gameConnection?.Dispose();
         _gameConnection = null;
         _pendingSessionToken = null;
+        if (_authRoot is not null)
+            _authRoot.SessionCreated -= BeginGameConnection;
     }
 
     private static string GetEnvironmentOrDefault(string name, string fallback)

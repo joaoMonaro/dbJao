@@ -35,6 +35,24 @@ public sealed class ApiClient : IDisposable
             null,
             cancellationToken);
 
+    public Task<RegisterApiResponse> RegisterAsync(
+        RegisterApiRequest request,
+        CancellationToken cancellationToken = default) =>
+        SendAsync<RegisterApiResponse>(
+            HttpMethod.Post, "api/auth/register", request, null, cancellationToken);
+
+    public Task<ForgotPasswordApiResponse> ForgotPasswordAsync(
+        ForgotPasswordApiRequest request,
+        CancellationToken cancellationToken = default) =>
+        SendAsync<ForgotPasswordApiResponse>(
+            HttpMethod.Post, "api/auth/forgot-password", request, null, cancellationToken);
+
+    public Task<ResetPasswordApiResponse> ResetPasswordAsync(
+        ResetPasswordApiRequest request,
+        CancellationToken cancellationToken = default) =>
+        SendAsync<ResetPasswordApiResponse>(
+            HttpMethod.Post, "api/auth/reset-password", request, null, cancellationToken);
+
     public Task<IReadOnlyList<CharacterApiResponse>> GetCharactersAsync(
         string accessToken,
         CancellationToken cancellationToken = default) =>
@@ -87,8 +105,11 @@ public sealed class ApiClient : IDisposable
 
         if (!response.IsSuccessStatusCode)
         {
-            string message = await ReadErrorAsync(response, cancellationToken);
-            throw new ApiRequestException(message, (int)response.StatusCode);
+            (string message, string? errorCode) =
+                await ReadErrorAsync(response, cancellationToken);
+            TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+            throw new ApiRequestException(
+                message, (int)response.StatusCode, errorCode, retryAfter);
         }
 
         T? result = await response.Content.ReadFromJsonAsync<T>(
@@ -97,7 +118,7 @@ public sealed class ApiClient : IDisposable
         return result ?? throw new ApiRequestException("A API retornou uma resposta vazia.");
     }
 
-    private static async Task<string> ReadErrorAsync(
+    private static async Task<(string Message, string? ErrorCode)> ReadErrorAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
@@ -106,16 +127,18 @@ public sealed class ApiClient : IDisposable
             using JsonDocument document = await JsonDocument.ParseAsync(
                 await response.Content.ReadAsStreamAsync(cancellationToken),
                 cancellationToken: cancellationToken);
+            string? errorCode = document.RootElement.TryGetProperty(
+                "errorCode", out JsonElement code) ? code.GetString() : null;
             if (document.RootElement.TryGetProperty("detail", out JsonElement detail))
-                return detail.GetString() ?? $"Erro HTTP {(int)response.StatusCode}.";
+                return (detail.GetString() ?? "Falha na requisição.", errorCode);
             if (document.RootElement.TryGetProperty("title", out JsonElement title))
-                return title.GetString() ?? $"Erro HTTP {(int)response.StatusCode}.";
+                return (title.GetString() ?? "Falha na requisição.", errorCode);
         }
         catch (JsonException)
         {
         }
 
-        return $"Erro HTTP {(int)response.StatusCode}.";
+        return ("Falha na requisição.", null);
     }
 
     public void Dispose() => _httpClient.Dispose();

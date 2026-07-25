@@ -1,0 +1,3 @@
+[gd_scene format=3]
+[node name="ErrorDialog" type="AcceptDialog"]
+title = "Não foi possível continuar"

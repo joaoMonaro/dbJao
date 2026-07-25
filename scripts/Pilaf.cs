@@ -21,6 +21,7 @@ public partial class Pilaf : NpcBase
     private Node2D? _target;
     private readonly HashSet<Player> _contactTargets = new();
     private float _attackVisualRemaining;
+    private bool _combatSignalsConnected;
 
     public override void _Ready()
     {
@@ -48,6 +49,7 @@ public partial class Pilaf : NpcBase
             _damageArea.BodyEntered += OnDamageAreaBodyEntered;
             _damageArea.BodyExited += OnDamageAreaBodyExited;
             _damageTimer.Timeout += OnDamageTimerTimeout;
+            _combatSignalsConnected = true;
             _damageTimer.WaitTime = Mathf.Max(ContactDamageInterval, 0.05f);
             _damageTimer.OneShot = false;
         }
@@ -58,17 +60,18 @@ public partial class Pilaf : NpcBase
 
     public override void _ExitTree()
     {
-        if (_damageArea is not null)
+        if (_combatSignalsConnected && _damageArea is not null)
         {
             _damageArea.BodyEntered -= OnDamageAreaBodyEntered;
             _damageArea.BodyExited -= OnDamageAreaBodyExited;
         }
 
-        if (_damageTimer is not null)
+        if (_combatSignalsConnected && _damageTimer is not null)
         {
             _damageTimer.Stop();
             _damageTimer.Timeout -= OnDamageTimerTimeout;
         }
+        _combatSignalsConnected = false;
 
         if (AnimatedSprite is not null)
             AnimatedSprite.AnimationFinished -= OnAnimationFinished;
