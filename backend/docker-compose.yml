@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: game_backend
+      POSTGRES_USER: game_backend
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-postgres-password}
+    volumes:
+      - game_backend_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U game_backend -d game_backend"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./GameBackend.Api
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=game_backend;Username=game_backend;Password=${POSTGRES_PASSWORD:-development-postgres-password}
+      Jwt__Issuer: GameBackend.Api
+      Jwt__Audience: GameBackend.Client
+      Jwt__Secret: ${JWT_SECRET:-development-only-jwt-secret-change-before-production-123456}
+      Jwt__ExpirationMinutes: 60
+      GameSession__ExpirationSeconds: 60
+      GameSession__MaxPendingSessionsPerUser: 3
+      GameServer__InternalApiKey: ${GAME_SERVER_API_KEY:?GAME_SERVER_API_KEY must be set}
+      GameServer__DefaultHost: ${GAME_SERVER_HOST:-127.0.0.1}
+      GameServer__DefaultPort: ${GAME_SERVER_PORT:-7000}
+      Database__ApplyMigrationsOnStartup: "true"
+      Swagger__Enabled: "true"
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  game_backend_postgres_data:

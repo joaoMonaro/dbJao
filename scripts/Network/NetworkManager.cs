@@ -1,0 +1,418 @@
+using Godot;
+using System;
+
+public partial class NetworkManager : Node2D
+{
+    [Export] public PackedScene? PlayerScene { get; set; }
+    [Export] public PackedScene? HudScene { get; set; }
+    [Export] public NodePath PlayersPath { get; set; } = new("Players");
+    [Export] public NodePath SpawnerPath { get; set; } = new("MultiplayerSpawner");
+    [Export] public NodePath NpcsPath { get; set; } = new("NPCs");
+
+    public static bool RunningAsServer { get; private set; }
+
+    private Node2D? _players;
+    private MultiplayerSpawner? _spawner;
+    private Node2D? _npcs;
+    private ENetMultiplayerPeer? _clientPeer;
+    private LineEdit? _addressInput;
+    private Button? _connectButton;
+    private Label? _statusLabel;
+    private int _nextSpawnIndex;
+
+    public override void _EnterTree()
+    {
+        RunningAsServer = HasCommandLineArgument("--server") || OS.HasFeature("dedicated_server");
+    }
+
+    public override void _Ready()
+    {
+        _players = GetNodeOrNull<Node2D>(PlayersPath);
+        _spawner = GetNodeOrNull<MultiplayerSpawner>(SpawnerPath);
+        _npcs = GetNodeOrNull<Node2D>(NpcsPath);
+
+        if (_players is null)
+        {
+            GD.PushError("[NETWORK] Node Players não encontrado.");
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        if (_spawner is null)
+        {
+            GD.PushError("[NETWORK] MultiplayerSpawner não encontrado.");
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        if (PlayerScene is null)
+        {
+            GD.PushError("[NETWORK] Cena do jogador não configurada.");
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        if (!ValidateNpcContainer())
+        {
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        Multiplayer.PeerConnected += OnPeerConnected;
+        Multiplayer.PeerDisconnected += OnPeerDisconnected;
+        Multiplayer.ConnectedToServer += OnConnectedToServer;
+        Multiplayer.ConnectionFailed += OnConnectionFailed;
+        Multiplayer.ServerDisconnected += OnServerDisconnected;
+
+        if (RunningAsServer)
+            StartServer();
+        else
+            BuildAuthenticatedClientInterface();
+    }
+
+    public override void _ExitTree()
+    {
+        Multiplayer.PeerConnected -= OnPeerConnected;
+        Multiplayer.PeerDisconnected -= OnPeerDisconnected;
+        Multiplayer.ConnectedToServer -= OnConnectedToServer;
+        Multiplayer.ConnectionFailed -= OnConnectionFailed;
+        Multiplayer.ServerDisconnected -= OnServerDisconnected;
+
+        _clientPeer?.Close();
+        _clientPeer = null;
+        DisposeAuthenticationResources();
+    }
+
+    private static bool HasCommandLineArgument(string expectedArgument)
+    {
+        foreach (string argument in OS.GetCmdlineArgs())
+        {
+            if (argument == expectedArgument)
+                return true;
+        }
+
+        foreach (string argument in OS.GetCmdlineUserArgs())
+        {
+            if (argument == expectedArgument)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void StartServer()
+    {
+        if (!InitializeServerAuthentication())
+        {
+            GetTree().Quit(1);
+            return;
+        }
+
+        ENetMultiplayerPeer serverPeer = new();
+        Error error = serverPeer.CreateServer(NetworkConstants.Port, NetworkConstants.MaxClients);
+        if (error != Error.Ok)
+        {
+            GD.PushError(
+                $"[SERVER] Falha ao iniciar na porta UDP {NetworkConstants.Port}: {error}. "
+                + "Verifique se a porta já está em uso."
+            );
+            serverPeer.Close();
+            GetTree().Quit((int)error);
+            return;
+        }
+
+        Multiplayer.MultiplayerPeer = serverPeer;
+        GD.Print($"[SERVER] Servidor iniciado na porta {NetworkConstants.Port}");
+    }
+
+    private void ConnectToServer()
+    {
+        if (_addressInput is null || _connectButton is null)
+            return;
+
+        string address = _addressInput.Text.Trim();
+        if (string.IsNullOrWhiteSpace(address))
+            address = NetworkConstants.DefaultAddress;
+
+        _clientPeer?.Close();
+        _clientPeer = new ENetMultiplayerPeer();
+        Error error = _clientPeer.CreateClient(address, NetworkConstants.Port);
+        if (error != Error.Ok)
+        {
+            SetClientStatus($"Falha ao criar conexão: {error}", isError: true);
+            GD.PushError($"[CLIENT] Falha ao criar o peer: {error}");
+            _clientPeer.Close();
+            _clientPeer = null;
+            return;
+        }
+
+        Multiplayer.MultiplayerPeer = _clientPeer;
+        _addressInput.Editable = false;
+        _connectButton.Disabled = true;
+        SetClientStatus($"Conectando a {address}:{NetworkConstants.Port}...", isError: false);
+    }
+
+    private void OnPeerConnected(long id)
+    {
+        if (!RunningAsServer)
+            return;
+
+        int peerId = checked((int)id);
+        GD.Print($"[SERVER] Peer conectado: {peerId}");
+        RegisterPendingPeer(peerId);
+    }
+
+    private void OnPeerDisconnected(long id)
+    {
+        if (!RunningAsServer)
+            return;
+
+        int peerId = checked((int)id);
+        GD.Print($"[AUTH] Peer desconectado: {peerId}");
+        bool hasPlayer = _players?.HasNode(peerId.ToString()) == true;
+        HandleAuthenticatedPeerDisconnected(peerId);
+        if (hasPlayer)
+            RemovePlayer(peerId);
+    }
+
+    private void OnConnectedToServer()
+    {
+        int peerId = Multiplayer.GetUniqueId();
+        GD.Print($"[CLIENT] ENet conectado ao servidor. PeerId: {peerId}");
+        SubmitPendingSessionToken();
+    }
+
+    private void OnConnectionFailed()
+    {
+        GD.PushError("[CLIENT] Falha ao conectar ao servidor.");
+        ResetAuthenticatedClientConnection("Falha ao conectar ao servidor.");
+    }
+
+    private void OnServerDisconnected()
+    {
+        GD.PrintErr("[CLIENT] Servidor desconectado.");
+        ClearReplicatedPlayers();
+        ResetAuthenticatedClientConnection("Servidor desconectado.");
+    }
+
+    private bool SpawnPlayer(int peerId, AuthenticatedCharacterData character)
+    {
+        if (!RunningAsServer || _players is null)
+            return false;
+
+        string playerName = peerId.ToString();
+        if (_players.HasNode(playerName))
+        {
+            GD.PushWarning($"[SERVER] Tentativa de criar jogador duplicado: {peerId}");
+            return false;
+        }
+
+        if (PlayerScene is null)
+        {
+            GD.PushError($"[SERVER] Cena do jogador não configurada; peer {peerId} não foi criado.");
+            return false;
+        }
+
+        Node instance = PlayerScene.Instantiate();
+        if (instance is not Player player)
+        {
+            GD.PushError("[SERVER] A cena configurada não possui Player como node raiz.");
+            instance.QueueFree();
+            return false;
+        }
+
+        player.Name = playerName;
+        player.OwnerPeerId = peerId;
+        player.AuthenticatedUserId = character.UserId.ToString("D");
+        player.CharacterId = character.CharacterId.ToString("D");
+        player.CharacterName = character.CharacterName;
+        player.CharacterLevel = Math.Max(character.Level, 1);
+        player.CharacterExperience = Math.Max(character.Experience, 0);
+        player.MapId = string.IsNullOrWhiteSpace(character.MapId)
+            ? "kame_house"
+            : character.MapId;
+        player.MaxHealth = Math.Max(character.MaxHealth, 1);
+        player.Position =
+            float.IsFinite(character.PositionX) && float.IsFinite(character.PositionY)
+                ? new Vector2(character.PositionX, character.PositionY)
+                : GetNextSpawnPosition();
+        _players.AddChild(player);
+        player.ApplyAuthenticatedInitialState(character);
+        GD.Print(
+            $"[SERVER] Jogador criado: peer {peerId}, personagem {character.CharacterId}");
+        return true;
+    }
+
+    private void RemovePlayer(int peerId)
+    {
+        if (_players is null)
+            return;
+
+        Player? player = _players.GetNodeOrNull<Player>(peerId.ToString());
+        if (player is null)
+        {
+            GD.PushWarning($"[SERVER] Tentativa de remover jogador inexistente: {peerId}");
+            return;
+        }
+
+        player.QueueFree();
+        GD.Print($"[SERVER] Jogador removido: {peerId}");
+    }
+
+    private Vector2 GetNextSpawnPosition()
+    {
+        const int columns = 4;
+        int slot = _nextSpawnIndex++;
+        return new Vector2(680.0f + (slot % columns) * 80.0f, 410.0f + (slot / columns) * 80.0f);
+    }
+
+    private void BuildClientInterface()
+    {
+        CanvasLayer clientUi = new()
+        {
+            Name = "ClientUI",
+            Layer = 100,
+        };
+        AddChild(clientUi);
+
+        PanelContainer panel = new()
+        {
+            Name = "ConnectionPanel",
+            Position = new Vector2(1220.0f, 20.0f),
+            CustomMinimumSize = new Vector2(360.0f, 155.0f),
+        };
+        clientUi.AddChild(panel);
+
+        VBoxContainer content = new() { Name = "Content" };
+        content.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(content);
+
+        Label title = new() { Text = "Multiplayer local" };
+        title.AddThemeFontSizeOverride("font_size", 20);
+        content.AddChild(title);
+
+        _addressInput = new LineEdit
+        {
+            Name = "Address",
+            Text = NetworkConstants.DefaultAddress,
+            PlaceholderText = "Endereço do servidor",
+        };
+        content.AddChild(_addressInput);
+
+        _connectButton = new Button
+        {
+            Name = "ConnectButton",
+            Text = $"Conectar (UDP {NetworkConstants.Port})",
+        };
+        _connectButton.Pressed += ConnectToServer;
+        content.AddChild(_connectButton);
+
+        _statusLabel = new Label
+        {
+            Name = "Status",
+            Text = "Desconectado",
+        };
+        content.AddChild(_statusLabel);
+
+        if (HudScene is not null)
+        {
+            Node hud = HudScene.Instantiate();
+            hud.Name = "HUD";
+            AddChild(hud);
+        }
+        else
+        {
+            GD.PushWarning("[CLIENT] Cena do HUD não configurada.");
+        }
+
+        if (HasCommandLineArgument("--connect"))
+            CallDeferred(MethodName.ConnectToServer);
+    }
+
+    private void ResetClientConnection(string message)
+    {
+        _clientPeer?.Close();
+        _clientPeer = null;
+
+        if (_addressInput is not null)
+            _addressInput.Editable = true;
+        if (_connectButton is not null)
+            _connectButton.Disabled = false;
+
+        SetClientStatus(message, isError: true);
+    }
+
+    private void SetClientStatus(string message, bool isError)
+    {
+        if (_statusLabel is null)
+            return;
+
+        _statusLabel.Text = message;
+        _statusLabel.Modulate = isError ? new Color(1.0f, 0.45f, 0.45f) : Colors.White;
+    }
+
+    private void ClearReplicatedPlayers()
+    {
+        if (_players is null)
+            return;
+
+        foreach (Node child in _players.GetChildren())
+            child.QueueFree();
+    }
+
+    private bool ValidateNpcContainer()
+    {
+        if (_npcs is null)
+        {
+            GD.PushError("[NETWORK] Node NPCs não encontrado.");
+            return false;
+        }
+
+        string[] expectedNpcNames = { "Sidra", "Pilaf" };
+        bool isValid = true;
+
+        if (_npcs.GetChildCount() != expectedNpcNames.Length)
+        {
+            GD.PushError(
+                $"[NETWORK] Quantidade inválida de NPCs em {_npcs.GetPath()}: "
+                + $"esperado {expectedNpcNames.Length}, encontrado {_npcs.GetChildCount()}."
+            );
+            isValid = false;
+        }
+
+        foreach (string npcName in expectedNpcNames)
+        {
+            NpcBase? npc = _npcs.GetNodeOrNull<NpcBase>(npcName);
+            if (npc is null)
+            {
+                GD.PushError(
+                    $"[NETWORK] NPC ausente ou cena não carregada: {_npcs.GetPath()}/{npcName}"
+                );
+                isValid = false;
+                continue;
+            }
+
+            if (npc.GetMultiplayerAuthority() != NetworkConstants.ServerPeerId)
+            {
+                GD.PushError($"[NETWORK] Autoridade inválida para o NPC: {npc.GetPath()}");
+                isValid = false;
+            }
+
+            if (!npc.NetworkSetupIsValid)
+            {
+                GD.PushError(
+                    $"[NETWORK] MultiplayerSynchronizer mal configurado: {npc.GetPath()}"
+                );
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    private void StopDedicatedServerAfterStartupError()
+    {
+        if (RunningAsServer)
+            GetTree().Quit(1);
+    }
+}

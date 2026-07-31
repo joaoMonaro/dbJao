@@ -1,0 +1,38 @@
+{
+  "character_id": "emperor_pilaf",
+  "reference_status": "approved_canonical",
+  "direction": "right",
+  "pose": "idle_standing_side",
+
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "transparent_background": true
+  },
+
+  "character_bounds": {
+    "coordinate_mode": "inclusive",
+    "x_min": 77,
+    "y_min": 92,
+    "x_max": 114,
+    "y_max": 159,
+    "width": 38,
+    "height": 68
+  },
+
+  "anchor": {
+    "center_x": 95.5,
+    "practical_x": 96,
+    "feet_y": 159
+  },
+
+  "rendering": {
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "isolated_fragments": false,
+    "cropped": false
+  }
+}

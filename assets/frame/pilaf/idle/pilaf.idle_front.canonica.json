@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.0",
+
+  "identity": {
+    "id": "emperor_pilaf",
+    "name": "Emperor Pilaf",
+    "reference_status": "approved_canonical",
+    "reference_file": "emperor_pilaf_idle_front_00.png",
+    "reference_sha256": "23596e5bc8bcac97b328516dd7cb562ad1179f00fde326ddea1ae916032ea127"
+  },
+
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+
+    "geometric_center": {
+      "x": 95.5,
+      "y": 95.5
+    },
+
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 78,
+      "y_min": 92,
+      "x_max": 113,
+      "y_max": 159,
+      "width": 36,
+      "height": 68
+    },
+
+    "sprite_center": {
+      "x": 95.5,
+      "y": 125.5
+    },
+
+    "feet_baseline_y": 159
+  },
+
+  "appearance": {
+    "skin": "blue skin",
+
+    "face": {
+      "shape": "small compact face",
+      "expression": "angry stern expression",
+      "eyes": "large eyes with dark pupils",
+      "ears": "large pointed ears extending sideways",
+      "mustache": "small dark mustache"
+    },
+
+    "hair": "not visible",
+
+    "headwear": {
+      "type": "pointed imperial hat",
+      "main_colors": [
+        "dark blue",
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "details": [
+        "pointed red and orange top",
+        "yellow decorative details",
+        "central ornamental emblem"
+      ]
+    },
+
+    "clothing": {
+      "type": "imperial robe",
+      "main_color": "dark blue",
+      "secondary_colors": [
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "details": [
+        "decorative chest emblem",
+        "colored collar",
+        "colored cuffs",
+        "ornamental waist details"
+      ]
+    },
+
+    "shoes": "small red and orange shoes",
+
+    "accessories": [
+      "decorative chest emblem",
+      "imperial hat"
+    ]
+  },
+
+  "body_proportions": {
+    "overall": "short compact body with oversized head",
+    "head": "large relative to body",
+    "torso": "short and compact",
+    "arms": "short",
+    "hands": "small",
+    "legs": "very short",
+    "feet": "small"
+  },
+
+  "style": {
+    "type": "pixel_art",
+    "pixel_density": "low_resolution_sprite",
+    "outline": "dark_consistent",
+    "shading": "simple_high_contrast",
+    "palette": "derived_from_canonical_reference",
+    "palette_policy": "do_not_introduce_unnecessary_new_colors",
+
+    "alpha_policy": {
+      "preserve_reference_alpha": true,
+      "do_not_add_smoothing": true,
+      "do_not_add_blur": true
+    },
+
+    "rendering": {
+      "no_3d": true,
+      "no_vector_style": true,
+      "no_painted_style": true,
+      "no_realistic_lighting": true
+    }
+  },
+
+  "identity_locks": {
+    "locked_features": [
+      "face design",
+      "angry expression",
+      "head size",
+      "pointed ears",
+      "mustache",
+      "hat shape",
+      "hat ornaments",
+      "robe design",
+      "chest emblem",
+      "color palette",
+      "outline style",
+      "shading style",
+      "body proportions",
+      "pixel density"
+    ],
+
+    "must_not_change_between_frames": [
+      "character identity",
+      "face structure",
+      "skin color",
+      "hat design",
+      "chest emblem design",
+      "clothing colors",
+      "relative head size",
+      "overall sprite scale"
+    ]
+  },
+
+  "animation_rules": {
+    "canonical_reference_required": true,
+    "edit_reference_instead_of_redrawing": true,
+
+    "fixed_properties": [
+      "canvas width",
+      "canvas height",
+      "transparent background",
+      "feet baseline for grounded animations",
+      "overall character scale",
+      "visual style",
+      "color identity"
+    ],
+
+    "allowed_to_change": [
+      "arm position",
+      "hand position",
+      "leg position",
+      "head vertical offset",
+      "torso vertical offset",
+      "robe deformation caused by movement",
+      "facial expression when required by the action"
+    ],
+
+    "bounds_policy": {
+      "reference_bounds_are_not_global_limits": true,
+      "description": "Arms, legs and clothing may extend outside the reference-frame bounds during an animation, but must remain inside the 192x192 canvas."
+    },
+
+    "grounded_animation": {
+      "feet_baseline_y": 159,
+      "maximum_idle_horizontal_shift": 1,
+      "maximum_idle_vertical_shift": 1
+    },
+
+    "camera": {
+      "fixed": true,
+      "zoom_changes_allowed": false,
+      "perspective_changes_allowed": false
+    }
+  },
+
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_interface": true,
+    "no_unrequested_effects": true
+  },
+
+  "validation": {
+    "expected_canvas_width": 192,
+    "expected_canvas_height": 192,
+    "expected_reference_bounds": {
+      "x_min": 78,
+      "y_min": 92,
+      "x_max": 113,
+      "y_max": 159
+    },
+    "expected_reference_width": 36,
+    "expected_reference_height": 68,
+    "expected_reference_feet_y": 159,
+    "reject_if_character_is_cropped": true,
+    "reject_if_canvas_is_opaque": true,
+    "reject_if_character_is_rescaled": true,
+    "reject_if_identity_details_change": true
+  }
+}
