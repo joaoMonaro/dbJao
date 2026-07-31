@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmxb77wp6osx3"
-path="res://.godot/imported/attack.png-bd347f7d88185afb9323d59f94f41888.ctex"
+uid="uid://cyoh7ox5o1ffd"
+path="res://.godot/imported/walk.png-63d843fbf08664500fa96a035553cca1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sheets/pilaf/attack/attack.png"
-dest_files=["res://.godot/imported/attack.png-bd347f7d88185afb9323d59f94f41888.ctex"]
+source_file="res://assets/sheets/pilaf/walk/walk.png"
+dest_files=["res://.godot/imported/walk.png-63d843fbf08664500fa96a035553cca1.ctex"]
 
 [params]
 
