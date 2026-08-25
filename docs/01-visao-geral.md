@@ -98,7 +98,7 @@ Nenhum Player é criado apenas porque o peer conectou.
 
 | Camada | Tecnologia |
 |---|---|
-| Jogo | Godot 4.7.1 Mono, C# |
+| Jogo | Godot 4.7.2 Mono, C# |
 | Runtime do jogo | .NET 10 |
 | API | ASP.NET Core 10 |
 | ORM | Entity Framework Core 10 |

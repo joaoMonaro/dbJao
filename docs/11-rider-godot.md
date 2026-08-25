@@ -22,7 +22,7 @@ Crie uma configuração do tipo executável externo:
 
 ```text
 Executable:
-caminho/para/Godot_v4.7.1-stable_mono_linux.x86_64
+caminho/para/Godot_v4.7.2-stable_mono_linux.x86_64
 
 Working directory:
 /home/jao/dbjao
@@ -48,7 +48,7 @@ argumentos seguintes são entregues ao jogo.
 
 ```text
 Executable:
-caminho/para/Godot_v4.7.1-stable_mono_linux.x86_64
+caminho/para/Godot_v4.7.2-stable_mono_linux.x86_64
 
 Working directory:
 /home/jao/dbjao

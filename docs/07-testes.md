@@ -5,21 +5,38 @@
 Na raiz:
 
 ```bash
-dotnet build dbjao.csproj
-dotnet test backend/GameBackend.sln
-git diff --check
+./scripts/validate.sh
 ```
 
-Resultado esperado:
+O script executa:
 
 ```text
-Build succeeded.
-0 Warning(s)
-0 Error(s)
-Passed: 10
+dotnet build dbjao.csproj
+dotnet build backend/GameBackend.sln
+dotnet test backend/GameBackend.sln
+importação de assets e cena principal em Godot headless, quando disponível
+git diff --check e git diff --cached --check
 ```
 
-O número de testes pode crescer; não fixe automações futuras em exatamente 10.
+O build Godot possui atualmente dois warnings `CS0649` preexistentes em
+`NetworkManager.Authentication.cs`. Não introduza warnings adicionais. A suíte possui
+16 testes neste baseline, mas automações não devem fixar esse número.
+
+Se Godot não for encontrado, o smoke aparece como `SKIP`. Instale Godot 4.7.2 Mono ou
+defina `GODOT_BIN=/caminho/para/o/executavel` antes de validar alterações de cenas,
+recursos ou networking. Um skip deve ser informado na entrega.
+
+O executável deve ter a mesma versão do `Godot.NET.Sdk` em `dbjao.csproj`. Versões
+diferentes também geram `SKIP`, pois o editor pode reescrever o `.csproj` durante a
+importação; uma atualização de Godot deve ser uma mudança separada e intencional.
+
+Antes de concluir, a revisão humana/agentic continua obrigatória:
+
+```bash
+git status --short
+git diff
+git diff --cached  # se houver mudanças staged
+```
 
 ## Smoke test da API
 

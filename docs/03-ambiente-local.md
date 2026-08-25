@@ -83,6 +83,13 @@ Resultado esperado:
 [SERVER] Servidor iniciado na porta 7000
 ```
 
+Como alternativa, após configurar `backend/.env`, o Harness carrega essas variáveis e
+resolve `godot`, `godot4` ou `GODOT_BIN`:
+
+```bash
+./scripts/dev-server.sh
+```
+
 ## 5. Iniciar clientes
 
 Em outros terminais:

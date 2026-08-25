@@ -3,11 +3,11 @@
 ## Requisitos mínimos
 
 - Linux x86_64 para reproduzir a exportação atual do servidor;
-- Godot `4.7.1` com suporte Mono/.NET;
+- Godot `4.7.2` com suporte Mono/.NET;
 - .NET SDK `10`;
 - Docker Engine com Docker Compose;
 - Git;
-- templates de exportação Godot `4.7.1 Mono`.
+- templates de exportação Godot `4.7.2 Mono`.
 
 Verifique:
 

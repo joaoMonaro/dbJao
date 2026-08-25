@@ -5,7 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 ENV_FILE="${PROJECT_DIR}/backend/.env"
-DEFAULT_GODOT_BIN="/home/jao/Downloads/Godot_v4.7.1-stable_mono_linux_x86_64/Godot_v4.7.1-stable_mono_linux.x86_64"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "Erro: ${ENV_FILE} não encontrado." >&2
@@ -29,14 +28,18 @@ if [[ -z "${GAME_SERVER_API_KEY:-}" ]]; then
 fi
 
 if [[ -n "${GODOT_BIN:-}" ]]; then
+  if [[ ! -x "${GODOT_BIN}" ]]; then
+    echo "Erro: GODOT_BIN não aponta para um executável: ${GODOT_BIN}" >&2
+    exit 1
+  fi
   GODOT_EXECUTABLE="${GODOT_BIN}"
 elif command -v godot >/dev/null 2>&1; then
   GODOT_EXECUTABLE="$(command -v godot)"
-elif [[ -x "${DEFAULT_GODOT_BIN}" ]]; then
-  GODOT_EXECUTABLE="${DEFAULT_GODOT_BIN}"
+elif command -v godot4 >/dev/null 2>&1; then
+  GODOT_EXECUTABLE="$(command -v godot4)"
 else
   echo "Erro: Godot não encontrado." >&2
-  echo "Defina GODOT_BIN com o caminho do Godot 4.7.1 Mono." >&2
+  echo "Defina GODOT_BIN com o caminho do Godot 4.7.2 Mono." >&2
   exit 1
 fi
 

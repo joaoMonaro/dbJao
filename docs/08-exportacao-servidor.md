@@ -2,8 +2,8 @@
 
 ## Pré-requisitos
 
-- Godot Mono 4.7.1;
-- templates de exportação Mono 4.7.1;
+- Godot Mono 4.7.2;
+- templates de exportação Mono 4.7.2;
 - build C# sem erros;
 - preset `server` em `export_presets.cfg`.
 

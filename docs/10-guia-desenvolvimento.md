@@ -30,11 +30,14 @@ docs/                      documentação
 9. atualize a documentação se mudar comandos, portas ou arquitetura.
 
 ```bash
-dotnet build dbjao.csproj
-dotnet test backend/GameBackend.sln
-git diff --check
+./scripts/validate.sh
 git status --short
+git diff
 ```
+
+Use `./scripts/build.sh` ou `./scripts/test.sh` durante iterações rápidas, mas execute
+o ponto de entrada completo antes de concluir. O procedimento operacional está em
+`AGENTS.md`; tarefas de feature e bug também possuem skills em `.agents/skills/`.
 
 ## Adicionar recursos Godot
 

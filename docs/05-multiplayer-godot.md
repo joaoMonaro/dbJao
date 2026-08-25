@@ -111,3 +111,18 @@ O servidor headless não interpola.
 - estado frequente de movimento usa mecanismo não confiável;
 - mantenha paths determinísticos;
 - não execute física remota nos clientes.
+
+## Guardrails automatizáveis no futuro
+
+O código já possui verificações runtime de `RunningAsServer`, `Multiplayer.IsServer()`,
+autoridade do peer `1` e remetente de RPC. Ainda não existe análise arquitetural
+automatizada. Bons primeiros guardrails seriam:
+
+- localizar RPCs `AnyPeer` sem validação de `GetRemoteSenderId()`;
+- testar que movimento e ataque enviados por um peer não controlam outro Player;
+- testar que dano, morte e respawn são rejeitados fora do servidor;
+- impedir que o cliente chame endpoints internos de persistência;
+- testar que Player só nasce após consumo válido e único da sessão.
+
+Esses guardrails devem começar como testes focados; não crie um analisador estático
+próprio antes de existir um caso que justifique sua manutenção.

@@ -27,6 +27,15 @@ um projeto separado e não executa física, IA, movimento ou combate.
 11. [Configurar Rider e editor Godot](11-rider-godot.md)
 12. [Solução de problemas](12-troubleshooting.md)
 
+## Harness para agentes
+
+- `AGENTS.md`: regras operacionais e critérios de conclusão;
+- `.agents/skills/`: procedimentos reutilizáveis para features e correções;
+- `scripts/validate.sh`: build, testes, smoke Godot quando disponível e diff check;
+- [`adr/`](adr/): decisões arquiteturais confirmadas no código.
+
+Agentes devem começar por `AGENTS.md` e consultar apenas os guias relevantes à tarefa.
+
 ## Início rápido
 
 ```bash

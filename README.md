@@ -1,6 +1,6 @@
 # dbjao
 
-Jogo multiplayer 2D feito em Godot 4.7.1 com C#/.NET 10, servidor dedicado
+Jogo multiplayer 2D feito em Godot 4.7.2 com C#/.NET 10, servidor dedicado
 autoritativo, API ASP.NET Core e PostgreSQL.
 
 ## Documentação

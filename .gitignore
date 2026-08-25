@@ -1,6 +1,15 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+/build/
+/exported/
 
 # JetBrains Rider / IntelliJ
 .idea/
+
+# .NET
+bin/
+obj/
+
+# Configuração local e secrets (mantenha .env.example versionado)
+.env
