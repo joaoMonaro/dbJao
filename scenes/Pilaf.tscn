@@ -1,44 +1,50 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scripts/Pilaf.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/frame/pilaf/idle/idle_front.png" id="2_texture"]
 [ext_resource type="Texture2D" path="res://assets/sheets/pilaf/attack/attack.png" id="3_attack"]
 [ext_resource type="Script" path="res://scripts/Combat/HealthComponent.cs" id="4_health"]
 [ext_resource type="Script" path="res://scripts/Network/NetworkInterpolation2D.cs" id="5_interpolation"]
+[ext_resource type="Texture2D" path="res://assets/sheets/pilaf/walk/walk.png" id="6_walk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_1"]
 atlas = ExtResource("3_attack")
-region = Rect2(0, 0, 89, 401)
+region = Rect2(0, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_2"]
 atlas = ExtResource("3_attack")
-region = Rect2(89, 0, 89, 401)
+region = Rect2(192, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_3"]
 atlas = ExtResource("3_attack")
-region = Rect2(178, 0, 89, 401)
+region = Rect2(384, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_4"]
 atlas = ExtResource("3_attack")
-region = Rect2(280, 0, 89, 401)
+region = Rect2(576, 0, 192, 192)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_5"]
-atlas = ExtResource("3_attack")
-region = Rect2(400, 0, 75, 401)
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_walk_1"]
+atlas = ExtResource("6_walk")
+region = Rect2(0, 0, 192, 192)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_6"]
-atlas = ExtResource("3_attack")
-region = Rect2(460, 0, 89, 401)
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_walk_2"]
+atlas = ExtResource("6_walk")
+region = Rect2(192, 0, 192, 192)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_attack_7"]
-atlas = ExtResource("3_attack")
-region = Rect2(534, 0, 89, 401)
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_walk_3"]
+atlas = ExtResource("6_walk")
+region = Rect2(384, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pilaf_walk_4"]
+atlas = ExtResource("6_walk")
+region = Rect2(576, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_pilaf"]
@@ -55,15 +61,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_pilaf_attack_4")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pilaf_attack_5")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pilaf_attack_6")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pilaf_attack_7")
 }],
 "loop": 0,
 "name": &"attack",
@@ -76,6 +73,23 @@ animations = [{
 "loop": 1,
 "name": &"idle",
 "speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_walk_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_walk_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_walk_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pilaf_walk_4")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_pilaf"]

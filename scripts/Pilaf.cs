@@ -3,12 +3,9 @@ using System.Collections.Generic;
 
 public partial class Pilaf : NpcBase
 {
-    private static readonly Vector2 NormalVisualScale = Vector2.One;
-    private static readonly Vector2 AttackVisualScale = new(0.5f, 0.5f);
-    private static readonly Vector2 NormalVisualOffset = Vector2.Zero;
-    private static readonly Vector2 AttackVisualOffset = new(0.0f, 91.0f);
     private static readonly StringName AttackAnimation = new("attack");
     private static readonly StringName IdleAnimation = new("idle");
+    private static readonly StringName WalkAnimation = new("walk");
 
     [Export] public StringName TargetGroup { get; set; } = new("player");
     [Export] public int ContactDamage { get; set; } = 10;
@@ -255,17 +252,15 @@ public partial class Pilaf : NpcBase
 
         if (IsAttacking)
         {
-            AnimatedSprite.Scale = AttackVisualScale;
-            AnimatedSprite.Position = AttackVisualOffset;
             if (AnimatedSprite.Animation != AttackAnimation || !AnimatedSprite.IsPlaying())
                 AnimatedSprite.Play(AttackAnimation);
             return;
         }
 
-        AnimatedSprite.Scale = NormalVisualScale;
-        AnimatedSprite.Position = NormalVisualOffset;
-        if (AnimatedSprite.Animation != IdleAnimation)
-            AnimatedSprite.Play(IdleAnimation);
+        StringName movementAnimation =
+            AiState == MovingAiState ? WalkAnimation : IdleAnimation;
+        if (AnimatedSprite.Animation != movementAnimation || !AnimatedSprite.IsPlaying())
+            AnimatedSprite.Play(movementAnimation);
     }
 
     private void OnAnimationFinished()
