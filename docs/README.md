@@ -27,6 +27,10 @@ um projeto separado e não executa física, IA, movimento ou combate.
 11. [Configurar Rider e editor Godot](11-rider-godot.md)
 12. [Solução de problemas](12-troubleshooting.md)
 
+### Arte
+
+- [Padrões visuais de personagens](14-padroes-de-personagens.md)
+
 ## Harness para agentes
 
 - `AGENTS.md`: regras operacionais e critérios de conclusão;
