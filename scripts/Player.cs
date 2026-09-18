@@ -20,10 +20,9 @@ public partial class Player : CharacterBody2D, IDamageable
     private const float MinimumFacingDot = 0.15f;
     private const ulong RejectionLogIntervalMsec = 1000;
 
-    private static readonly Vector2 NormalVisualScale = Vector2.One;
-    private static readonly Vector2 AttackVisualScale = new(0.5f, 0.5f);
-    private static readonly Vector2 NormalVisualOffset = Vector2.Zero;
-    private static readonly Vector2 AttackVisualOffset = new(0.0f, 9.0f);
+    // Preserve the existing movement limits independently of transparent sprite padding.
+    private static readonly Rect2 MovementViewportBounds = new(-64, -69, 128, 138);
+    private static readonly Rect2 AttackViewportBounds = new(-64, -62, 128, 142);
     private static readonly StringName IdleAnimation = new("idle");
     private static readonly StringName WalkAnimation = new("walk");
     private static readonly StringName AttackAnimation = new("attack");
@@ -593,14 +592,11 @@ public partial class Player : CharacterBody2D, IDamageable
         if (IsAttacking)
         {
             _currentState = PlayerState.Attack;
-            _animatedSprite.Scale = AttackVisualScale;
-            _animatedSprite.Position = AttackVisualOffset;
             if (_animatedSprite.Animation != AttackAnimation || !_animatedSprite.IsPlaying())
                 _animatedSprite.Play(AttackAnimation);
             return;
         }
 
-        ResetAttackPresentation();
         UpdateMovementPresentation(Velocity);
     }
 
@@ -652,17 +648,7 @@ public partial class Player : CharacterBody2D, IDamageable
         if (_animatedSprite is null || _animatedSprite.Animation != AttackAnimation || IsAttacking)
             return;
 
-        ResetAttackPresentation();
         UpdateMovementPresentation(Velocity);
-    }
-
-    private void ResetAttackPresentation()
-    {
-        if (_animatedSprite is null)
-            return;
-
-        _animatedSprite.Scale = NormalVisualScale;
-        _animatedSprite.Position = NormalVisualOffset;
     }
 
     private void ClampToViewport()
@@ -674,17 +660,9 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
         }
 
-        Texture2D? currentTexture = _animatedSprite.SpriteFrames.GetFrameTexture(
-            _animatedSprite.Animation,
-            _animatedSprite.Frame
-        );
-        if (currentTexture is null)
-            return;
-
-        Vector2 halfSpriteSize = currentTexture.GetSize() * _animatedSprite.Scale.Abs() / 2.0f;
-        Vector2 visualOffset = _animatedSprite.Position;
-        Vector2 minimumPosition = viewportRect.Position + halfSpriteSize - visualOffset;
-        Vector2 maximumPosition = viewportRect.End - halfSpriteSize - visualOffset;
+        Rect2 bounds = IsAttacking ? AttackViewportBounds : MovementViewportBounds;
+        Vector2 minimumPosition = viewportRect.Position - bounds.Position;
+        Vector2 maximumPosition = viewportRect.End - bounds.End;
         GlobalPosition = GlobalPosition.Clamp(minimumPosition, maximumPosition);
     }
 }

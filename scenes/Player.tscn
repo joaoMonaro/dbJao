@@ -9,62 +9,57 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_1"]
 atlas = ExtResource("4_attack")
-region = Rect2(0, 408, 256, 284)
+region = Rect2(0, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_2"]
 atlas = ExtResource("4_attack")
-region = Rect2(256, 408, 256, 284)
+region = Rect2(192, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_3"]
 atlas = ExtResource("4_attack")
-region = Rect2(512, 408, 256, 284)
+region = Rect2(384, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_4"]
 atlas = ExtResource("4_attack")
-region = Rect2(768, 408, 256, 284)
+region = Rect2(576, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_5"]
 atlas = ExtResource("4_attack")
-region = Rect2(1024, 408, 256, 284)
+region = Rect2(768, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_attack_6"]
 atlas = ExtResource("4_attack")
-region = Rect2(1280, 408, 256, 284)
+region = Rect2(960, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_idle"]
 atlas = ExtResource("2_idle")
-region = Rect2(0, 0, 67, 138)
-margin = Rect2(31, 0, 61, 0)
+region = Rect2(0, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_1"]
 atlas = ExtResource("3_walk")
-region = Rect2(128, 0, 128, 136)
-margin = Rect2(0, 2, 0, 2)
+region = Rect2(0, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_2"]
 atlas = ExtResource("3_walk")
-region = Rect2(256, 0, 128, 136)
-margin = Rect2(0, 2, 0, 2)
+region = Rect2(192, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_3"]
 atlas = ExtResource("3_walk")
-region = Rect2(384, 0, 128, 136)
-margin = Rect2(0, 2, 0, 2)
+region = Rect2(384, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_4"]
 atlas = ExtResource("3_walk")
-region = Rect2(512, 0, 122, 136)
-margin = Rect2(0, 2, 6, 2)
+region = Rect2(576, 0, 192, 192)
 filter_clip = true
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_player"]
