@@ -2,6 +2,11 @@ using Godot;
 
 public partial class Sidra : NpcBase
 {
+    private static readonly StringName IdleAnimation = new("idle");
+    private static readonly StringName WalkAnimation = new("walk");
+    private static readonly StringName AttackAnimation = new("attack");
+    private static readonly Vector2 PreviousSpriteHalfExtent = new(41.0f, 75.5f);
+
     [Export] public float MinDirectionTime { get; set; } = 1.5f;
     [Export] public float MaxDirectionTime { get; set; } = 4.0f;
 
@@ -25,6 +30,7 @@ public partial class Sidra : NpcBase
     public override void _Ready()
     {
         base._Ready();
+        UpdateAnimation();
 
         if (!CanRunServerAi())
             return;
@@ -39,6 +45,7 @@ public partial class Sidra : NpcBase
         if (!CanRunServerAi())
         {
             UpdateClientPresentation();
+            UpdateAnimation();
             return;
         }
 
@@ -53,7 +60,7 @@ public partial class Sidra : NpcBase
         MoveAndSlide();
 
         Vector2 avoidanceDirection = GetCollisionAvoidanceDirection();
-        avoidanceDirection += KeepInsideViewport();
+        avoidanceDirection += KeepInsideViewport(PreviousSpriteHalfExtent);
 
         if (avoidanceDirection != Vector2.Zero)
             ChooseNewDirection(avoidanceDirection.Normalized());
@@ -61,6 +68,7 @@ public partial class Sidra : NpcBase
             ChooseNewDirection();
 
         UpdateServerMovementState(MovementDirection);
+        UpdateAnimation();
     }
 
     protected override void OnRespawned()
@@ -70,6 +78,22 @@ public partial class Sidra : NpcBase
 
         ChooseNewDirection();
         UpdateServerMovementState(MovementDirection);
+        UpdateAnimation();
+    }
+
+    private void UpdateAnimation()
+    {
+        if (AnimatedSprite is null || IsDead || IsRespawning)
+            return;
+
+        StringName animation = IsAttacking
+            ? AttackAnimation
+            : AiState == MovingAiState ? WalkAnimation : IdleAnimation;
+
+        if (AnimatedSprite.Animation != animation)
+            AnimatedSprite.Play(animation);
+        else if (animation != AttackAnimation && !AnimatedSprite.IsPlaying())
+            AnimatedSprite.Play(animation);
     }
 
     private Vector2 GetCollisionAvoidanceDirection()

@@ -1,0 +1,12 @@
+Use case: style-transfer. Asset: six-frame Sidra NPC attack gesture pixel-art animation sheet for Godot.
+Input1 = newly generated Sidra frontal identity and costume reference. Input2 = newly generated Sidra four-pose right-facing walk sheet to preserve EXACT same face, proportions, colors and apparel. Input3 = Goku attack sheet ONLY for 3-columns x 2-rows layout, crisp pixel density, proportions and transition pacing; DO NOT draw Goku or copy his clothing.
+Produce EXACTLY 6 full-body Sidra poses in a regular sheet of 3 columns by 2 rows, same three-quarter view facing RIGHT throughout. Read frames top-left to bottom-right:
+1 calm guarded stance, feet planted;
+2 anticipation, forward arm bends back, torso turns slightly;
+3 extend right-facing near arm halfway with open palm;
+4 right-facing arm fully extended at chest height, flat open palm directed right, stern spellcasting gesture with NO particle, NO energy ball, NO aura;
+5 arm retracting halfway;
+6 return to guard stance of frame1.
+No physical hits shown, only the NPC body and costume. No new weapon or objects.
+LOCK character: green-blue narrow bald head with tiny golden top, pointed ears, stern golden eyes, angular dark red shoulder cloak, white arm sleeves/wrapping, dark chest with gold edging and orange jewel, gold cuffs, voluminous purple trousers, central black apron with orange WHITE orange stacked diamonds, dark shoes edged gold. Cloth and hanging apron may sway subtly but keep same design in every frame. TWO attached arms, TWO legs and boots in every frame. Character body, head and chest maintain the SAME scale from frame to frame; arm extends into the empty right margin, do not shrink entire sprite. Full body visible no clipping.
+Logical canvas EACH cell 192x192 pixels, normal standing body height around128 pixels, hip anchor local x96, both feet support line y159. Logical sheet 576x384. Strict manually pixelled finish, small consistent palette, dark crisp 1px outlines, pixel color clusters and contrast matching references. TRUE transparent background. NO glow, no beam, no aura, no spark, no floating elements, no floor, no shadow, no scenery, no labels, text, borders or grids. No blur, gradients, realism, painterly shading, anti-aliasing. If generated at higher raster, uniformly enlarge logical grid without additional subpixel details.

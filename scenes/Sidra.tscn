@@ -1,9 +1,117 @@
-[gd_scene load_steps=11 format=3 uid="uid://b0nrq5xl28kcp"]
+[gd_scene load_steps=25 format=3 uid="uid://b0nrq5xl28kcp"]
 
 [ext_resource type="Script" path="res://scripts/Sidra.cs" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dbr2kb1rd10tm" path="res://assets/frame/sidra/front_01.png" id="2_texture"]
+[ext_resource type="Texture2D" path="res://assets/frame/sidra/idle/idle_front.png" id="2_texture"]
 [ext_resource type="Script" path="res://scripts/Combat/HealthComponent.cs" id="3_health"]
 [ext_resource type="Script" path="res://scripts/Network/NetworkInterpolation2D.cs" id="4_interpolation"]
+[ext_resource type="Texture2D" path="res://assets/sheets/sidra/walk/walk.png" id="5_walk"]
+[ext_resource type="Texture2D" path="res://assets/sheets/sidra/attack/attack.png" id="6_attack"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_idle"]
+atlas = ExtResource("2_texture")
+region = Rect2(0, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_walk_1"]
+atlas = ExtResource("5_walk")
+region = Rect2(0, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_walk_2"]
+atlas = ExtResource("5_walk")
+region = Rect2(192, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_walk_3"]
+atlas = ExtResource("5_walk")
+region = Rect2(384, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_walk_4"]
+atlas = ExtResource("5_walk")
+region = Rect2(576, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_1"]
+atlas = ExtResource("6_attack")
+region = Rect2(0, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_2"]
+atlas = ExtResource("6_attack")
+region = Rect2(192, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_3"]
+atlas = ExtResource("6_attack")
+region = Rect2(384, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_4"]
+atlas = ExtResource("6_attack")
+region = Rect2(576, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_5"]
+atlas = ExtResource("6_attack")
+region = Rect2(768, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sidra_attack_6"]
+atlas = ExtResource("6_attack")
+region = Rect2(960, 0, 192, 192)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sidra"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_attack_6")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_idle")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_walk_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_walk_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_walk_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sidra_walk_4")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
+}]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sidra"]
 radius = 20.0
@@ -76,9 +184,11 @@ script = ExtResource("4_interpolation")
 
 [node name="VisualRoot" type="Node2D" parent="."]
 
-[node name="Sprite2D" type="Sprite2D" parent="VisualRoot" unique_id=1920353044]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="VisualRoot" unique_id=1920353044]
 texture_filter = 1
-texture = ExtResource("2_texture")
+sprite_frames = SubResource("SpriteFrames_sidra")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2106920131]
 position = Vector2(0, 45)

@@ -171,12 +171,16 @@ public partial class NpcBase : CharacterBody2D, IDamageable
     {
     }
 
-    protected Vector2 KeepInsideViewport()
+    protected Vector2 KeepInsideViewport(Vector2? halfSpriteSizeOverride = null)
     {
         Rect2 viewportRect = GetViewportRect();
         Vector2 halfSpriteSize;
 
-        if (Sprite is not null)
+        if (halfSpriteSizeOverride is Vector2 configuredHalfSize)
+        {
+            halfSpriteSize = configuredHalfSize;
+        }
+        else if (Sprite is not null)
         {
             halfSpriteSize = Sprite.GetRect().Size * Sprite.Scale.Abs() / 2.0f;
         }
