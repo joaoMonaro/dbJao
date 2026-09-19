@@ -16,6 +16,7 @@ dotnet build backend/GameBackend.sln
 dotnet test backend/GameBackend.sln
 importação de assets e cena principal em Godot headless, quando disponível
 teste headless da integração Sidra → killer → progressão, quando Godot está disponível
+teste headless do feedback visual de dano, quando Godot está disponível
 teste headless dos comandos de debug de XP, quando Godot está disponível
 teste headless do HUD compacto e modal de perfil, quando Godot está disponível
 git diff --check e git diff --cached --check
@@ -114,7 +115,14 @@ O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 - dano repetido durante a mesma morte não duplica a recompensa;
 - a recompensa pode causar Level Up e Reset;
 - XP excedente é preservado;
-- Poder de Luta só aumenta pelos Levels realmente concluídos.
+- Poder de Luta só aumenta pelos Levels realmente concluídos;
+- golpes aceitos geram feedback de dano causado/recebido para o jogador correto;
+- golpes rejeitados contra NPC morto não geram feedback visual duplicado;
+- o jogador não possui barra de vida no mundo e NPCs mantêm a barra fina sob o sprite.
+
+O teste `tests/godot/FloatingDamageNumberTest.tscn` valida o valor exibido, branco para
+dano causado, vermelho para dano recebido, movimento ascendente e remoção ao final do
+fade.
 
 O teste `tests/godot/DebugXpCommandsIntegrationTest.tscn` valida `/addxp`, entradas
 inválidas, bloqueio quando os comandos estão desabilitados, XP exato do

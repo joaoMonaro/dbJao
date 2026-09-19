@@ -182,6 +182,13 @@ recebe dano, Attack ou Defense: ele continua sendo somente a intenção de ataca
 servidor calcula o valor após validar o remetente e o alvo. O ataque básico usa
 multiplicador `1.0`.
 
+Quando o servidor aceita um golpe, ele envia ao cliente envolvido somente o feedback
+visual correspondente. O atacante recebe o valor e a posição do dano causado, exibido
+em branco; a vítima recebe o dano sofrido, exibido em vermelho. O cliente não informa
+nem recalcula o dano. `FloatingDamageNumber.tscn` move o texto para cima, aplica fade e
+remove o node ao fim da animação. Golpes rejeitados e dano repetido em alvos mortos não
+geram números.
+
 NPCs possuem Attack e Defense configuráveis diretamente em `NpcBase`, sem usar
 BattlePower ou `CharacterDefinition`. O Sidra começa com Defense 10. O Pilaf começa
 com Attack 17 e Defense 10; seu contato também usa `PhysicalDamageCalculator` contra
@@ -226,6 +233,8 @@ Instruções de uso, respostas, validações e solução de problemas estão no 
 `CombatStatsCalculator` calcula os stats do jogador, `PhysicalDamageCalculator`
 calcula somente o dano, e `HealthComponent` aplica esse dano. Morte e recompensa
 continuam fora dos calculadores. `HealthComponent` é reutilizado por jogadores e NPCs.
+O jogador consulta sua vida pelo HUD e não possui barra sobre o sprite. NPCs mantêm
+uma barra fina sob o sprite, com borda e cantos arredondados.
 
 ## Interpolação
 

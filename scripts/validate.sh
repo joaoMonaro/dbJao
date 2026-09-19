@@ -111,6 +111,28 @@ if GODOT_EXECUTABLE="$(find_godot)"; then
     fi
 
     : > "${GODOT_LOG}"
+    echo "[GODOT] Teste do feedback visual de dano"
+    if ! "${GODOT_EXECUTABLE}" \
+      --headless \
+      --path "${PROJECT_DIR}" \
+      --quit-after 180 \
+      res://tests/godot/FloatingDamageNumberTest.tscn \
+      2>&1 | tee "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do feedback visual de dano encerrou com código de erro." >&2
+      exit 1
+    fi
+
+    if rg -n 'ERROR:|SCRIPT ERROR:|Unhandled exception|Failed to load' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do feedback visual de dano registrou erro grave." >&2
+      exit 1
+    fi
+
+    if ! rg -F '[PASS] Feedback visual de dano validado.' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do feedback visual de dano não confirmou o fluxo esperado." >&2
+      exit 1
+    fi
+
+    : > "${GODOT_LOG}"
     echo "[GODOT] Teste dos comandos de debug de XP"
     if ! "${GODOT_EXECUTABLE}" \
       --headless \

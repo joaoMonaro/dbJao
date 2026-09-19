@@ -19,6 +19,11 @@ public partial class Player : CharacterBody2D, IDamageable
         long defense,
         long kiAttack);
     [Signal] public delegate void DebugCommandResultEventHandler(string message, bool success);
+    [Signal]
+    public delegate void DamageFeedbackRequestedEventHandler(
+        long amount,
+        Vector2 worldPosition,
+        bool isReceivedDamage);
 
     private enum PlayerState
     {
@@ -33,6 +38,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private const ulong RejectionLogIntervalMsec = 1000;
     private const ulong TravelCooldownMsec = 500;
     private const ulong DebugCommandCooldownMsec = 250;
+    private static readonly Vector2 DamageNumberOffset = new(0.0f, -96.0f);
 
     // Preserve the existing movement limits independently of transparent sprite padding.
     private static readonly Rect2 MovementViewportBounds = new(-64, -69, 128, 138);
@@ -125,6 +131,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public int MaxHealth { get; set; } = 100;
     [Export] public int MaxMana { get; set; } = 100;
     [Export] public float RespawnDelay { get; set; } = 3.0f;
+    [Export] public PackedScene? FloatingDamageNumberScene { get; set; }
 
     [Export]
     public Vector2 FacingDirection
@@ -175,7 +182,6 @@ public partial class Player : CharacterBody2D, IDamageable
     private CollisionShape2D? _bodyShape;
     private Area2D? _attackArea;
     private CollisionShape2D? _attackShape;
-    private ProgressBar? _healthBar;
     private HealthComponent? _health;
     private NetworkInterpolation2D? _interpolation;
     private Camera2D? _localCamera;
@@ -214,7 +220,6 @@ public partial class Player : CharacterBody2D, IDamageable
         _bodyShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
         _attackArea = GetNodeOrNull<Area2D>("AttackArea");
         _attackShape = GetNodeOrNull<CollisionShape2D>("AttackArea/CollisionShape2D");
-        _healthBar = GetNodeOrNull<ProgressBar>("VisualRoot/HealthBar");
         _health = GetNodeOrNull<HealthComponent>("Health");
         _interpolation = GetNodeOrNull<NetworkInterpolation2D>("NetworkInterpolation");
 
@@ -305,7 +310,14 @@ public partial class Player : CharacterBody2D, IDamageable
         if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer() || _health is null)
             return false;
 
-        return _health.ApplyDamage(damageInfo);
+        if (!_health.ApplyDamage(damageInfo))
+            return false;
+
+        SendDamageFeedback(
+            damageInfo.Amount,
+            GlobalPosition + DamageNumberOffset,
+            isReceivedDamage: true);
+        return true;
     }
 
     public void ApplyAuthenticatedInitialState(AuthenticatedCharacterData data)
@@ -851,7 +863,98 @@ public partial class Player : CharacterBody2D, IDamageable
             damage,
             GlobalPosition,
             OwnerPeerId);
-        return target.ApplyServerDamage(damageInfo);
+        if (!target.ApplyServerDamage(damageInfo))
+            return false;
+
+        SendDamageFeedback(
+            damage,
+            target.GlobalPosition + DamageNumberOffset,
+            isReceivedDamage: false);
+        return true;
+    }
+
+    private void SendDamageFeedback(long amount, Vector2 worldPosition, bool isReceivedDamage)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer()
+            || amount <= 0 || !IsFinite(worldPosition))
+        {
+            return;
+        }
+
+        EmitSignal(
+            SignalName.DamageFeedbackRequested,
+            amount,
+            worldPosition,
+            isReceivedDamage);
+
+        if (!IsPeerConnected(OwnerPeerId))
+            return;
+
+        RpcId(
+            OwnerPeerId,
+            MethodName.ReceiveDamageFeedback,
+            amount,
+            worldPosition,
+            isReceivedDamage);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.Authority,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Reliable
+    )]
+    private void ReceiveDamageFeedback(
+        long amount,
+        Vector2 worldPosition,
+        bool isReceivedDamage)
+    {
+        if (NetworkManager.RunningAsServer
+            || OwnerPeerId != Multiplayer.GetUniqueId()
+            || amount <= 0
+            || !IsFinite(worldPosition))
+        {
+            return;
+        }
+
+        ShowLocalDamageNumber(amount, worldPosition, isReceivedDamage);
+    }
+
+    internal bool ShowLocalDamageNumber(
+        long amount,
+        Vector2 worldPosition,
+        bool isReceivedDamage)
+    {
+        if (amount <= 0 || !IsFinite(worldPosition) || FloatingDamageNumberScene is null)
+            return false;
+
+        Node? presentationRoot = GetTree().CurrentScene;
+        if (presentationRoot is null)
+            return false;
+
+        FloatingDamageNumber number = FloatingDamageNumberScene.Instantiate<FloatingDamageNumber>();
+        presentationRoot.AddChild(number);
+        number.GlobalPosition = worldPosition;
+        number.ShowDamage(amount, isReceivedDamage);
+        return true;
+    }
+
+    private bool IsPeerConnected(int peerId)
+    {
+        if (peerId <= NetworkConstants.ServerPeerId || !Multiplayer.HasMultiplayerPeer())
+            return false;
+
+        foreach (int connectedPeerId in Multiplayer.GetPeers())
+        {
+            if (connectedPeerId == peerId)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsFinite(Vector2 value)
+    {
+        return float.IsFinite(value.X) && float.IsFinite(value.Y);
     }
 
     private void LogAttackRejection(int senderId, string reason)
@@ -866,12 +969,6 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private void OnComponentHealthChanged(int current, int maximum)
     {
-        if (_healthBar is not null)
-        {
-            _healthBar.MaxValue = maximum;
-            _healthBar.Value = current;
-        }
-
         EmitSignal(SignalName.HealthChanged, current, maximum);
     }
 

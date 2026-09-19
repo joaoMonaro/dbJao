@@ -8,6 +8,12 @@ public partial class SidraXpIntegrationTest : NetworkManager
     private Player _secondPlayer = null!;
     private Sidra _sidra = null!;
     private Pilaf _pilaf = null!;
+    private int _firstPlayerDamageFeedbackCount;
+    private long _firstPlayerLastDamageFeedback;
+    private bool _firstPlayerLastDamageWasReceived;
+    private int _secondPlayerDamageFeedbackCount;
+    private long _secondPlayerLastDamageFeedback;
+    private bool _secondPlayerLastDamageWasReceived;
 
     public override void _Ready()
     {
@@ -19,6 +25,8 @@ public partial class SidraXpIntegrationTest : NetworkManager
         PackedScene playerScene = GD.Load<PackedScene>("res://scenes/Player.tscn");
         _firstPlayer = CreatePlayer(playerScene, players, 2, "character-a");
         _secondPlayer = CreatePlayer(playerScene, players, 3, "character-b");
+        _firstPlayer.DamageFeedbackRequested += OnFirstPlayerDamageFeedbackRequested;
+        _secondPlayer.DamageFeedbackRequested += OnSecondPlayerDamageFeedbackRequested;
 
         _sidra = GD.Load<PackedScene>("res://scenes/Sidra.tscn").Instantiate<Sidra>();
         _sidra.Name = "Sidra";
@@ -38,6 +46,11 @@ public partial class SidraXpIntegrationTest : NetworkManager
         {
             Assert(RunningAsServer && Multiplayer.IsServer(),
                 "O teste precisa executar como servidor.");
+            Assert(!_firstPlayer.HasNode("VisualRoot/HealthBar")
+                && !_secondPlayer.HasNode("VisualRoot/HealthBar"),
+                "A barra de vida não deve permanecer sobre o personagem jogável.");
+            AssertNpcHealthBarPresentation(_sidra, "Sidra");
+            AssertNpcHealthBarPresentation(_pilaf, "Pilaf");
             Assert(_sidra.Defense == 10,
                 "Defense inicial do Sidra não corresponde à configuração da cena.");
             MethodInfo? attackRequest = typeof(Player).GetMethod(
@@ -59,6 +72,10 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 && npcDamage == expectedNpcDamage
                 && _firstPlayer.CurrentHealth == playerHealthBeforeNpcAttack - npcDamage,
                 "Pilaf Attack vs Player Defense não utilizou o calculador físico.");
+            Assert(_firstPlayerDamageFeedbackCount == 1
+                && _firstPlayerLastDamageFeedback == npcDamage
+                && _firstPlayerLastDamageWasReceived,
+                "Dano recebido não gerou feedback vermelho para a vítima.");
             Assert(_firstPlayer.Health.Heal(checked((int)npcDamage)),
                 "Não foi possível restaurar a vida após validar o ataque do Pilaf.");
 
@@ -72,6 +89,10 @@ public partial class SidraXpIntegrationTest : NetworkManager
             Assert(firstDamage == expectedFirstDamage
                 && _sidra.Health.CurrentHealth == healthBeforeFirstHit - firstDamage,
                 "Player Attack vs Sidra Defense não utilizou o calculador físico.");
+            Assert(_firstPlayerDamageFeedbackCount == 2
+                && _firstPlayerLastDamageFeedback == firstDamage
+                && !_firstPlayerLastDamageWasReceived,
+                "Dano causado não gerou feedback branco para o atacante.");
             Assert(!_sidra.IsDead, "Sidra morreu antes do golpe fatal.");
             Assert(_firstPlayer.TotalXp == 0 && _secondPlayer.TotalXp == 0,
                 "Sidra concedeu XP enquanto ainda estava vivo.");
@@ -86,6 +107,10 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 && killingDamage == expectedFirstDamage,
                 "Golpe físico fatal deveria ser calculado e aceito.");
             Assert(_sidra.IsDead, "Servidor não confirmou a morte do Sidra.");
+            Assert(_secondPlayerDamageFeedbackCount == 1
+                && _secondPlayerLastDamageFeedback == killingDamage
+                && !_secondPlayerLastDamageWasReceived,
+                "Golpe fatal não gerou feedback de dano para o atacante.");
             Assert(_firstPlayer.TotalXp == 0, "XP foi concedido ao jogador incorreto.");
             long grantedXp = _secondPlayer.TotalXp;
             Assert(grantedXp > 0, "Golpe fatal não concedeu XP.");
@@ -95,6 +120,8 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 "XP do Sidra alterou incorretamente o Poder de Luta.");
             Assert(!_secondPlayer.TryApplyServerPhysicalAttack(_sidra, 1.0m, out _),
                 "Dano repetido em Sidra morto deveria ser rejeitado.");
+            Assert(_secondPlayerDamageFeedbackCount == 1,
+                "Dano rejeitado gerou feedback visual duplicado.");
             Assert(_secondPlayer.TotalXp == grantedXp,
                 "Uma morte concedeu XP mais de uma vez.");
 
@@ -169,6 +196,46 @@ public partial class SidraXpIntegrationTest : NetworkManager
         player.CharacterId = characterId;
         parent.AddChild(player);
         return player;
+    }
+
+    private static void AssertNpcHealthBarPresentation(NpcBase npc, string npcName)
+    {
+        ProgressBar healthBar = npc.GetNode<ProgressBar>("VisualRoot/HealthBar");
+        StyleBoxFlat? background = healthBar.GetThemeStylebox("background") as StyleBoxFlat;
+        StyleBoxFlat? fill = healthBar.GetThemeStylebox("fill") as StyleBoxFlat;
+
+        Assert(healthBar.Position.Y > 0.0f && healthBar.Size.Y <= 6.0f,
+            $"A barra de vida de {npcName} deve ficar abaixo do sprite e ser fina.");
+        Assert(background is not null && fill is not null
+            && background.BorderWidthLeft == 1
+            && fill.BorderWidthLeft == 1
+            && background.CornerRadiusTopLeft > 0
+            && fill.CornerRadiusTopLeft > 0,
+            $"A barra de vida de {npcName} deve possuir borda e pontas arredondadas.");
+    }
+
+    private void OnFirstPlayerDamageFeedbackRequested(
+        long amount,
+        Vector2 worldPosition,
+        bool isReceivedDamage)
+    {
+        Assert(float.IsFinite(worldPosition.X) && float.IsFinite(worldPosition.Y),
+            "Posição do feedback de dano do primeiro jogador é inválida.");
+        _firstPlayerDamageFeedbackCount++;
+        _firstPlayerLastDamageFeedback = amount;
+        _firstPlayerLastDamageWasReceived = isReceivedDamage;
+    }
+
+    private void OnSecondPlayerDamageFeedbackRequested(
+        long amount,
+        Vector2 worldPosition,
+        bool isReceivedDamage)
+    {
+        Assert(float.IsFinite(worldPosition.X) && float.IsFinite(worldPosition.Y),
+            "Posição do feedback de dano do segundo jogador é inválida.");
+        _secondPlayerDamageFeedbackCount++;
+        _secondPlayerLastDamageFeedback = amount;
+        _secondPlayerLastDamageWasReceived = isReceivedDamage;
     }
 
     private bool KillSidraWithPhysicalAttack(Player player)
