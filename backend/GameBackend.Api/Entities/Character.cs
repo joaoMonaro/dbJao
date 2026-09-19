@@ -8,6 +8,7 @@ public sealed class Character : IAuditableEntity
     public int Level { get; set; }
     public long Reset { get; set; }
     public long TotalXp { get; set; }
+    public long BaseBattlePower { get; set; } = 10;
     public int CurrentHealth { get; set; } = 100;
     public int MaxHealth { get; set; } = 100;
     public string MapId { get; set; } = "kame_house";

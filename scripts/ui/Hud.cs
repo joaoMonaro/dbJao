@@ -9,6 +9,7 @@ public partial class Hud : CanvasLayer
     private ProgressBar _experienceBar = null!;
     private Label _experienceLabel = null!;
     private Label _progressionLabel = null!;
+    private Label _battlePowerLabel = null!;
     private Label _healthLabel = null!;
     private TextureButton _mapButton = null!;
     private Control _mapModal = null!;
@@ -36,6 +37,9 @@ public partial class Hud : CanvasLayer
         );
         _progressionLabel = GetNode<Label>(
             "MarginContainer/PanelContainer/HBoxContainer/Bars/ProgressionLabel"
+        );
+        _battlePowerLabel = GetNode<Label>(
+            "MarginContainer/PanelContainer/HBoxContainer/Bars/BattlePowerLabel"
         );
         _healthLabel = GetNode<Label>(
             "MarginContainer/PanelContainer/HBoxContainer/Bars/HealthBar/Label"
@@ -119,6 +123,7 @@ public partial class Hud : CanvasLayer
             player.ManaChanged += OnManaChanged;
             player.ExperienceChanged += OnExperienceChanged;
             player.ProgressionChanged += OnProgressionChanged;
+            player.BattlePowerChanged += OnBattlePowerChanged;
             player.DebugCommandResult += OnDebugCommandResult;
             player.TreeExiting += OnBoundPlayerExiting;
 
@@ -126,6 +131,7 @@ public partial class Hud : CanvasLayer
             OnManaChanged(player.CurrentMana, player.MaxMana);
             OnExperienceChanged(player.CurrentExperience, player.MaxExperience);
             OnProgressionChanged(player.Level, player.Reset);
+            OnBattlePowerChanged(player.BaseBattlePower);
             return;
         }
     }
@@ -147,6 +153,7 @@ public partial class Hud : CanvasLayer
         _boundPlayer.ManaChanged -= OnManaChanged;
         _boundPlayer.ExperienceChanged -= OnExperienceChanged;
         _boundPlayer.ProgressionChanged -= OnProgressionChanged;
+        _boundPlayer.BattlePowerChanged -= OnBattlePowerChanged;
         _boundPlayer.DebugCommandResult -= OnDebugCommandResult;
         _boundPlayer.TreeExiting -= OnBoundPlayerExiting;
         _boundPlayer = null;
@@ -175,6 +182,11 @@ public partial class Hud : CanvasLayer
     private void OnProgressionChanged(int level, long reset)
     {
         _progressionLabel.Text = $"Nível {level} | Reset {reset}";
+    }
+
+    private void OnBattlePowerChanged(long baseBattlePower)
+    {
+        _battlePowerLabel.Text = $"Poder de Luta: {baseBattlePower:N0}";
     }
 
     private void SubmitDebugCommand(string command)

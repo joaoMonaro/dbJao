@@ -11,6 +11,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Signal] public delegate void XpGainedEventHandler(long amount, long totalXp);
     [Signal] public delegate void LevelUpEventHandler(int level, long reset);
     [Signal] public delegate void ResetCompletedEventHandler(long reset);
+    [Signal] public delegate void BattlePowerChangedEventHandler(long baseBattlePower);
     [Signal] public delegate void DebugCommandResultEventHandler(string message, bool success);
 
     private enum PlayerState
@@ -35,6 +36,8 @@ public partial class Player : CharacterBody2D, IDamageable
     private static readonly StringName AttackAnimation = new("attack");
     private static readonly ExponentialXpCurve XpCurve = new(XpCurveSettings.Default);
     private static readonly CharacterProgression Progression = new(XpCurve);
+    private static readonly BattlePowerProgression BattlePowerProgression =
+        new(BattlePowerSettings.Default);
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
@@ -58,6 +61,19 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         get => _reset;
         set { _reset = value; RefreshProgressionPresentation(); }
+    }
+    [Export]
+    public long BaseBattlePower
+    {
+        get => _baseBattlePower;
+        set
+        {
+            if (_baseBattlePower == value)
+                return;
+
+            _baseBattlePower = value;
+            RefreshBattlePowerPresentation();
+        }
     }
     [Export]
     public string MapId
@@ -132,6 +148,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private long _totalXp;
     private int _level;
     private long _reset;
+    private long _baseBattlePower = BattlePowerSettings.Default.InitialBattlePower;
     private bool _progressionReady;
     private PlayerState _currentState = PlayerState.Idle;
     private Vector2 _facingDirection = Vector2.Right;
@@ -197,6 +214,7 @@ public partial class Player : CharacterBody2D, IDamageable
         _progressionReady = true;
         EmitSignal(SignalName.ManaChanged, CurrentMana, MaxMana);
         RefreshProgressionPresentation();
+        RefreshBattlePowerPresentation();
 
         bool isLocalPlayer =
             !NetworkManager.RunningAsServer && OwnerPeerId == Multiplayer.GetUniqueId();
@@ -273,6 +291,7 @@ public partial class Player : CharacterBody2D, IDamageable
         TotalXp = progression.State.TotalXp;
         Level = progression.State.Level;
         Reset = progression.State.Reset;
+        BaseBattlePower = data.BaseBattlePower;
         MapId = WorldMaps.TryGetBounds(data.MapId, out _)
             ? data.MapId : WorldMaps.KameHouse;
         MaxHealth = Mathf.Max(data.MaxHealth, 1);
@@ -303,6 +322,7 @@ public partial class Player : CharacterBody2D, IDamageable
             Level,
             Reset,
             TotalXp,
+            BaseBattlePower,
             MapId,
             GlobalPosition.X,
             GlobalPosition.Y);
@@ -323,13 +343,18 @@ public partial class Player : CharacterBody2D, IDamageable
             return false;
 
         ProgressionResult result;
+        long updatedBattlePower;
         try
         {
             result = Progression.AddXp(new(TotalXp, Level, Reset), amount);
+            updatedBattlePower = BattlePowerProgression.AddCompletedLevels(
+                BaseBattlePower,
+                result.Steps.Count);
         }
         catch (OverflowException)
         {
-            GD.PushWarning($"[XP] Concessão excederia o limite de TotalXp de {CharacterId}.");
+            GD.PushWarning(
+                $"[XP] Concessão excederia o limite numérico de progressão de {CharacterId}.");
             return false;
         }
         catch (ArgumentException exception)
@@ -344,6 +369,11 @@ public partial class Player : CharacterBody2D, IDamageable
         TotalXp = result.Snapshot.State.TotalXp;
         Level = result.Snapshot.State.Level;
         Reset = result.Snapshot.State.Reset;
+        if (result.Steps.Count > 0)
+        {
+            BaseBattlePower = updatedBattlePower;
+            EmitSignal(SignalName.BattlePowerChanged, BaseBattlePower);
+        }
         EmitSignal(SignalName.XpGained, amount, TotalXp);
         foreach (ProgressionStep step in result.Steps)
         {
@@ -365,6 +395,15 @@ public partial class Player : CharacterBody2D, IDamageable
         EmitSignal(SignalName.ExperienceChanged,
             snapshot.XpIntoLevel, snapshot.XpRequiredForNextLevel);
         EmitSignal(SignalName.ProgressionChanged, Level, Reset);
+    }
+
+    private void RefreshBattlePowerPresentation()
+    {
+        if (!_progressionReady || NetworkManager.RunningAsServer
+            || OwnerPeerId != Multiplayer.GetUniqueId())
+            return;
+
+        EmitSignal(SignalName.BattlePowerChanged, BaseBattlePower);
     }
 
     private void ProcessAuthoritativeTimers(float delta)

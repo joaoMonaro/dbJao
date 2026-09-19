@@ -49,7 +49,8 @@ ser exposto sem a chave e proteção de rede.
 
 ### Character
 
-- dono, nome, `TotalXp` histórico (`bigint`), `Level` (0 a 199) e `Reset` (`bigint`);
+- dono, nome, `TotalXp` histórico (`bigint`), `Level` (0 a 199), `Reset` (`bigint`)
+  e `BaseBattlePower` (`bigint`);
 - vida atual e máxima;
 - mapa e posição persistida;
 - datas de criação e atualização.
@@ -121,6 +122,12 @@ de versioná-la, principalmente constraints e migração de dados existentes.
 preserva seu valor e reconstrói `Level`/`Reset` com a curva inicial. O estado salvo
 pelo servidor inclui os três campos. O banco rejeita níveis fora de 0 a 199,
 Reset negativo e TotalXp negativo.
+
+`AddCharacterBattlePower` adiciona o Poder de Luta permanente com valor inicial 10.
+Para personagens existentes, a migration executa o backfill
+`10 + (((Reset * 200) + Level) * 100)` usando aritmética `numeric` do PostgreSQL e
+limita o resultado a `long.MaxValue`. O estado salvo pelo servidor não permite reduzir
+`BaseBattlePower`, e o banco rejeita valores abaixo de 10.
 
 ## Inspecionar PostgreSQL
 

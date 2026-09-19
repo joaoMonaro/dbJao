@@ -18,10 +18,11 @@ public sealed class CharacterStateServiceTests
         Guid userId = Guid.NewGuid();
         Guid characterId = Guid.NewGuid();
         SaveCharacterStateRequest request = new(
-            userId, 75, 12, 3, 1234567, "clean_path", 3000, 600);
+            userId, 75, 12, 3, 1234567, 3210, "clean_path", 3000, 600);
 
         Assert.True(await service.SaveAsync(characterId, request, CancellationToken.None));
-        Assert.Equal((characterId, userId, 75, 12, 3L, 1234567L, "clean_path", 3000f, 600f),
+        Assert.Equal((characterId, userId, 75, 12, 3L, 1234567L, 3210L,
+                "clean_path", 3000f, 600f),
             repository.Saved);
     }
 
@@ -36,7 +37,20 @@ public sealed class CharacterStateServiceTests
         CharacterStateService service = new(repository,
             NullLogger<CharacterStateService>.Instance);
         SaveCharacterStateRequest request = new(
-            Guid.NewGuid(), 100, level, reset, totalXp, "kame_house", 10, 20);
+            Guid.NewGuid(), 100, level, reset, totalXp, 10, "kame_house", 10, 20);
+
+        Assert.False(await service.SaveAsync(Guid.NewGuid(), request, CancellationToken.None));
+        Assert.Null(repository.Saved);
+    }
+
+    [Fact]
+    public async Task BattlePowerBelowInitialValueIsRejected()
+    {
+        RecordingRepository repository = new();
+        CharacterStateService service = new(repository,
+            NullLogger<CharacterStateService>.Instance);
+        SaveCharacterStateRequest request = new(
+            Guid.NewGuid(), 100, 0, 0, 0, 9, "kame_house", 10, 20);
 
         Assert.False(await service.SaveAsync(Guid.NewGuid(), request, CancellationToken.None));
         Assert.Null(repository.Saved);
@@ -44,14 +58,15 @@ public sealed class CharacterStateServiceTests
 
     private sealed class RecordingRepository : ICharacterRepository
     {
-        public (Guid, Guid, int, int, long, long, string, float, float)? Saved { get; private set; }
+        public (Guid, Guid, int, int, long, long, long, string, float, float)? Saved
+        { get; private set; }
 
         public Task<bool> UpdateStateAsync(Guid characterId, Guid userId, int currentHealth,
-            int level, long reset, long totalXp, string mapId, float positionX,
+            int level, long reset, long totalXp, long baseBattlePower, string mapId, float positionX,
             float positionY, CancellationToken cancellationToken)
         {
             Saved = (characterId, userId, currentHealth, level, reset, totalXp,
-                mapId, positionX, positionY);
+                baseBattlePower, mapId, positionX, positionY);
             return Task.FromResult(true);
         }
 

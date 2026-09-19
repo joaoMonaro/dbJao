@@ -1,8 +1,9 @@
 # Comandos de debug de XP
 
-Este guia descreve como testar `TotalXp`, `Level` e `Reset` sem editar código nem
-matar NPCs repetidamente. Os comandos usam a progressão real do personagem e só
-podem ser processados pelo servidor dedicado em ambiente de desenvolvimento.
+Este guia descreve como testar `TotalXp`, `Level`, `Reset` e `BaseBattlePower` sem
+editar código nem matar NPCs repetidamente. Os comandos usam a progressão real do
+personagem e só podem ser processados pelo servidor dedicado em ambiente de
+desenvolvimento.
 
 ## Disponibilidade
 
@@ -57,8 +58,9 @@ Concede a quantidade informada ao personagem conectado:
 ```
 
 O comando aceita valores entre `0` e `long.MaxValue`. A quantidade passa por
-`Player.AddXp`, que processa XP excedente, múltiplos Levels, transições de Reset e
-overflow. O comando não escreve diretamente em `TotalXp`, `Level` ou `Reset`.
+`Player.AddXp`, que processa XP excedente, múltiplos Levels, transições de Reset,
+Poder de Luta e overflow. O comando não escreve diretamente em `TotalXp`, `Level`,
+`Reset` ou `BaseBattlePower`.
 
 Exemplo de resposta:
 
@@ -67,6 +69,7 @@ Exemplo de resposta:
 Level: 0 -> 69
 Reset: 0 -> 0
 TotalXp: 25 -> 10025
+Poder de Luta: 10 -> 6910
 ```
 
 Comportamentos de validação:
@@ -120,6 +123,7 @@ TotalXp: 0
 Reset: 0
 Level: 0
 GlobalLevel: 0
+Poder de Luta base: 10
 XP atual: 0 / 100
 XP restante: 100
 ```
@@ -132,6 +136,7 @@ Os campos têm os seguintes significados:
 | `Reset` | quantidade de ciclos de 200 Levels concluídos |
 | `Level` | posição atual entre 0 e 199 |
 | `GlobalLevel` | `(Reset * 200) + Level` |
+| `Poder de Luta base` | poder permanente conquistado pelos Levels concluídos |
 | `XP atual` | progresso dentro do Level atual |
 | `XP restante` | quantidade necessária para completar o Level |
 
@@ -146,7 +151,7 @@ HUD
   → servidor confirma peer, node e CharacterId autenticados
   → DebugXpCommands interpreta a entrada
   → Player.AddXp processa a progressão
-  → MultiplayerSynchronizer replica TotalXp, Level e Reset
+  → MultiplayerSynchronizer replica TotalXp, Level, Reset e BaseBattlePower
   → HUD recebe o resultado e atualiza a progressão
 ```
 
@@ -184,6 +189,8 @@ O teste `tests/godot/DebugXpCommandsIntegrationTest.tscn` cobre:
 - bloqueio com comandos de debug desabilitados;
 - XP exato de `/addxpnext`;
 - `/addxpnext` no Level 199 concluindo Reset;
+- múltiplos Resets em uma concessão;
+- Poder de Luta por Level e rejeição atômica em overflow;
 - `/xpinfo` sem alteração do estado.
 
 ## Solução rápida de problemas

@@ -65,6 +65,7 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
         int level,
         long reset,
         long totalXp,
+        long baseBattlePower,
         string mapId,
         float positionX,
         float positionY,
@@ -75,13 +76,15 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
                 character.Id == characterId
                 && character.UserId == userId
                 && currentHealth <= character.MaxHealth
-                && character.TotalXp <= totalXp)
+                && character.TotalXp <= totalXp
+                && character.BaseBattlePower <= baseBattlePower)
             .ExecuteUpdateAsync(
                 updates => updates
                     .SetProperty(character => character.CurrentHealth, currentHealth)
                     .SetProperty(character => character.Level, level)
                     .SetProperty(character => character.Reset, reset)
                     .SetProperty(character => character.TotalXp, totalXp)
+                    .SetProperty(character => character.BaseBattlePower, baseBattlePower)
                     .SetProperty(character => character.MapId, mapId)
                     .SetProperty(character => character.PositionX, positionX)
                     .SetProperty(character => character.PositionY, positionY)

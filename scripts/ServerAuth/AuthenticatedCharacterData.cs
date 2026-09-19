@@ -9,6 +9,7 @@ public sealed class AuthenticatedCharacterData
     public int Level { get; init; }
     public long Reset { get; init; }
     public long TotalXp { get; init; }
+    public long BaseBattlePower { get; init; }
     public int CurrentHealth { get; init; }
     public int MaxHealth { get; init; }
     public string MapId { get; init; } = string.Empty;

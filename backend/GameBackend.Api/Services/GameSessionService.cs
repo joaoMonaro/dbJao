@@ -141,6 +141,7 @@ public sealed class GameSessionService(
             Level: character.Level,
             Reset: character.Reset,
             TotalXp: character.TotalXp,
+            BaseBattlePower: character.BaseBattlePower,
             CurrentHealth: character.CurrentHealth,
             MaxHealth: character.MaxHealth,
             MapId: character.MapId,

@@ -57,7 +57,9 @@ public partial class CharacterSelectionScreen : VBoxContainer
             _options.Clear();
             foreach (CharacterApiResponse character in characters)
             {
-                _options.AddItem($"{character.Name} — Nv. {character.Level} / Reset {character.Reset}");
+                _options.AddItem(
+                    $"{character.Name} — Nv. {character.Level} / Reset {character.Reset} "
+                    + $"/ Poder {character.BaseBattlePower}");
                 _options.SetItemMetadata(
                     _options.ItemCount - 1, character.Id.ToString("D"));
             }
@@ -132,7 +134,9 @@ public partial class CharacterSelectionScreen : VBoxContainer
         _options.Clear();
         foreach (CharacterApiResponse character in characters)
         {
-            _options.AddItem($"{character.Name} — Nv. {character.Level} / Reset {character.Reset}");
+            _options.AddItem(
+                $"{character.Name} — Nv. {character.Level} / Reset {character.Reset} "
+                + $"/ Poder {character.BaseBattlePower}");
             _options.SetItemMetadata(
                 _options.ItemCount - 1, character.Id.ToString("D"));
         }

@@ -7,6 +7,7 @@ public sealed record AuthenticatedPlayerState(
     int Level,
     long Reset,
     long TotalXp,
+    long BaseBattlePower,
     string MapId,
     float PositionX,
     float PositionY);

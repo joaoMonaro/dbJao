@@ -64,9 +64,11 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             || payload.Level is null
             || payload.Reset is null
             || payload.TotalXp is null
+            || payload.BaseBattlePower is null
             || payload.Level is < 0 or >= 200
             || payload.Reset < 0
             || payload.TotalXp < 0
+            || payload.BaseBattlePower < BattlePowerSettings.Default.InitialBattlePower
             || payload.PositionX is null
             || payload.PositionY is null
             || string.IsNullOrWhiteSpace(payload.Username)
@@ -85,6 +87,7 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             Level = payload.Level.Value,
             Reset = payload.Reset.Value,
             TotalXp = payload.TotalXp.Value,
+            BaseBattlePower = payload.BaseBattlePower.Value,
             CurrentHealth = payload.CurrentHealth.Value,
             MaxHealth = payload.MaxHealth.Value,
             MapId = payload.MapId,
@@ -108,6 +111,7 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
                 state.Level,
                 state.Reset,
                 state.TotalXp,
+                state.BaseBattlePower,
                 state.MapId,
                 state.PositionX,
                 state.PositionY),

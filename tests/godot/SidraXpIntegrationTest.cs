@@ -36,6 +36,8 @@ public partial class SidraXpIntegrationTest : NetworkManager
             Assert(!_sidra.IsDead, "Sidra morreu antes do golpe fatal.");
             Assert(_firstPlayer.TotalXp == 0 && _secondPlayer.TotalXp == 0,
                 "Sidra concedeu XP enquanto ainda estava vivo.");
+            Assert(_firstPlayer.BaseBattlePower == 10 && _secondPlayer.BaseBattlePower == 10,
+                "Sidra vivo alterou o Poder de Luta.");
 
             DamageInfo killingBlow = PlayerDamage(_secondPlayer, 1);
             Assert(_sidra.ApplyServerDamage(killingBlow), "Golpe fatal deveria ser aceito.");
@@ -43,6 +45,10 @@ public partial class SidraXpIntegrationTest : NetworkManager
             Assert(_firstPlayer.TotalXp == 0, "XP foi concedido ao jogador incorreto.");
             long grantedXp = _secondPlayer.TotalXp;
             Assert(grantedXp > 0, "Golpe fatal não concedeu XP.");
+            long firstCompletedLevels = Player.GetGlobalLevel(
+                _secondPlayer.Reset, _secondPlayer.Level);
+            Assert(_secondPlayer.BaseBattlePower == 10 + firstCompletedLevels * 100,
+                "XP do Sidra alterou incorretamente o Poder de Luta.");
             Assert(!_sidra.ApplyServerDamage(killingBlow),
                 "Dano repetido em Sidra morto deveria ser rejeitado.");
             Assert(_secondPlayer.TotalXp == grantedXp,
@@ -56,6 +62,9 @@ public partial class SidraXpIntegrationTest : NetworkManager
             ProgressionSnapshot expectedAfterLevelUp = Player.RebuildProgression(
                 checked(beforeLevelUp + grantedXp));
             SetProgression(_secondPlayer, beforeLevelUp);
+            long battlePowerBeforeLevelUp = _secondPlayer.BaseBattlePower;
+            long globalBeforeLevelUp = Player.GetGlobalLevel(
+                _secondPlayer.Reset, _secondPlayer.Level);
             Assert(_sidra.ApplyServerDamage(PlayerDamage(_secondPlayer, _sidra.MaxHealth)),
                 "Golpe fatal para Level Up foi rejeitado.");
             Assert(_secondPlayer.TotalXp == expectedAfterLevelUp.State.TotalXp
@@ -63,6 +72,11 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 && _secondPlayer.Reset == expectedAfterLevelUp.State.Reset
                 && Player.GetGlobalLevel(_secondPlayer.Reset, _secondPlayer.Level) > 0,
                 "Recompensa do Sidra não passou pelo Level Up da progressão.");
+            long completedByReward = Player.GetGlobalLevel(
+                _secondPlayer.Reset, _secondPlayer.Level) - globalBeforeLevelUp;
+            Assert(_secondPlayer.BaseBattlePower
+                    == battlePowerBeforeLevelUp + completedByReward * 100,
+                "Level Up causado pelo Sidra não concedeu Poder de Luta corretamente.");
 
             RespawnSidra();
             long level199Start = TotalXpAtGlobalLevel(199);
@@ -71,6 +85,9 @@ public partial class SidraXpIntegrationTest : NetworkManager
             ProgressionSnapshot expectedAfterReset = Player.RebuildProgression(
                 checked(nearReset + grantedXp));
             SetProgression(_secondPlayer, nearReset);
+            long battlePowerBeforeReset = _secondPlayer.BaseBattlePower;
+            long globalBeforeReset = Player.GetGlobalLevel(
+                _secondPlayer.Reset, _secondPlayer.Level);
             Assert(_secondPlayer.Level == 199 && _secondPlayer.Reset == 0,
                 "Preparação do cenário de Reset falhou.");
             Assert(_sidra.ApplyServerDamage(PlayerDamage(_secondPlayer, _sidra.MaxHealth)),
@@ -80,6 +97,11 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 "Recompensa do Sidra não atravessou o Reset.");
             Assert(_secondPlayer.CurrentExperience == expectedAfterReset.XpIntoLevel,
                 "XP excedente após Reset não foi preservado.");
+            long levelsAcrossReset = Player.GetGlobalLevel(
+                _secondPlayer.Reset, _secondPlayer.Level) - globalBeforeReset;
+            Assert(_secondPlayer.BaseBattlePower
+                    == battlePowerBeforeReset + levelsAcrossReset * 100,
+                "Sidra concedeu bônus incorreto na travessia de Reset.");
 
             GD.Print("[PASS] Integração Sidra -> killer -> progressão validada.");
             GetTree().Quit(0);
@@ -122,6 +144,9 @@ public partial class SidraXpIntegrationTest : NetworkManager
         player.TotalXp = snapshot.State.TotalXp;
         player.Level = snapshot.State.Level;
         player.Reset = snapshot.State.Reset;
+        long completedLevels = Player.GetGlobalLevel(snapshot.State.Reset, snapshot.State.Level);
+        player.BaseBattlePower = new BattlePowerProgression(BattlePowerSettings.Default)
+            .FromCompletedLevels(completedLevels);
     }
 
     private static long TotalXpAtGlobalLevel(int targetGlobalLevel)

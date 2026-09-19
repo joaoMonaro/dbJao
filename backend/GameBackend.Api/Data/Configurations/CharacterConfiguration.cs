@@ -28,6 +28,10 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasDefaultValue(0L)
             .IsRequired();
 
+        builder.Property(character => character.BaseBattlePower)
+            .HasDefaultValue(10L)
+            .IsRequired();
+
         builder.Property(character => character.CurrentHealth)
             .HasDefaultValue(100)
             .IsRequired();
@@ -54,6 +58,9 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             table.HasCheckConstraint("ck_characters_level", "\"Level\" >= 0 AND \"Level\" < 200");
             table.HasCheckConstraint("ck_characters_reset", "\"Reset\" >= 0");
             table.HasCheckConstraint("ck_characters_total_xp", "\"TotalXp\" >= 0");
+            table.HasCheckConstraint(
+                "ck_characters_base_battle_power",
+                "\"BaseBattlePower\" >= 10");
             table.HasCheckConstraint("ck_characters_current_health", "\"CurrentHealth\" >= 0");
             table.HasCheckConstraint("ck_characters_max_health", "\"MaxHealth\" > 0");
             table.HasCheckConstraint(

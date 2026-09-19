@@ -95,8 +95,9 @@ Confirme:
 16. Desconecte em Clean Path e entre novamente para confirmar mapa e posição persistidos.
 
 Para progressão, conceda XP somente por `Player.AddXp` no servidor de teste.
-Confirme que dois clientes veem `TotalXp`, `Level` e `Reset` iguais, que uma
-concessão atravessa o nível 199 e que a reconexão mantém os três valores.
+Confirme que dois clientes veem `TotalXp`, `Level`, `Reset` e `BaseBattlePower`
+iguais, que uma concessão atravessa o nível 199 e que a reconexão mantém os quatro
+valores sem conceder poder novamente.
 
 O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 
@@ -104,11 +105,13 @@ O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 - o peer do golpe fatal recebe a recompensa de XP aplicada pelo Sidra;
 - dano repetido durante a mesma morte não duplica a recompensa;
 - a recompensa pode causar Level Up e Reset;
-- XP excedente é preservado.
+- XP excedente é preservado;
+- Poder de Luta só aumenta pelos Levels realmente concluídos.
 
 O teste `tests/godot/DebugXpCommandsIntegrationTest.tscn` valida `/addxp`, entradas
 inválidas, bloqueio quando os comandos estão desabilitados, XP exato do
-`/addxpnext`, Reset no Level 199 e leitura sem mutação do `/xpinfo`.
+`/addxpnext`, Reset no Level 199, múltiplos Resets, Poder de Luta por Level,
+proteção contra overflow e leitura sem mutação do `/xpinfo`.
 Consulte [Comandos de debug de XP](13-comandos-debug-xp.md) para o procedimento
 manual e os resultados esperados.
 

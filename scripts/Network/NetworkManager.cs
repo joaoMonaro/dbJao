@@ -241,6 +241,7 @@ public partial class NetworkManager : Node2D
         player.TotalXp = progression.State.TotalXp;
         player.Level = progression.State.Level;
         player.Reset = progression.State.Reset;
+        player.BaseBattlePower = character.BaseBattlePower;
         bool knownMap = WorldMaps.TryGetBounds(character.MapId, out Rect2 mapBounds);
         player.MapId = knownMap ? character.MapId : WorldMaps.KameHouse;
         if (!knownMap)

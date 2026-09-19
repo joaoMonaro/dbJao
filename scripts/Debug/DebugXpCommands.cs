@@ -91,6 +91,7 @@ public static class DebugXpCommands
         long previousTotalXp = player.TotalXp;
         int previousLevel = player.Level;
         long previousReset = player.Reset;
+        long previousBattlePower = player.BaseBattlePower;
 
         if (!player.AddXp(amount))
             return Failure("O servidor não conseguiu conceder o XP solicitado.");
@@ -100,7 +101,8 @@ public static class DebugXpCommands
             $"[DEBUG XP] +{amount} XP\n"
             + $"Level: {previousLevel} -> {player.Level}\n"
             + $"Reset: {previousReset} -> {player.Reset}\n"
-            + $"TotalXp: {previousTotalXp} -> {player.TotalXp}",
+            + $"TotalXp: {previousTotalXp} -> {player.TotalXp}\n"
+            + $"Poder de Luta: {previousBattlePower} -> {player.BaseBattlePower}",
             amount);
     }
 
@@ -126,6 +128,7 @@ public static class DebugXpCommands
             + $"Reset: {snapshot.State.Reset}\n"
             + $"Level: {snapshot.State.Level}\n"
             + $"GlobalLevel: {globalLevel}\n"
+            + $"Poder de Luta base: {player.BaseBattlePower}\n"
             + $"XP atual: {snapshot.XpIntoLevel} / {snapshot.XpRequiredForNextLevel}\n"
             + $"XP restante: {remainingXp}");
     }

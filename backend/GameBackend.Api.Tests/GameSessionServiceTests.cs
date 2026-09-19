@@ -80,6 +80,7 @@ public sealed class GameSessionServiceTests
         Assert.Equal(0, result.Level);
         Assert.Equal(0, result.Reset);
         Assert.Equal(0, result.TotalXp);
+        Assert.Equal(12310, result.BaseBattlePower);
     }
 
     [Fact]
@@ -189,6 +190,7 @@ public sealed class GameSessionServiceTests
                 Id = CharacterId,
                 UserId = characterBelongsToUser ? UserId : Guid.NewGuid(),
                 Name = "Goku",
+                BaseBattlePower = 12310,
                 CurrentHealth = 75,
                 MaxHealth = 100,
                 MapId = "kame_house",
@@ -280,6 +282,7 @@ public sealed class GameSessionServiceTests
             int level,
             long reset,
             long totalXp,
+            long baseBattlePower,
             string mapId,
             float positionX,
             float positionY,
@@ -351,6 +354,7 @@ public sealed class GameSessionServiceTests
                     Id = CharacterId,
                     UserId = UserId,
                     Name = "Goku",
+                    BaseBattlePower = 12310,
                     CurrentHealth = 75,
                     MaxHealth = 100,
                     MapId = "kame_house",

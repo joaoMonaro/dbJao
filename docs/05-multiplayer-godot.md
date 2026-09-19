@@ -103,7 +103,26 @@ também exige ajustar a validação e a constraint do banco em nova migration.
 `TotalXp`; `Level` e `Reset` são reconstruídos desse total no login. O servidor
 replica os três campos pelo `MultiplayerSynchronizer` e os salva junto com o
 estado do personagem na desconexão. O Player expõe os sinais `XpGained`,
-`LevelUp` e `ResetCompleted` para futuras reações, sem conceder bônus agora.
+`LevelUp` e `ResetCompleted` para reações à progressão.
+
+### Poder de Luta
+
+`BaseBattlePower` é o Poder de Luta permanente e persistido. A configuração fica em
+`BattlePowerSettings.Default`, com `InitialBattlePower = 10` e
+`BattlePowerPerLevel = 100`. `BattlePowerProgression` concentra os cálculos com
+aritmética verificada contra overflow.
+
+`Player.AddXp` conta os Levels realmente concluídos em `ProgressionResult.Steps` e
+aplica um incremento para cada item. Assim, XP insuficiente não altera o poder, uma
+concessão que atravessa vários Levels aplica todos os incrementos e a passagem de
+Level 199 para o próximo Reset aplica somente o incremento daquele Level. Reset não
+possui multiplicador ou bônus próprio.
+
+O servidor calcula o novo valor antes de modificar XP, Level, Reset ou poder; se o
+cálculo exceder `long`, a operação inteira é rejeitada. `BaseBattlePower` segue o
+mesmo snapshot de persistência do personagem e é replicado pelo
+`MultiplayerSynchronizer`. O sinal `BattlePowerChanged` atualiza o HUD do jogador
+local. Sincronização, reconexão e eventos de apresentação não concedem poder.
 
 O Sidra é a primeira fonte de XP integrada. Sua propriedade exportada `XpReward`
 vale 25. Quando `HealthComponent` aceita o golpe fatal, `NpcBase` encaminha o
@@ -123,7 +142,8 @@ O servidor aceita os comandos apenas quando roda em build debug e a variável
 `DEBUG_COMMANDS_ENABLED=true` está definida. `scripts/dev-server.sh` ativa essa
 variável por padrão; ela permanece desabilitada quando ausente. `/addxp` e
 `/addxpnext` chamam `Player.AddXp`, preservando a mesma progressão usada pelo Sidra.
-`/xpinfo` apenas consulta o snapshot reconstruído de `TotalXp`.
+`/xpinfo` apenas consulta o snapshot reconstruído de `TotalXp` e exibe também o
+`BaseBattlePower` atual.
 
 Instruções de uso, respostas, validações e solução de problemas estão no guia
 [Comandos de debug de XP](13-comandos-debug-xp.md).

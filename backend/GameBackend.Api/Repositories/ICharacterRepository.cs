@@ -31,6 +31,7 @@ public interface ICharacterRepository
         int level,
         long reset,
         long totalXp,
+        long baseBattlePower,
         string mapId,
         float positionX,
         float positionY,

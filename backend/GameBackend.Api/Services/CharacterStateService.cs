@@ -14,7 +14,8 @@ public sealed class CharacterStateService(
     {
         if (!float.IsFinite(request.PositionX) || !float.IsFinite(request.PositionY))
             return false;
-        if (request.Level is < 0 or >= 200 || request.Reset < 0 || request.TotalXp < 0)
+        if (request.Level is < 0 or >= 200 || request.Reset < 0 || request.TotalXp < 0
+            || request.BaseBattlePower < 10)
             return false;
 
         string mapId = request.MapId.Trim();
@@ -28,6 +29,7 @@ public sealed class CharacterStateService(
             request.Level,
             request.Reset,
             request.TotalXp,
+            request.BaseBattlePower,
             mapId,
             request.PositionX,
             request.PositionY,
