@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Texture2D" uid="uid://c1s4fwyq08bj6" path="res://assets/maps/kame_house.png" id="1_map"]
 [ext_resource type="PackedScene" uid="uid://x2rc0auym4w3" path="res://scenes/Player.tscn" id="2_player"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/Pilaf.tscn" id="4_pilaf"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/Network/NetworkManager.cs" id="6_network"]
+[ext_resource type="PackedScene" path="res://scenes/CleanPath.tscn" id="7_clean_path"]
 
 [node name="KameHouse" type="Node2D"]
 script = ExtResource("6_network")
@@ -17,6 +18,9 @@ z_index = -10
 position = Vector2(800, 450)
 scale = Vector2(0.956938, 0.956429)
 texture = ExtResource("1_map")
+
+[node name="CleanPath" parent="." instance=ExtResource("7_clean_path")]
+position = Vector2(2048, 0)
 
 [node name="Players" type="Node2D" parent="."]
 
@@ -31,3 +35,12 @@ position = Vector2(1250, 450)
 
 [node name="Pilaf" parent="NPCs" instance=ExtResource("4_pilaf")]
 position = Vector2(350, 450)
+
+[node name="CleanPathPilaf" parent="NPCs" instance=ExtResource("4_pilaf")]
+position = Vector2(2398, 520)
+
+[node name="CleanPathPilaf2" parent="NPCs" instance=ExtResource("4_pilaf")]
+position = Vector2(3098, 700)
+
+[node name="CleanPathPilaf3" parent="NPCs" instance=ExtResource("4_pilaf")]
+position = Vector2(3498, 570)

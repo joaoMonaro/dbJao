@@ -9,6 +9,7 @@ public partial class Sidra : NpcBase
 
     [Export] public float MinDirectionTime { get; set; } = 1.5f;
     [Export] public float MaxDirectionTime { get; set; } = 4.0f;
+    [Export] public long XpReward { get; set; } = 25;
 
     private static readonly Vector2[] PossibleDirections =
     {
@@ -79,6 +80,49 @@ public partial class Sidra : NpcBase
         ChooseNewDirection();
         UpdateServerMovementState(MovementDirection);
         UpdateAnimation();
+    }
+
+    protected override void OnKilled(DamageInfo killingBlow)
+    {
+        if (!CanRunServerAi() || killingBlow.SourceType != DamageSourceType.Player)
+            return;
+
+        if (XpReward <= 0)
+        {
+            GD.PushWarning($"[XP] Recompensa inválida configurada para {Name}: {XpReward}");
+            return;
+        }
+
+        if (killingBlow.AttackerPeerId is <= NetworkConstants.ServerPeerId or > int.MaxValue)
+        {
+            GD.PushWarning($"[XP] Sidra morreu sem peer atacante válido.");
+            return;
+        }
+
+        int attackerPeerId = checked((int)killingBlow.AttackerPeerId);
+        Player? killer = GetParent()?.GetParent()
+            ?.GetNodeOrNull<Player>($"Players/{attackerPeerId}");
+        if (killer is null || killer.OwnerPeerId != attackerPeerId
+            || string.IsNullOrWhiteSpace(killer.CharacterId))
+        {
+            GD.PushWarning($"[XP] Killer do Sidra não corresponde a um jogador autenticado.");
+            return;
+        }
+
+        long previousTotalXp = killer.TotalXp;
+        int previousLevel = killer.Level;
+        long previousReset = killer.Reset;
+        if (!killer.AddXp(XpReward))
+        {
+            GD.PushWarning($"[XP] Não foi possível conceder a recompensa do Sidra.");
+            return;
+        }
+
+        GD.Print($"[XP] Sidra morto pelo personagem {killer.CharacterId}.");
+        GD.Print($"[XP] Recompensa: {XpReward}");
+        GD.Print($"[XP] TotalXp: {previousTotalXp} -> {killer.TotalXp}");
+        GD.Print($"[XP] Level: {previousLevel} -> {killer.Level}");
+        GD.Print($"[XP] Reset: {previousReset} -> {killer.Reset}");
     }
 
     private void UpdateAnimation()

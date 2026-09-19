@@ -6,7 +6,12 @@ public partial class Player : CharacterBody2D, IDamageable
 {
     [Signal] public delegate void HealthChangedEventHandler(int current, int maximum);
     [Signal] public delegate void ManaChangedEventHandler(int current, int maximum);
-    [Signal] public delegate void ExperienceChangedEventHandler(int current, int maximum);
+    [Signal] public delegate void ExperienceChangedEventHandler(long current, long maximum);
+    [Signal] public delegate void ProgressionChangedEventHandler(int level, long reset);
+    [Signal] public delegate void XpGainedEventHandler(long amount, long totalXp);
+    [Signal] public delegate void LevelUpEventHandler(int level, long reset);
+    [Signal] public delegate void ResetCompletedEventHandler(long reset);
+    [Signal] public delegate void DebugCommandResultEventHandler(string message, bool success);
 
     private enum PlayerState
     {
@@ -19,6 +24,8 @@ public partial class Player : CharacterBody2D, IDamageable
     private const int MaximumServerDamage = 100;
     private const float MinimumFacingDot = 0.15f;
     private const ulong RejectionLogIntervalMsec = 1000;
+    private const ulong TravelCooldownMsec = 500;
+    private const ulong DebugCommandCooldownMsec = 250;
 
     // Preserve the existing movement limits independently of transparent sprite padding.
     private static readonly Rect2 MovementViewportBounds = new(-64, -69, 128, 138);
@@ -26,15 +33,42 @@ public partial class Player : CharacterBody2D, IDamageable
     private static readonly StringName IdleAnimation = new("idle");
     private static readonly StringName WalkAnimation = new("walk");
     private static readonly StringName AttackAnimation = new("attack");
+    private static readonly ExponentialXpCurve XpCurve = new(XpCurveSettings.Default);
+    private static readonly CharacterProgression Progression = new(XpCurve);
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
     [Export] public string AuthenticatedUserId { get; set; } = string.Empty;
     [Export] public string CharacterId { get; set; } = string.Empty;
     [Export] public string CharacterName { get; set; } = string.Empty;
-    [Export] public int CharacterLevel { get; set; } = 1;
-    [Export] public long CharacterExperience { get; set; }
-    [Export] public string MapId { get; set; } = "kame_house";
+    [Export]
+    public long TotalXp
+    {
+        get => _totalXp;
+        set { _totalXp = value; RefreshProgressionPresentation(); }
+    }
+    [Export]
+    public int Level
+    {
+        get => _level;
+        set { _level = value; RefreshProgressionPresentation(); }
+    }
+    [Export]
+    public long Reset
+    {
+        get => _reset;
+        set { _reset = value; RefreshProgressionPresentation(); }
+    }
+    [Export]
+    public string MapId
+    {
+        get => _mapId;
+        set
+        {
+            _mapId = value;
+            UpdateLocalCameraLimits();
+        }
+    }
     [Export] public int AttackDamage { get; set; } = 20;
     [Export] public float AttackRange { get; set; } = 80.0f;
     [Export] public float AttackCooldown { get; set; } = 0.5f;
@@ -42,7 +76,6 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public float AttackOffsetX { get; set; } = 46.0f;
     [Export] public int MaxHealth { get; set; } = 100;
     [Export] public int MaxMana { get; set; } = 100;
-    [Export] public int MaxExperience { get; set; } = 100;
     [Export] public float RespawnDelay { get; set; } = 3.0f;
 
     [Export]
@@ -79,7 +112,8 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public int CurrentHealth => _health?.CurrentHealth ?? MaxHealth;
     public int CurrentMana { get; private set; }
-    public int CurrentExperience { get; private set; }
+    public long CurrentExperience => Progression.FromTotalXp(TotalXp).XpIntoLevel;
+    public long MaxExperience => Progression.FromTotalXp(TotalXp).XpRequiredForNextLevel;
     public bool IsDead => _health?.IsDead ?? false;
     public bool IsRespawning => _health?.IsRespawning ?? false;
     public bool CanAct => _health?.CanAct ?? false;
@@ -93,6 +127,12 @@ public partial class Player : CharacterBody2D, IDamageable
     private ProgressBar? _healthBar;
     private HealthComponent? _health;
     private NetworkInterpolation2D? _interpolation;
+    private Camera2D? _localCamera;
+    private string _mapId = WorldMaps.KameHouse;
+    private long _totalXp;
+    private int _level;
+    private long _reset;
+    private bool _progressionReady;
     private PlayerState _currentState = PlayerState.Idle;
     private Vector2 _facingDirection = Vector2.Right;
     private bool _isAttacking;
@@ -103,6 +143,8 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _attackCooldownRemaining;
     private float _attackActionRemaining;
     private ulong _lastRejectionLogMsec;
+    private ulong _nextTravelAllowedMsec;
+    private ulong _nextDebugCommandAllowedMsec;
 
     public override void _EnterTree()
     {
@@ -136,9 +178,7 @@ public partial class Player : CharacterBody2D, IDamageable
             GD.PushError($"[CLIENT][INTERPOLATION] Componente ausente: {GetPath()}");
         }
 
-        _spawnPosition = GlobalPosition;
         CurrentMana = Mathf.Max(MaxMana, 0);
-        CurrentExperience = Mathf.Clamp(CurrentExperience, 0, Mathf.Max(MaxExperience, 0));
 
         _health.HealthChanged += OnComponentHealthChanged;
         _health.StateChanged += OnHealthStateChanged;
@@ -153,8 +193,10 @@ public partial class Player : CharacterBody2D, IDamageable
         ApplyHealthState();
         ApplyVisualState();
         ClampToViewport();
+        _spawnPosition = GlobalPosition;
+        _progressionReady = true;
         EmitSignal(SignalName.ManaChanged, CurrentMana, MaxMana);
-        EmitSignal(SignalName.ExperienceChanged, CurrentExperience, MaxExperience);
+        RefreshProgressionPresentation();
 
         bool isLocalPlayer =
             !NetworkManager.RunningAsServer && OwnerPeerId == Multiplayer.GetUniqueId();
@@ -227,12 +269,16 @@ public partial class Player : CharacterBody2D, IDamageable
         AuthenticatedUserId = data.UserId.ToString("D");
         CharacterId = data.CharacterId.ToString("D");
         CharacterName = data.CharacterName;
-        CharacterLevel = Mathf.Max(data.Level, 1);
-        CharacterExperience = Math.Max(data.Experience, 0);
-        MapId = string.IsNullOrWhiteSpace(data.MapId) ? "kame_house" : data.MapId;
+        ProgressionSnapshot progression = RebuildProgression(data.TotalXp);
+        TotalXp = progression.State.TotalXp;
+        Level = progression.State.Level;
+        Reset = progression.State.Reset;
+        MapId = WorldMaps.TryGetBounds(data.MapId, out _)
+            ? data.MapId : WorldMaps.KameHouse;
         MaxHealth = Mathf.Max(data.MaxHealth, 1);
         _health.Configure(CharacterName, MaxHealth, RespawnDelay);
         _health.CurrentHealth = Mathf.Clamp(data.CurrentHealth, 0, MaxHealth);
+        ClampToViewport();
         _spawnPosition = GlobalPosition;
 
         if (_health.CurrentHealth == 0)
@@ -254,10 +300,71 @@ public partial class Player : CharacterBody2D, IDamageable
             userId,
             characterId,
             CurrentHealth,
+            Level,
+            Reset,
+            TotalXp,
             MapId,
             GlobalPosition.X,
             GlobalPosition.Y);
         return true;
+    }
+
+    public static ProgressionSnapshot RebuildProgression(long totalXp) =>
+        Progression.FromTotalXp(totalXp);
+
+    public static long GetGlobalLevel(long reset, int level) =>
+        XpCurve.GetGlobalLevel(reset, level);
+
+    public bool AddXp(long amount)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer())
+            return false;
+        if (amount < 0)
+            return false;
+
+        ProgressionResult result;
+        try
+        {
+            result = Progression.AddXp(new(TotalXp, Level, Reset), amount);
+        }
+        catch (OverflowException)
+        {
+            GD.PushWarning($"[XP] Concessão excederia o limite de TotalXp de {CharacterId}.");
+            return false;
+        }
+        catch (ArgumentException exception)
+        {
+            GD.PushError($"[XP] Estado inválido para {CharacterId}: {exception.Message}");
+            return false;
+        }
+
+        if (amount == 0)
+            return true;
+
+        TotalXp = result.Snapshot.State.TotalXp;
+        Level = result.Snapshot.State.Level;
+        Reset = result.Snapshot.State.Reset;
+        EmitSignal(SignalName.XpGained, amount, TotalXp);
+        foreach (ProgressionStep step in result.Steps)
+        {
+            EmitSignal(SignalName.LevelUp, step.Level, step.Reset);
+            if (step.ResetCompleted)
+                EmitSignal(SignalName.ResetCompleted, step.Reset);
+        }
+
+        return true;
+    }
+
+    private void RefreshProgressionPresentation()
+    {
+        if (!_progressionReady || NetworkManager.RunningAsServer
+            || OwnerPeerId != Multiplayer.GetUniqueId() || TotalXp < 0)
+            return;
+
+        ProgressionSnapshot snapshot = RebuildProgression(TotalXp);
+        EmitSignal(SignalName.ExperienceChanged,
+            snapshot.XpIntoLevel, snapshot.XpRequiredForNextLevel);
+        EmitSignal(SignalName.ProgressionChanged, Level, Reset);
     }
 
     private void ProcessAuthoritativeTimers(float delta)
@@ -299,7 +406,9 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private void CaptureAndSendMovement(float delta)
     {
-        Vector2 direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+        Vector2 direction = GetViewport().GuiGetFocusOwner() is LineEdit
+            ? Vector2.Zero
+            : Input.GetVector("move_left", "move_right", "move_up", "move_down");
         direction = direction.LimitLength(1.0f);
 
         _inputHeartbeatElapsed += delta;
@@ -314,8 +423,130 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private void CaptureAndSendAttack()
     {
-        if (Input.IsActionJustPressed("attack"))
+        if (GetViewport().GuiGetFocusOwner() is not LineEdit
+            && Input.IsActionJustPressed("attack"))
             RpcId(NetworkConstants.ServerPeerId, MethodName.RequestAttack);
+    }
+
+    public void SubmitDebugCommand(string command)
+    {
+        if (NetworkManager.RunningAsServer || OwnerPeerId != Multiplayer.GetUniqueId())
+            return;
+
+        if (string.IsNullOrWhiteSpace(command)
+            || command.Length > DebugXpCommands.MaximumCommandLength)
+        {
+            EmitSignal(SignalName.DebugCommandResult,
+                "Comando vazio ou grande demais.", false);
+            return;
+        }
+
+        RpcId(NetworkConstants.ServerPeerId, MethodName.RequestDebugCommand, command);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.AnyPeer,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Reliable
+    )]
+    private void RequestDebugCommand(string command)
+    {
+        if (!TryValidateSender(out int senderId, "comando de debug"))
+            return;
+
+        ulong now = Time.GetTicksMsec();
+        if (now < _nextDebugCommandAllowedMsec)
+            return;
+        _nextDebugCommandAllowedMsec = now + DebugCommandCooldownMsec;
+
+        if (string.IsNullOrWhiteSpace(CharacterId))
+        {
+            SendDebugCommandResult(senderId,
+                new(false, "Personagem autenticado não encontrado."));
+            return;
+        }
+
+        long previousTotalXp = TotalXp;
+        int previousLevel = Level;
+        long previousReset = Reset;
+        DebugXpCommandResult result = DebugXpCommands.Execute(
+            this,
+            command,
+            DebugXpCommands.ServerCommandsEnabled);
+
+        if (result.Success && result.GrantedXp > 0)
+        {
+            GD.Print(
+                $"[DEBUG XP] Personagem {CharacterId} recebeu {result.GrantedXp} XP por comando.");
+            GD.Print(
+                $"[DEBUG XP] Reset {previousReset} / Level {previousLevel} -> "
+                + $"Reset {Reset} / Level {Level}; TotalXp {previousTotalXp} -> {TotalXp}.");
+        }
+        else if (result.Success)
+        {
+            GD.Print($"[DEBUG XP] Personagem {CharacterId}: {result.Message}");
+        }
+
+        SendDebugCommandResult(senderId, result);
+    }
+
+    private void SendDebugCommandResult(int peerId, DebugXpCommandResult result)
+    {
+        RpcId(peerId, MethodName.ReceiveDebugCommandResult, result.Message, result.Success);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.Authority,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Reliable
+    )]
+    private void ReceiveDebugCommandResult(string message, bool success)
+    {
+        if (NetworkManager.RunningAsServer || OwnerPeerId != Multiplayer.GetUniqueId())
+            return;
+
+        EmitSignal(SignalName.DebugCommandResult, message, success);
+    }
+
+    public void TravelToMap(string mapId)
+    {
+        if (NetworkManager.RunningAsServer || OwnerPeerId != Multiplayer.GetUniqueId())
+            return;
+
+        RpcId(NetworkConstants.ServerPeerId, MethodName.RequestTravelToMap, mapId);
+    }
+
+    [Rpc(
+        MultiplayerApi.RpcMode.AnyPeer,
+        CallLocal = false,
+        TransferMode = MultiplayerPeer.TransferModeEnum.Reliable
+    )]
+    private void RequestTravelToMap(string mapId)
+    {
+        if (!TryValidateSender(out int senderId, "viagem") || !CanAct)
+            return;
+
+        if (mapId is null || mapId.Length > 32
+            || !WorldMaps.TryGetBounds(mapId, out _) || mapId == MapId)
+        {
+            GD.PushWarning($"[SERVER] Destino inválido para o peer {senderId}.");
+            return;
+        }
+
+        ulong now = Time.GetTicksMsec();
+        if (now < _nextTravelAllowedMsec)
+            return;
+        _nextTravelAllowedMsec = now + TravelCooldownMsec;
+
+        _serverInputDirection = Vector2.Zero;
+        Velocity = Vector2.Zero;
+        IsAttacking = false;
+        _attackActionRemaining = 0.0f;
+        DisableAttackArea();
+        MapId = mapId;
+        GlobalPosition = WorldMaps.GetArrivalPosition(mapId);
+        _spawnPosition = GlobalPosition;
+        GD.Print($"[SERVER] Peer {senderId} viajou para {mapId}.");
     }
 
     [Rpc(
@@ -370,7 +601,7 @@ public partial class Player : CharacterBody2D, IDamageable
         if (
             !float.IsFinite(GlobalPosition.X)
             || !float.IsFinite(GlobalPosition.Y)
-            || !GetViewportRect().HasPoint(GlobalPosition)
+            || !GetMapBounds().HasPoint(GlobalPosition)
         )
         {
             LogAttackRejection(senderId, "posição oficial inválida");
@@ -567,19 +798,27 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private void CreateLocalCamera()
     {
-        Rect2 viewportRect = GetViewportRect();
-        Camera2D camera = new()
+        _localCamera = new Camera2D
         {
             Name = "LocalCamera",
             Enabled = true,
             PositionSmoothingEnabled = false,
-            LimitLeft = Mathf.RoundToInt(viewportRect.Position.X),
-            LimitTop = Mathf.RoundToInt(viewportRect.Position.Y),
-            LimitRight = Mathf.RoundToInt(viewportRect.End.X),
-            LimitBottom = Mathf.RoundToInt(viewportRect.End.Y),
         };
-        AddChild(camera);
-        camera.MakeCurrent();
+        UpdateLocalCameraLimits();
+        AddChild(_localCamera);
+        _localCamera.MakeCurrent();
+    }
+
+    private void UpdateLocalCameraLimits()
+    {
+        if (_localCamera is null)
+            return;
+
+        Rect2 bounds = GetMapBounds();
+        _localCamera.LimitLeft = Mathf.RoundToInt(bounds.Position.X);
+        _localCamera.LimitTop = Mathf.RoundToInt(bounds.Position.Y);
+        _localCamera.LimitRight = Mathf.RoundToInt(bounds.End.X);
+        _localCamera.LimitBottom = Mathf.RoundToInt(bounds.End.Y);
     }
 
     private void ApplyVisualState()
@@ -653,7 +892,7 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private void ClampToViewport()
     {
-        Rect2 viewportRect = GetViewportRect();
+        Rect2 viewportRect = GetMapBounds();
         if (_animatedSprite is null)
         {
             GlobalPosition = GlobalPosition.Clamp(viewportRect.Position, viewportRect.End);
@@ -665,4 +904,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Vector2 maximumPosition = viewportRect.End - bounds.End;
         GlobalPosition = GlobalPosition.Clamp(minimumPosition, maximumPosition);
     }
+
+    private Rect2 GetMapBounds() =>
+        WorldMaps.TryGetBounds(MapId, out Rect2 bounds) ? bounds : WorldMaps.KameHouseBounds;
 }

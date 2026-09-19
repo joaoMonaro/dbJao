@@ -19,6 +19,7 @@ public partial class NetworkManager : Node2D
     private Button? _connectButton;
     private Label? _statusLabel;
     private int _nextSpawnIndex;
+    private bool _multiplayerSignalsConnected;
 
     public override void _EnterTree()
     {
@@ -63,6 +64,7 @@ public partial class NetworkManager : Node2D
         Multiplayer.ConnectedToServer += OnConnectedToServer;
         Multiplayer.ConnectionFailed += OnConnectionFailed;
         Multiplayer.ServerDisconnected += OnServerDisconnected;
+        _multiplayerSignalsConnected = true;
 
         if (RunningAsServer)
             StartServer();
@@ -72,11 +74,15 @@ public partial class NetworkManager : Node2D
 
     public override void _ExitTree()
     {
-        Multiplayer.PeerConnected -= OnPeerConnected;
-        Multiplayer.PeerDisconnected -= OnPeerDisconnected;
-        Multiplayer.ConnectedToServer -= OnConnectedToServer;
-        Multiplayer.ConnectionFailed -= OnConnectionFailed;
-        Multiplayer.ServerDisconnected -= OnServerDisconnected;
+        if (_multiplayerSignalsConnected)
+        {
+            Multiplayer.PeerConnected -= OnPeerConnected;
+            Multiplayer.PeerDisconnected -= OnPeerDisconnected;
+            Multiplayer.ConnectedToServer -= OnConnectedToServer;
+            Multiplayer.ConnectionFailed -= OnConnectionFailed;
+            Multiplayer.ServerDisconnected -= OnServerDisconnected;
+            _multiplayerSignalsConnected = false;
+        }
 
         _clientPeer?.Close();
         _clientPeer = null;
@@ -226,16 +232,27 @@ public partial class NetworkManager : Node2D
         player.AuthenticatedUserId = character.UserId.ToString("D");
         player.CharacterId = character.CharacterId.ToString("D");
         player.CharacterName = character.CharacterName;
-        player.CharacterLevel = Math.Max(character.Level, 1);
-        player.CharacterExperience = Math.Max(character.Experience, 0);
-        player.MapId = string.IsNullOrWhiteSpace(character.MapId)
-            ? "kame_house"
-            : character.MapId;
+        ProgressionSnapshot progression = Player.RebuildProgression(character.TotalXp);
+        if (character.Level != progression.State.Level
+            || character.Reset != progression.State.Reset)
+        {
+            GD.PushWarning($"[SERVER] Progressão persistida divergente para {character.CharacterId}; TotalXp prevaleceu.");
+        }
+        player.TotalXp = progression.State.TotalXp;
+        player.Level = progression.State.Level;
+        player.Reset = progression.State.Reset;
+        bool knownMap = WorldMaps.TryGetBounds(character.MapId, out Rect2 mapBounds);
+        player.MapId = knownMap ? character.MapId : WorldMaps.KameHouse;
+        if (!knownMap)
+            mapBounds = WorldMaps.KameHouseBounds;
         player.MaxHealth = Math.Max(character.MaxHealth, 1);
         player.Position =
             float.IsFinite(character.PositionX) && float.IsFinite(character.PositionY)
+                && mapBounds.HasPoint(new Vector2(character.PositionX, character.PositionY))
                 ? new Vector2(character.PositionX, character.PositionY)
-                : GetNextSpawnPosition();
+                : player.MapId == WorldMaps.CleanPath
+                    ? WorldMaps.GetArrivalPosition(player.MapId)
+                    : GetNextSpawnPosition();
         _players.AddChild(player);
         player.ApplyAuthenticatedInitialState(character);
         GD.Print(
@@ -368,7 +385,7 @@ public partial class NetworkManager : Node2D
             return false;
         }
 
-        string[] expectedNpcNames = { "Sidra", "Pilaf" };
+        string[] expectedNpcNames = { "Sidra", "Pilaf", "CleanPathPilaf", "CleanPathPilaf2", "CleanPathPilaf3" };
         bool isValid = true;
 
         if (_npcs.GetChildCount() != expectedNpcNames.Length)

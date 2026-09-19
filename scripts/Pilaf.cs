@@ -127,7 +127,8 @@ public partial class Pilaf : NpcBase
 
         foreach (Node node in GetTree().GetNodesInGroup(TargetGroup))
         {
-            if (node is not Player player || !player.CanAct)
+            if (node is not Player player || !player.CanAct
+                || !WorldMaps.GetBoundsAt(GlobalPosition).HasPoint(player.GlobalPosition))
                 continue;
 
             float distanceSquared = GlobalPosition.DistanceSquaredTo(player.GlobalPosition);
@@ -184,7 +185,8 @@ public partial class Pilaf : NpcBase
 
         foreach (Player player in _contactTargets)
         {
-            if (!GodotObject.IsInstanceValid(player) || !player.CanAct)
+            if (!GodotObject.IsInstanceValid(player) || !player.CanAct
+                || !WorldMaps.GetBoundsAt(GlobalPosition).HasPoint(player.GlobalPosition))
             {
                 invalidPlayers.Add(player);
                 continue;
@@ -240,9 +242,10 @@ public partial class Pilaf : NpcBase
             SetServerAttacking(false);
     }
 
-    private static bool IsValidTarget(Node2D? target)
+    private bool IsValidTarget(Node2D? target)
     {
-        return GodotObject.IsInstanceValid(target) && target is Player player && player.CanAct;
+        return GodotObject.IsInstanceValid(target) && target is Player player && player.CanAct
+            && WorldMaps.GetBoundsAt(GlobalPosition).HasPoint(player.GlobalPosition);
     }
 
     private void UpdateAttackPresentation()

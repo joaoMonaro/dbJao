@@ -21,6 +21,7 @@ export GAME_API_URL="${GAME_API_URL:-http://127.0.0.1:5000}"
 export GAME_SERVER_ID="${GAME_SERVER_ID:-local-server-01}"
 export GAME_AUTH_TIMEOUT_SECONDS="${GAME_AUTH_TIMEOUT_SECONDS:-10}"
 export GAME_API_TIMEOUT_SECONDS="${GAME_API_TIMEOUT_SECONDS:-5}"
+export DEBUG_COMMANDS_ENABLED="${DEBUG_COMMANDS_ENABLED:-true}"
 
 if [[ -z "${GAME_SERVER_API_KEY:-}" ]]; then
   echo "Erro: GAME_SERVER_API_KEY não está configurada em ${ENV_FILE}." >&2

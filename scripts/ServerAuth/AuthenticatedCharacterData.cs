@@ -7,7 +7,8 @@ public sealed class AuthenticatedCharacterData
     public string Username { get; init; } = string.Empty;
     public string CharacterName { get; init; } = string.Empty;
     public int Level { get; init; }
-    public long Experience { get; init; }
+    public long Reset { get; init; }
+    public long TotalXp { get; init; }
     public int CurrentHealth { get; init; }
     public int MaxHealth { get; init; }
     public string MapId { get; init; } = string.Empty;

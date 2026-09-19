@@ -99,7 +99,11 @@ public partial class NpcBase : CharacterBody2D, IDamageable
         if (!CanRunServerAi() || _health is null)
             return false;
 
-        return _health.ApplyDamage(damageInfo);
+        bool damageApplied = _health.ApplyDamage(damageInfo);
+        if (damageApplied && _health.IsDead)
+            OnKilled(damageInfo);
+
+        return damageApplied;
     }
 
     protected bool CanRunServerAi()
@@ -167,13 +171,17 @@ public partial class NpcBase : CharacterBody2D, IDamageable
     {
     }
 
+    protected virtual void OnKilled(DamageInfo killingBlow)
+    {
+    }
+
     protected virtual void OnRespawned()
     {
     }
 
     protected Vector2 KeepInsideViewport(Vector2? halfSpriteSizeOverride = null)
     {
-        Rect2 viewportRect = GetViewportRect();
+        Rect2 viewportRect = WorldMaps.GetBoundsAt(_spawnPosition);
         Vector2 halfSpriteSize;
 
         if (halfSpriteSizeOverride is Vector2 configuredHalfSize)

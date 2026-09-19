@@ -62,7 +62,11 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             || payload.CurrentHealth is null
             || payload.MaxHealth is null
             || payload.Level is null
-            || payload.Experience is null
+            || payload.Reset is null
+            || payload.TotalXp is null
+            || payload.Level is < 0 or >= 200
+            || payload.Reset < 0
+            || payload.TotalXp < 0
             || payload.PositionX is null
             || payload.PositionY is null
             || string.IsNullOrWhiteSpace(payload.Username)
@@ -79,7 +83,8 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             Username = payload.Username,
             CharacterName = payload.CharacterName,
             Level = payload.Level.Value,
-            Experience = payload.Experience.Value,
+            Reset = payload.Reset.Value,
+            TotalXp = payload.TotalXp.Value,
             CurrentHealth = payload.CurrentHealth.Value,
             MaxHealth = payload.MaxHealth.Value,
             MapId = payload.MapId,
@@ -100,6 +105,9 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             new SaveCharacterStateApiRequest(
                 state.UserId,
                 state.CurrentHealth,
+                state.Level,
+                state.Reset,
+                state.TotalXp,
                 state.MapId,
                 state.PositionX,
                 state.PositionY),

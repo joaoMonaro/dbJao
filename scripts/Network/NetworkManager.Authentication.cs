@@ -428,7 +428,7 @@ public partial class NetworkManager
             foreach (CharacterApiResponse character in characters)
             {
                 _characterOptions.AddItem(
-                    $"{character.Name} - Nv. {character.Level}");
+                    $"{character.Name} - Nv. {character.Level} / Reset {character.Reset}");
                 int index = _characterOptions.ItemCount - 1;
                 _characterOptions.SetItemMetadata(index, character.Id.ToString("D"));
             }

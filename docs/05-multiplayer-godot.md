@@ -66,15 +66,64 @@ Input Map atual:
 
 Movimento possui WASD e setas configurados em `project.godot`.
 
+## Mapas e viagem
+
+`KameHouse.tscn` mantém o `NetworkManager`, os jogadores e os NPCs durante a viagem.
+`CleanPath.tscn` é instanciada como cenário em outra região do mesmo mundo. Os limites,
+IDs e pontos de chegada estão em `scripts/WorldMaps.cs`.
+
+O HUD envia somente o ID do destino. O servidor valida o peer autenticado, o estado
+do jogador e o destino permitido; então define `MapId`, posição e ponto de respawn.
+`MultiplayerSynchronizer` replica `MapId` e posição. A câmera local usa os limites
+do mapa atual. Na reconexão, posição e mapa salvos são validados antes do spawn.
+
 ## NPCs
 
-`Sidra` e `Pilaf` ficam diretamente em `KameHouse/NPCs`.
+`Sidra`, `Pilaf` e os três Pilafs de Clean Path ficam diretamente em
+`KameHouse/NPCs`.
 
 - IA e aleatoriedade rodam somente no servidor;
 - movimento e colisão são oficiais no servidor;
 - posição, velocidade, direção e estado são sincronizados;
 - conexão de jogador não recria NPC;
 - morte e respawn mantêm o mesmo node.
+
+## Progressão
+
+`Player.AddXp(long amount)` é a entrada para futuras recompensas. Ela executa
+somente no servidor dedicado e recebe a quantidade final de XP; o cliente não
+possui RPC para conceder XP. A origem da recompensa fica fora da progressão.
+
+`CharacterProgression` aplica os níveis e resets; `ExponentialXpCurve` calcula o
+custo do próximo nível. `XpCurveSettings.Default` centraliza `BaseXp = 100`,
+`GrowthRate = 1.01` e `LevelsPerReset = 200`. Uma mudança em `LevelsPerReset`
+também exige ajustar a validação e a constraint do banco em nova migration.
+
+`TotalXp` é histórico e não é consumido. O XP dentro do nível é derivado de
+`TotalXp`; `Level` e `Reset` são reconstruídos desse total no login. O servidor
+replica os três campos pelo `MultiplayerSynchronizer` e os salva junto com o
+estado do personagem na desconexão. O Player expõe os sinais `XpGained`,
+`LevelUp` e `ResetCompleted` para futuras reações, sem conceder bônus agora.
+
+O Sidra é a primeira fonte de XP integrada. Sua propriedade exportada `XpReward`
+vale 25. Quando `HealthComponent` aceita o golpe fatal, `NpcBase` encaminha o
+`DamageInfo` para `Sidra.OnKilled`. O Sidra valida que a origem é um jogador,
+resolve `AttackerPeerId` no container autoritativo `Players` e chama
+`Player.AddXp`. Dano posterior à morte é rejeitado por `HealthComponent`, portanto
+a mesma morte não gera uma segunda recompensa.
+
+### Comandos de debug de XP
+
+Builds debug exibem no HUD uma entrada para `/addxp <quantidade>`, `/addxpnext` e
+`/xpinfo`; a tecla `/` coloca o foco nela. O cliente envia somente o texto do comando
+por RPC confiável no seu próprio `Player`. O servidor confirma o remetente com
+`GetRemoteSenderId()`, `OwnerPeerId`, o node autenticado e `CharacterId`.
+
+O servidor aceita os comandos apenas quando roda em build debug e a variável
+`DEBUG_COMMANDS_ENABLED=true` está definida. `scripts/dev-server.sh` ativa essa
+variável por padrão; ela permanece desabilitada quando ausente. `/addxp` e
+`/addxpnext` chamam `Player.AddXp`, preservando a mesma progressão usada pelo Sidra.
+`/xpinfo` apenas consulta o snapshot reconstruído de `TotalXp`.
 
 ## Combate e vida
 

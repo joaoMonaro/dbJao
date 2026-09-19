@@ -18,7 +18,8 @@ public sealed record CharacterApiResponse(
     Guid Id,
     string Name,
     int Level,
-    long Experience,
+    long Reset,
+    long TotalXp,
     int CurrentHealth,
     string MapId,
     float PositionX,
@@ -45,7 +46,8 @@ public sealed class ValidateGameSessionApiResponse
     public string? Username { get; init; }
     public string? CharacterName { get; init; }
     public int? Level { get; init; }
-    public long? Experience { get; init; }
+    public long? Reset { get; init; }
+    public long? TotalXp { get; init; }
     public int? CurrentHealth { get; init; }
     public int? MaxHealth { get; init; }
     public string? MapId { get; init; }
@@ -56,6 +58,9 @@ public sealed class ValidateGameSessionApiResponse
 public sealed record SaveCharacterStateApiRequest(
     Guid UserId,
     int CurrentHealth,
+    int Level,
+    long Reset,
+    long TotalXp,
     string MapId,
     float PositionX,
     float PositionY);

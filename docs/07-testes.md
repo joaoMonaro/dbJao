@@ -15,12 +15,14 @@ dotnet build dbjao.csproj
 dotnet build backend/GameBackend.sln
 dotnet test backend/GameBackend.sln
 importação de assets e cena principal em Godot headless, quando disponível
+teste headless da integração Sidra → killer → progressão, quando Godot está disponível
+teste headless dos comandos de debug de XP, quando Godot está disponível
 git diff --check e git diff --cached --check
 ```
 
 O build Godot possui atualmente dois warnings `CS0649` preexistentes em
 `NetworkManager.Authentication.cs`. Não introduza warnings adicionais. A suíte possui
-16 testes neste baseline, mas automações não devem fixar esse número.
+30 testes neste baseline, mas automações não devem fixar esse número.
 
 Se Godot não for encontrado, o smoke aparece como `SKIP`. Instale Godot 4.7.2 Mono ou
 defina `GODOT_BIN=/caminho/para/o/executavel` antes de validar alterações de cenas,
@@ -66,7 +68,7 @@ godot --headless --path . -- --server
 
 Confirme:
 
-- dois NPCs inicializados;
+- cinco NPCs inicializados (dois em Kame House e três em Clean Path);
 - backend configurado;
 - servidor na porta 7000;
 - nenhuma janela;
@@ -88,6 +90,25 @@ Confirme:
 11. Mate um NPC e confirme respawn sincronizado.
 12. Feche A e confirme remoção em B.
 13. Entre novamente com A e confirme posição/vida persistidas.
+14. Com A e B conectados, viaje para Clean Path pelo HUD e confirme que ambos veem os jogadores no mapa.
+15. Retorne à Kame House e confirme que os dois clientes recebem as posições oficiais.
+16. Desconecte em Clean Path e entre novamente para confirmar mapa e posição persistidos.
+
+Para progressão, conceda XP somente por `Player.AddXp` no servidor de teste.
+Confirme que dois clientes veem `TotalXp`, `Level` e `Reset` iguais, que uma
+concessão atravessa o nível 199 e que a reconexão mantém os três valores.
+
+O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
+
+- dano não fatal não concede XP;
+- o peer do golpe fatal recebe a recompensa de XP aplicada pelo Sidra;
+- dano repetido durante a mesma morte não duplica a recompensa;
+- a recompensa pode causar Level Up e Reset;
+- XP excedente é preservado.
+
+O teste `tests/godot/DebugXpCommandsIntegrationTest.tscn` valida `/addxp`, entradas
+inválidas, bloqueio quando os comandos estão desabilitados, XP exato do
+`/addxpnext`, Reset no Level 199 e leitura sem mutação do `/xpinfo`.
 
 ## Casos de autenticação
 

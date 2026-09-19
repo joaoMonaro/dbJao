@@ -86,6 +86,52 @@ if GODOT_EXECUTABLE="$(find_godot)"; then
     fi
 
     echo "[PASS] Cena principal iniciou em Godot headless."
+
+    : > "${GODOT_LOG}"
+    echo "[GODOT] Teste de integração de XP do Sidra"
+    if ! "${GODOT_EXECUTABLE}" \
+      --headless \
+      --path "${PROJECT_DIR}" \
+      --quit-after 10 \
+      res://tests/godot/SidraXpIntegrationTest.tscn \
+      -- \
+      --server 2>&1 | tee "${GODOT_LOG}"; then
+      echo "[FAIL] Teste de integração do Sidra encerrou com código de erro." >&2
+      exit 1
+    fi
+
+    if rg -n 'ERROR:|SCRIPT ERROR:|Unhandled exception|Failed to load' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste de integração do Sidra registrou erro grave." >&2
+      exit 1
+    fi
+
+    if ! rg -F '[PASS] Integração Sidra -> killer -> progressão validada.' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste de integração do Sidra não confirmou o fluxo esperado." >&2
+      exit 1
+    fi
+
+    : > "${GODOT_LOG}"
+    echo "[GODOT] Teste dos comandos de debug de XP"
+    if ! "${GODOT_EXECUTABLE}" \
+      --headless \
+      --path "${PROJECT_DIR}" \
+      --quit-after 10 \
+      res://tests/godot/DebugXpCommandsIntegrationTest.tscn \
+      -- \
+      --server 2>&1 | tee "${GODOT_LOG}"; then
+      echo "[FAIL] Teste dos comandos de debug de XP encerrou com código de erro." >&2
+      exit 1
+    fi
+
+    if rg -n 'ERROR:|SCRIPT ERROR:|Unhandled exception|Failed to load' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste dos comandos de debug de XP registrou erro grave." >&2
+      exit 1
+    fi
+
+    if ! rg -F '[PASS] Comandos de debug de XP validados.' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste dos comandos de debug de XP não confirmou o fluxo esperado." >&2
+      exit 1
+    fi
   fi
 else
   GODOT_STATUS=$?

@@ -68,12 +68,12 @@ script = ExtResource("1_script")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 offset_right = 360.0
-offset_bottom = 120.0
+offset_bottom = 140.0
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
-custom_minimum_size = Vector2(340, 100)
+custom_minimum_size = Vector2(340, 120)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer"]
@@ -131,6 +131,10 @@ label_settings = SubResource("LabelSettings_bar")
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="ProgressionLabel" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
+text = "Nível 0 | Reset 0"
+horizontal_alignment = 1
+
 [node name="ExperienceBar" type="ProgressBar" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
 custom_minimum_size = Vector2(220, 20)
 theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
@@ -169,6 +173,40 @@ texture_normal = ExtResource("3_map_icon")
 ignore_texture_size = true
 stretch_mode = 5
 
+[node name="DebugCommands" type="PanelContainer" parent="."]
+visible = false
+offset_left = 1000.0
+offset_top = 20.0
+offset_right = 1580.0
+offset_bottom = 174.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="DebugCommands"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DebugCommands/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="DebugCommands/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Comandos de XP — pressione /"
+
+[node name="Output" type="Label" parent="DebugCommands/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+text = "/addxp <quantidade> | /addxpnext | /xpinfo"
+autowrap_mode = 2
+
+[node name="Input" type="LineEdit" parent="DebugCommands/MarginContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "/addxp 100"
+clear_button_enabled = true
+
 [node name="MapModal" type="Control" parent="."]
 visible = false
 layout_mode = 3
@@ -197,9 +235,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -220.0
-offset_top = -140.0
+offset_top = -190.0
 offset_right = 220.0
-offset_bottom = 140.0
+offset_bottom = 190.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
@@ -231,6 +269,12 @@ theme_override_font_sizes/font_size = 16
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 text = "Ir para Clean Path"
+theme_override_font_sizes/font_size = 18
+
+[node name="KameHouseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+text = "Ir para Kame House"
 theme_override_font_sizes/font_size = 18
 
 [node name="CloseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
