@@ -5,8 +5,9 @@ public sealed class Character : IAuditableEntity
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid UserId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Level { get; set; } = 1;
-    public long Experience { get; set; }
+    public int Level { get; set; }
+    public long Reset { get; set; }
+    public long TotalXp { get; set; }
     public int CurrentHealth { get; set; } = 100;
     public int MaxHealth { get; set; } = 100;
     public string MapId { get; set; } = "kame_house";

@@ -49,7 +49,7 @@ ser exposto sem a chave e proteção de rede.
 
 ### Character
 
-- dono, nome, nível e experiência;
+- dono, nome, `TotalXp` histórico (`bigint`), `Level` (0 a 199) e `Reset` (`bigint`);
 - vida atual e máxima;
 - mapa e posição persistida;
 - datas de criação e atualização.
@@ -116,6 +116,11 @@ dotnet tool run dotnet-ef migrations list \
 
 O container aplica migrations pendentes no startup. Revise a migration gerada antes
 de versioná-la, principalmente constraints e migração de dados existentes.
+
+`AddCharacterProgression` renomeia a coluna antiga `Experience` para `TotalXp`,
+preserva seu valor e reconstrói `Level`/`Reset` com a curva inicial. O estado salvo
+pelo servidor inclui os três campos. O banco rejeita níveis fora de 0 a 199,
+Reset negativo e TotalXp negativo.
 
 ## Inspecionar PostgreSQL
 

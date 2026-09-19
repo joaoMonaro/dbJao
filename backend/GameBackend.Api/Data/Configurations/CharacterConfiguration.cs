@@ -17,10 +17,14 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .IsRequired();
 
         builder.Property(character => character.Level)
-            .HasDefaultValue(1)
+            .HasDefaultValue(0)
             .IsRequired();
 
-        builder.Property(character => character.Experience)
+        builder.Property(character => character.Reset)
+            .HasDefaultValue(0L)
+            .IsRequired();
+
+        builder.Property(character => character.TotalXp)
             .HasDefaultValue(0L)
             .IsRequired();
 
@@ -47,8 +51,9 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
 
         builder.ToTable(table =>
         {
-            table.HasCheckConstraint("ck_characters_level", "\"Level\" >= 1");
-            table.HasCheckConstraint("ck_characters_experience", "\"Experience\" >= 0");
+            table.HasCheckConstraint("ck_characters_level", "\"Level\" >= 0 AND \"Level\" < 200");
+            table.HasCheckConstraint("ck_characters_reset", "\"Reset\" >= 0");
+            table.HasCheckConstraint("ck_characters_total_xp", "\"TotalXp\" >= 0");
             table.HasCheckConstraint("ck_characters_current_health", "\"CurrentHealth\" >= 0");
             table.HasCheckConstraint("ck_characters_max_health", "\"MaxHealth\" > 0");
             table.HasCheckConstraint(

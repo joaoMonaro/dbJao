@@ -77,6 +77,9 @@ public sealed class GameSessionServiceTests
         Assert.Equal(CharacterId, result.CharacterId);
         Assert.Equal("Goku", result.CharacterName);
         Assert.Equal(100, result.MaxHealth);
+        Assert.Equal(0, result.Level);
+        Assert.Equal(0, result.Reset);
+        Assert.Equal(0, result.TotalXp);
     }
 
     [Fact]
@@ -274,6 +277,9 @@ public sealed class GameSessionServiceTests
             Guid characterId,
             Guid userId,
             int currentHealth,
+            int level,
+            long reset,
+            long totalXp,
             string mapId,
             float positionX,
             float positionY,
