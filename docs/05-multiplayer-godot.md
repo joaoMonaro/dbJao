@@ -187,9 +187,10 @@ a mesma morte não gera uma segunda recompensa.
 
 ### Comandos de debug de XP
 
-Builds debug exibem no HUD uma entrada para `/addxp <quantidade>`, `/addxpnext` e
-`/xpinfo`; a tecla `/` coloca o foco nela. O cliente envia somente o texto do comando
-por RPC confiável no seu próprio `Player`. O servidor confirma o remetente com
+Builds debug exibem um botão `XP` recolhido no canto superior direito do HUD. O botão
+ou a tecla `/` abre a entrada para `/addxp <quantidade>`, `/addxpnext` e `/xpinfo`;
+`Esc` recolhe o painel. O cliente envia somente o texto do comando por RPC confiável
+no seu próprio `Player`. O servidor confirma o remetente com
 `GetRemoteSenderId()`, `OwnerPeerId`, o node autenticado e `CharacterId`.
 
 O servidor aceita os comandos apenas quando roda em build debug e a variável

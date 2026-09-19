@@ -17,6 +17,7 @@ public partial class Hud : CanvasLayer
     private Button _closeMapButton = null!;
     private Button _cleanPathButton = null!;
     private Button _kameHouseButton = null!;
+    private Button _debugCommandsToggle = null!;
     private PanelContainer _debugCommandsPanel = null!;
     private Label _debugCommandOutput = null!;
     private LineEdit _debugCommandInput = null!;
@@ -59,6 +60,7 @@ public partial class Hud : CanvasLayer
         _kameHouseButton = GetNode<Button>(
             "MapModal/MapPanel/MarginContainer/VBoxContainer/KameHouseButton"
         );
+        _debugCommandsToggle = GetNode<Button>("DebugCommandsToggle");
         _debugCommandsPanel = GetNode<PanelContainer>("DebugCommands");
         _debugCommandOutput = GetNode<Label>(
             "DebugCommands/MarginContainer/VBoxContainer/Output"
@@ -71,8 +73,10 @@ public partial class Hud : CanvasLayer
         _closeMapButton.Pressed += CloseMapModal;
         _cleanPathButton.Pressed += TravelToCleanPath;
         _kameHouseButton.Pressed += TravelToKameHouse;
+        _debugCommandsToggle.Pressed += ToggleDebugCommands;
         _debugCommandInput.TextSubmitted += SubmitDebugCommand;
-        _debugCommandsPanel.Visible = OS.IsDebugBuild();
+        _debugCommandsToggle.Visible = OS.IsDebugBuild();
+        SetDebugCommandsExpanded(false);
 
         GetTree().NodeAdded += OnNodeAdded;
         CallDeferred(MethodName.TryBindLocalPlayer);
@@ -81,26 +85,28 @@ public partial class Hud : CanvasLayer
     public override void _ExitTree()
     {
         GetTree().NodeAdded -= OnNodeAdded;
+        _debugCommandsToggle.Pressed -= ToggleDebugCommands;
         _debugCommandInput.TextSubmitted -= SubmitDebugCommand;
         UnbindPlayer();
     }
 
     public override void _UnhandledInput(InputEvent input)
     {
-        if (!_debugCommandsPanel.Visible || input is not InputEventKey key
+        if (!_debugCommandsToggle.Visible || input is not InputEventKey key
             || !key.Pressed || key.Echo)
             return;
 
         if (key.Keycode == Key.Slash && !_debugCommandInput.HasFocus())
         {
+            SetDebugCommandsExpanded(true);
             _debugCommandInput.Text = "/";
             _debugCommandInput.CaretColumn = 1;
             _debugCommandInput.GrabFocus();
             GetViewport().SetInputAsHandled();
         }
-        else if (key.Keycode == Key.Escape && _debugCommandInput.HasFocus())
+        else if (key.Keycode == Key.Escape && _debugCommandsPanel.Visible)
         {
-            _debugCommandInput.ReleaseFocus();
+            SetDebugCommandsExpanded(false);
             GetViewport().SetInputAsHandled();
         }
     }
@@ -231,6 +237,25 @@ public partial class Hud : CanvasLayer
         _debugCommandOutput.Modulate = success
             ? new Color("b8f5b1")
             : new Color("ff9e9e");
+    }
+
+    private void ToggleDebugCommands()
+    {
+        SetDebugCommandsExpanded(!_debugCommandsPanel.Visible);
+        if (_debugCommandsPanel.Visible)
+            _debugCommandInput.GrabFocus();
+    }
+
+    private void SetDebugCommandsExpanded(bool expanded)
+    {
+        _debugCommandsPanel.Visible = expanded && _debugCommandsToggle.Visible;
+        _debugCommandsToggle.Text = _debugCommandsPanel.Visible ? "×" : "XP";
+        _debugCommandsToggle.TooltipText = _debugCommandsPanel.Visible
+            ? "Recolher comandos de debug"
+            : "Abrir comandos de debug de XP";
+
+        if (!_debugCommandsPanel.Visible && _debugCommandInput.HasFocus())
+            _debugCommandInput.ReleaseFocus();
     }
 
     private void OpenMapModal()

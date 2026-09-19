@@ -36,10 +36,11 @@ bloqueando os comandos mesmo que receba `DEBUG_COMMANDS_ENABLED=true`.
 1. Inicie API, banco e servidor dedicado.
 2. Abra o cliente com `godot --path .`.
 3. Faça login e entre com um personagem.
-4. Pressione `/` para colocar o foco na entrada de debug do HUD.
+4. Clique no botão `XP` no canto superior direito ou pressione `/` para abrir o painel.
 5. Digite o comando e pressione `Enter`.
 
-O painel só aparece em builds debug. Pressione `Esc` para devolver o foco ao jogo.
+O painel inicia recolhido e só fica disponível em builds debug. Clique no botão `×`
+ou pressione `Esc` para recolhê-lo e devolver o foco ao jogo.
 Enquanto a entrada está focada, teclas de texto não movimentam nem fazem o
 personagem atacar.
 
