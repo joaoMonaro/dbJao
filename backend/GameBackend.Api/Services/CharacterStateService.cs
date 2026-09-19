@@ -18,6 +18,10 @@ public sealed class CharacterStateService(
             || request.BaseBattlePower < 10)
             return false;
 
+        string activeCharacterId = request.ActiveCharacterId.Trim();
+        if (string.IsNullOrWhiteSpace(activeCharacterId))
+            return false;
+
         string mapId = request.MapId.Trim();
         if (string.IsNullOrWhiteSpace(mapId))
             return false;
@@ -30,6 +34,7 @@ public sealed class CharacterStateService(
             request.Reset,
             request.TotalXp,
             request.BaseBattlePower,
+            activeCharacterId,
             mapId,
             request.PositionX,
             request.PositionY,

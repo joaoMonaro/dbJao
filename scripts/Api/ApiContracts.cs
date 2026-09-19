@@ -21,6 +21,7 @@ public sealed record CharacterApiResponse(
     long Reset,
     long TotalXp,
     long BaseBattlePower,
+    string ActiveCharacterId,
     int CurrentHealth,
     string MapId,
     float PositionX,
@@ -50,6 +51,7 @@ public sealed class ValidateGameSessionApiResponse
     public long? Reset { get; init; }
     public long? TotalXp { get; init; }
     public long? BaseBattlePower { get; init; }
+    public string? ActiveCharacterId { get; init; }
     public int? CurrentHealth { get; init; }
     public int? MaxHealth { get; init; }
     public string? MapId { get; init; }
@@ -64,6 +66,7 @@ public sealed record SaveCharacterStateApiRequest(
     long Reset,
     long TotalXp,
     long BaseBattlePower,
+    string ActiveCharacterId,
     string MapId,
     float PositionX,
     float PositionY);

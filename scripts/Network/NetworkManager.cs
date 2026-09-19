@@ -3,7 +3,6 @@ using System;
 
 public partial class NetworkManager : Node2D
 {
-    [Export] public PackedScene? PlayerScene { get; set; }
     [Export] public PackedScene? HudScene { get; set; }
     [Export] public NodePath PlayersPath { get; set; } = new("Players");
     [Export] public NodePath SpawnerPath { get; set; } = new("MultiplayerSpawner");
@@ -46,9 +45,8 @@ public partial class NetworkManager : Node2D
             return;
         }
 
-        if (PlayerScene is null)
+        if (!ConfigurePlayableCharacterScenes())
         {
-            GD.PushError("[NETWORK] Cena do jogador não configurada.");
             StopDedicatedServerAfterStartupError();
             return;
         }
@@ -213,13 +211,26 @@ public partial class NetworkManager : Node2D
             return false;
         }
 
-        if (PlayerScene is null)
+        CharacterDefinition definition = CharacterRegistry.ResolveOrDefault(
+            character.ActiveCharacterId,
+            out bool usedFallback);
+        if (usedFallback)
         {
-            GD.PushError($"[SERVER] Cena do jogador não configurada; peer {peerId} não foi criado.");
+            GD.PushError(
+                $"[CHARACTER] Personagem ativo inválido '{character.ActiveCharacterId}' "
+                + $"para {character.CharacterId}; usando '{definition.Id}'.");
+            character.ActiveCharacterId = definition.Id;
+        }
+
+        PackedScene? playerScene = GD.Load<PackedScene>(definition.PlayerScenePath);
+        if (playerScene is null)
+        {
+            GD.PushError(
+                $"[SERVER] Cena '{definition.PlayerScenePath}' ausente para '{definition.Id}'.");
             return false;
         }
 
-        Node instance = PlayerScene.Instantiate();
+        Node instance = playerScene.Instantiate();
         if (instance is not Player player)
         {
             GD.PushError("[SERVER] A cena configurada não possui Player como node raiz.");
@@ -242,6 +253,7 @@ public partial class NetworkManager : Node2D
         player.Level = progression.State.Level;
         player.Reset = progression.State.Reset;
         player.BaseBattlePower = character.BaseBattlePower;
+        player.ActiveCharacterId = definition.Id;
         bool knownMap = WorldMaps.TryGetBounds(character.MapId, out Rect2 mapBounds);
         player.MapId = knownMap ? character.MapId : WorldMaps.KameHouse;
         if (!knownMap)
@@ -258,6 +270,27 @@ public partial class NetworkManager : Node2D
         player.ApplyAuthenticatedInitialState(character);
         GD.Print(
             $"[SERVER] Jogador criado: peer {peerId}, personagem {character.CharacterId}");
+        return true;
+    }
+
+    private bool ConfigurePlayableCharacterScenes()
+    {
+        if (_spawner is null)
+            return false;
+
+        foreach (CharacterDefinition definition in CharacterRegistry.All)
+        {
+            if (!ResourceLoader.Exists(definition.PlayerScenePath, "PackedScene"))
+            {
+                GD.PushError(
+                    $"[CHARACTER] Cena '{definition.PlayerScenePath}' ausente "
+                    + $"para '{definition.Id}'.");
+                return false;
+            }
+
+            _spawner.AddSpawnableScene(definition.PlayerScenePath);
+        }
+
         return true;
     }
 

@@ -2,6 +2,8 @@ namespace GameBackend.Api.Entities;
 
 public sealed class Character : IAuditableEntity
 {
+    public const string DefaultActiveCharacterId = "goku";
+
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid UserId { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -9,6 +11,7 @@ public sealed class Character : IAuditableEntity
     public long Reset { get; set; }
     public long TotalXp { get; set; }
     public long BaseBattlePower { get; set; } = 10;
+    public string ActiveCharacterId { get; set; } = DefaultActiveCharacterId;
     public int CurrentHealth { get; set; } = 100;
     public int MaxHealth { get; set; } = 100;
     public string MapId { get; set; } = "kame_house";

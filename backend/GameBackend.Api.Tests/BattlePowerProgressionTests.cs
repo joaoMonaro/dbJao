@@ -24,6 +24,7 @@ public sealed class BattlePowerProgressionTests
 
         Assert.Equal(BattlePowerSettings.Default.InitialBattlePower,
             character.BaseBattlePower);
+        Assert.Equal(CharacterRegistry.DefaultCharacterId, character.ActiveCharacterId);
     }
 
     [Theory]

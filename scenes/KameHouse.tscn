@@ -1,7 +1,6 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" uid="uid://c1s4fwyq08bj6" path="res://assets/maps/kame_house.png" id="1_map"]
-[ext_resource type="PackedScene" uid="uid://x2rc0auym4w3" path="res://scenes/Player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/Sidra.tscn" id="3_sidra"]
 [ext_resource type="PackedScene" path="res://scenes/Pilaf.tscn" id="4_pilaf"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
@@ -10,7 +9,6 @@
 
 [node name="KameHouse" type="Node2D"]
 script = ExtResource("6_network")
-PlayerScene = ExtResource("2_player")
 HudScene = ExtResource("5_hud")
 
 [node name="Map" type="Sprite2D" parent="."]
@@ -25,7 +23,6 @@ position = Vector2(2048, 0)
 [node name="Players" type="Node2D" parent="."]
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
-_spawnable_scenes = PackedStringArray("res://scenes/Player.tscn")
 spawn_path = NodePath("../Players")
 
 [node name="NPCs" type="Node2D" parent="."]

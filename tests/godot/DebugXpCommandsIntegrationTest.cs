@@ -28,6 +28,11 @@ public partial class DebugXpCommandsIntegrationTest : NetworkManager
                 "O teste precisa executar como servidor.");
             Assert(_player.BaseBattlePower == 10,
                 "Personagem novo não iniciou com Poder de Luta 10.");
+            Assert(_player.ActiveCharacterId == "goku"
+                && _player.ActiveCharacterDefinition.Name == "Goku",
+                "Personagem novo não iniciou com Goku ativo.");
+            Assert(_player.CurrentCombatStats == new CombatStats(10, 10, 10),
+                "Stats iniciais do Goku não foram derivados do Poder de Luta.");
 
             DebugXpCommandResult blocked = Execute("/addxp 100", enabled: false);
             Assert(!blocked.Success && _player.TotalXp == 0,
@@ -50,6 +55,8 @@ public partial class DebugXpCommandsIntegrationTest : NetworkManager
                 "/addxp não passou pela progressão real.");
             Assert(_player.BaseBattlePower == 110,
                 "Um Level Up não concedeu exatamente 100 de Poder de Luta.");
+            Assert(_player.CurrentCombatStats == new CombatStats(110, 110, 110),
+                "Stats derivados não acompanharam o Poder de Luta.");
 
             SetProgression(125);
             ProgressionSnapshot beforeNext = Player.RebuildProgression(_player.TotalXp);
@@ -103,6 +110,7 @@ public partial class DebugXpCommandsIntegrationTest : NetworkManager
                 Level = 5,
                 Reset = 0,
                 BaseBattlePower = 510,
+                ActiveCharacterId = "goku",
                 CurrentHealth = 100,
                 MaxHealth = 100,
                 MapId = WorldMaps.KameHouse,
@@ -111,9 +119,13 @@ public partial class DebugXpCommandsIntegrationTest : NetworkManager
             _player.ApplyAuthenticatedInitialState(persisted);
             Assert(_player.BaseBattlePower == 510,
                 "Reconexão concedeu Poder de Luta novamente.");
+            Assert(_player.ActiveCharacterId == "goku"
+                && _player.CurrentCombatStats == new CombatStats(510, 510, 510),
+                "Reconexão não preservou o personagem ativo e seus stats.");
             Assert(_player.TryCaptureAuthenticatedState(out AuthenticatedPlayerState? saved)
-                && saved?.BaseBattlePower == 510,
-                "Snapshot persistente não preservou o Poder de Luta.");
+                && saved?.BaseBattlePower == 510
+                && saved.ActiveCharacterId == "goku",
+                "Snapshot persistente não preservou Poder de Luta/personagem ativo.");
 
             SetProgression(0);
             _player.BaseBattlePower = long.MaxValue;

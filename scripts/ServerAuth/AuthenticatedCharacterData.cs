@@ -10,6 +10,7 @@ public sealed class AuthenticatedCharacterData
     public long Reset { get; init; }
     public long TotalXp { get; init; }
     public long BaseBattlePower { get; init; }
+    public string ActiveCharacterId { get; set; } = CharacterRegistry.DefaultCharacterId;
     public int CurrentHealth { get; init; }
     public int MaxHealth { get; init; }
     public string MapId { get; init; } = string.Empty;

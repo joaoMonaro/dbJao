@@ -59,7 +59,8 @@ public partial class CharacterSelectionScreen : VBoxContainer
             {
                 _options.AddItem(
                     $"{character.Name} — Nv. {character.Level} / Reset {character.Reset} "
-                    + $"/ Poder {character.BaseBattlePower}");
+                    + $"/ Poder {character.BaseBattlePower} / Ativo "
+                    + GetActiveCharacterName(character.ActiveCharacterId));
                 _options.SetItemMetadata(
                     _options.ItemCount - 1, character.Id.ToString("D"));
             }
@@ -136,11 +137,17 @@ public partial class CharacterSelectionScreen : VBoxContainer
         {
             _options.AddItem(
                 $"{character.Name} — Nv. {character.Level} / Reset {character.Reset} "
-                + $"/ Poder {character.BaseBattlePower}");
+                + $"/ Poder {character.BaseBattlePower} / Ativo "
+                + GetActiveCharacterName(character.ActiveCharacterId));
             _options.SetItemMetadata(
                 _options.ItemCount - 1, character.Id.ToString("D"));
         }
     }
+
+    private static string GetActiveCharacterName(string activeCharacterId) =>
+        CharacterRegistry.TryGet(activeCharacterId, out CharacterDefinition definition)
+            ? definition.Name
+            : activeCharacterId;
 
     private void SetBusy(bool busy, string message = "")
     {

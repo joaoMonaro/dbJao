@@ -18,5 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="../GameBackend.Api/GameBackend.Api.csproj" />
     <Compile Include="../../scripts/Progression/*.cs" Link="Progression/%(Filename)%(Extension)" />
+    <Compile Include="../../scripts/Characters/*.cs" Link="Characters/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

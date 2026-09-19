@@ -12,6 +12,12 @@ public partial class Player : CharacterBody2D, IDamageable
     [Signal] public delegate void LevelUpEventHandler(int level, long reset);
     [Signal] public delegate void ResetCompletedEventHandler(long reset);
     [Signal] public delegate void BattlePowerChangedEventHandler(long baseBattlePower);
+    [Signal]
+    public delegate void CombatStatsChangedEventHandler(
+        string characterName,
+        long attack,
+        long defense,
+        long kiAttack);
     [Signal] public delegate void DebugCommandResultEventHandler(string message, bool success);
 
     private enum PlayerState
@@ -38,6 +44,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private static readonly CharacterProgression Progression = new(XpCurve);
     private static readonly BattlePowerProgression BattlePowerProgression =
         new(BattlePowerSettings.Default);
+    private static readonly CombatStatsCalculator CombatStatsCalculator = new();
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
@@ -73,6 +80,30 @@ public partial class Player : CharacterBody2D, IDamageable
 
             _baseBattlePower = value;
             RefreshBattlePowerPresentation();
+            RecalculateCombatStats();
+        }
+    }
+    [Export]
+    public string ActiveCharacterId
+    {
+        get => _activeCharacterId;
+        set
+        {
+            CharacterDefinition definition = CharacterRegistry.ResolveOrDefault(
+                value,
+                out bool usedFallback);
+            if (usedFallback)
+            {
+                GD.PushError(
+                    $"[CHARACTER] Id ativo inválido '{value}'; usando "
+                    + $"'{CharacterRegistry.DefaultCharacterId}'.");
+            }
+
+            if (_activeCharacterId == definition.Id)
+                return;
+
+            _activeCharacterId = definition.Id;
+            RecalculateCombatStats();
         }
     }
     [Export]
@@ -130,6 +161,8 @@ public partial class Player : CharacterBody2D, IDamageable
     public int CurrentMana { get; private set; }
     public long CurrentExperience => Progression.FromTotalXp(TotalXp).XpIntoLevel;
     public long MaxExperience => Progression.FromTotalXp(TotalXp).XpRequiredForNextLevel;
+    public CombatStats CurrentCombatStats => _combatStats;
+    public CharacterDefinition ActiveCharacterDefinition => CharacterRegistry.Get(ActiveCharacterId);
     public bool IsDead => _health?.IsDead ?? false;
     public bool IsRespawning => _health?.IsRespawning ?? false;
     public bool CanAct => _health?.CanAct ?? false;
@@ -149,6 +182,8 @@ public partial class Player : CharacterBody2D, IDamageable
     private int _level;
     private long _reset;
     private long _baseBattlePower = BattlePowerSettings.Default.InitialBattlePower;
+    private string _activeCharacterId = CharacterRegistry.DefaultCharacterId;
+    private CombatStats _combatStats;
     private bool _progressionReady;
     private PlayerState _currentState = PlayerState.Idle;
     private Vector2 _facingDirection = Vector2.Right;
@@ -215,6 +250,7 @@ public partial class Player : CharacterBody2D, IDamageable
         EmitSignal(SignalName.ManaChanged, CurrentMana, MaxMana);
         RefreshProgressionPresentation();
         RefreshBattlePowerPresentation();
+        RecalculateCombatStats();
 
         bool isLocalPlayer =
             !NetworkManager.RunningAsServer && OwnerPeerId == Multiplayer.GetUniqueId();
@@ -292,6 +328,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Level = progression.State.Level;
         Reset = progression.State.Reset;
         BaseBattlePower = data.BaseBattlePower;
+        ActiveCharacterId = data.ActiveCharacterId;
         MapId = WorldMaps.TryGetBounds(data.MapId, out _)
             ? data.MapId : WorldMaps.KameHouse;
         MaxHealth = Mathf.Max(data.MaxHealth, 1);
@@ -323,6 +360,7 @@ public partial class Player : CharacterBody2D, IDamageable
             Reset,
             TotalXp,
             BaseBattlePower,
+            ActiveCharacterId,
             MapId,
             GlobalPosition.X,
             GlobalPosition.Y);
@@ -404,6 +442,25 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
 
         EmitSignal(SignalName.BattlePowerChanged, BaseBattlePower);
+    }
+
+    private void RecalculateCombatStats()
+    {
+        CharacterDefinition definition = CharacterRegistry.Get(ActiveCharacterId);
+        _combatStats = CombatStatsCalculator.Calculate(BaseBattlePower, definition);
+
+        if (!_progressionReady || NetworkManager.RunningAsServer
+            || OwnerPeerId != Multiplayer.GetUniqueId())
+        {
+            return;
+        }
+
+        EmitSignal(
+            SignalName.CombatStatsChanged,
+            definition.Name,
+            _combatStats.Attack,
+            _combatStats.Defense,
+            _combatStats.KiAttack);
     }
 
     private void ProcessAuthoritativeTimers(float delta)

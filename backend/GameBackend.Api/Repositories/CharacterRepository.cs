@@ -66,6 +66,7 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
         long reset,
         long totalXp,
         long baseBattlePower,
+        string activeCharacterId,
         string mapId,
         float positionX,
         float positionY,
@@ -85,6 +86,7 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
                     .SetProperty(character => character.Reset, reset)
                     .SetProperty(character => character.TotalXp, totalXp)
                     .SetProperty(character => character.BaseBattlePower, baseBattlePower)
+                    .SetProperty(character => character.ActiveCharacterId, activeCharacterId)
                     .SetProperty(character => character.MapId, mapId)
                     .SetProperty(character => character.PositionX, positionX)
                     .SetProperty(character => character.PositionY, positionY)

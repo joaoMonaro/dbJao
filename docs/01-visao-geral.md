@@ -76,8 +76,9 @@ KameHouse
     └── Pilaf
 ```
 
-`Players` recebe instâncias dinâmicas de `Player.tscn`. Os NPCs são fixos na cena e
-possuem caminhos determinísticos.
+`Players` recebe instâncias dinâmicas da cena indicada pela `CharacterDefinition`
+ativa. Atualmente o registry mapeia `goku` para `Player.tscn`. Os NPCs são fixos na
+cena e possuem caminhos determinísticos.
 
 ## Fluxo de entrada
 

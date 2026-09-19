@@ -10,6 +10,7 @@ public partial class Hud : CanvasLayer
     private Label _experienceLabel = null!;
     private Label _progressionLabel = null!;
     private Label _battlePowerLabel = null!;
+    private Label _combatStatsLabel = null!;
     private Label _healthLabel = null!;
     private TextureButton _mapButton = null!;
     private Control _mapModal = null!;
@@ -40,6 +41,9 @@ public partial class Hud : CanvasLayer
         );
         _battlePowerLabel = GetNode<Label>(
             "MarginContainer/PanelContainer/HBoxContainer/Bars/BattlePowerLabel"
+        );
+        _combatStatsLabel = GetNode<Label>(
+            "MarginContainer/PanelContainer/HBoxContainer/Bars/CombatStatsLabel"
         );
         _healthLabel = GetNode<Label>(
             "MarginContainer/PanelContainer/HBoxContainer/Bars/HealthBar/Label"
@@ -124,6 +128,7 @@ public partial class Hud : CanvasLayer
             player.ExperienceChanged += OnExperienceChanged;
             player.ProgressionChanged += OnProgressionChanged;
             player.BattlePowerChanged += OnBattlePowerChanged;
+            player.CombatStatsChanged += OnCombatStatsChanged;
             player.DebugCommandResult += OnDebugCommandResult;
             player.TreeExiting += OnBoundPlayerExiting;
 
@@ -132,6 +137,12 @@ public partial class Hud : CanvasLayer
             OnExperienceChanged(player.CurrentExperience, player.MaxExperience);
             OnProgressionChanged(player.Level, player.Reset);
             OnBattlePowerChanged(player.BaseBattlePower);
+            CombatStats stats = player.CurrentCombatStats;
+            OnCombatStatsChanged(
+                player.ActiveCharacterDefinition.Name,
+                stats.Attack,
+                stats.Defense,
+                stats.KiAttack);
             return;
         }
     }
@@ -154,6 +165,7 @@ public partial class Hud : CanvasLayer
         _boundPlayer.ExperienceChanged -= OnExperienceChanged;
         _boundPlayer.ProgressionChanged -= OnProgressionChanged;
         _boundPlayer.BattlePowerChanged -= OnBattlePowerChanged;
+        _boundPlayer.CombatStatsChanged -= OnCombatStatsChanged;
         _boundPlayer.DebugCommandResult -= OnDebugCommandResult;
         _boundPlayer.TreeExiting -= OnBoundPlayerExiting;
         _boundPlayer = null;
@@ -187,6 +199,16 @@ public partial class Hud : CanvasLayer
     private void OnBattlePowerChanged(long baseBattlePower)
     {
         _battlePowerLabel.Text = $"Poder de Luta: {baseBattlePower:N0}";
+    }
+
+    private void OnCombatStatsChanged(
+        string characterName,
+        long attack,
+        long defense,
+        long kiAttack)
+    {
+        _combatStatsLabel.Text =
+            $"Personagem: {characterName}\nATQ {attack:N0} | DEF {defense:N0} | KI {kiAttack:N0}";
     }
 
     private void SubmitDebugCommand(string command)

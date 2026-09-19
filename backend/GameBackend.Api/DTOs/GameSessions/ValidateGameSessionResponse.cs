@@ -11,6 +11,7 @@ public sealed record ValidateGameSessionResponse(
     long? Reset = null,
     long? TotalXp = null,
     long? BaseBattlePower = null,
+    string? ActiveCharacterId = null,
     int? CurrentHealth = null,
     int? MaxHealth = null,
     string? MapId = null,

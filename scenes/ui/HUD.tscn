@@ -68,12 +68,12 @@ script = ExtResource("1_script")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 offset_right = 360.0
-offset_bottom = 160.0
+offset_bottom = 200.0
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
-custom_minimum_size = Vector2(340, 140)
+custom_minimum_size = Vector2(340, 180)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer"]
@@ -139,6 +139,10 @@ horizontal_alignment = 1
 text = "Poder de Luta: 10"
 horizontal_alignment = 1
 
+[node name="CombatStatsLabel" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
+text = "Personagem: Goku\nATQ 10 | DEF 10 | KI 10"
+horizontal_alignment = 1
+
 [node name="ExperienceBar" type="ProgressBar" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
 custom_minimum_size = Vector2(220, 20)
 theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
@@ -159,9 +163,9 @@ vertical_alignment = 1
 
 [node name="BagButton" type="TextureButton" parent="."]
 offset_left = 20.0
-offset_top = 130.0
+offset_top = 210.0
 offset_right = 84.0
-offset_bottom = 194.0
+offset_bottom = 274.0
 tooltip_text = "Mochila"
 texture_normal = ExtResource("2_bag_icon")
 ignore_texture_size = true
@@ -169,9 +173,9 @@ stretch_mode = 5
 
 [node name="MapButton" type="TextureButton" parent="."]
 offset_left = 20.0
-offset_top = 204.0
+offset_top = 284.0
 offset_right = 84.0
-offset_bottom = 268.0
+offset_bottom = 348.0
 tooltip_text = "Mapa"
 texture_normal = ExtResource("3_map_icon")
 ignore_texture_size = true

@@ -99,6 +99,10 @@ Confirme que dois clientes veem `TotalXp`, `Level`, `Reset` e `BaseBattlePower`
 iguais, que uma concessão atravessa o nível 199 e que a reconexão mantém os quatro
 valores sem conceder poder novamente.
 
+Para personagem jogável, confirme que os dois clientes recebem `ActiveCharacterId`,
+nome e stats iguais, e que o servidor instancia somente cenas registradas em
+`CharacterRegistry`.
+
 O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 
 - dano não fatal não concede XP;
@@ -114,6 +118,12 @@ inválidas, bloqueio quando os comandos estão desabilitados, XP exato do
 proteção contra overflow e leitura sem mutação do `/xpinfo`.
 Consulte [Comandos de debug de XP](13-comandos-debug-xp.md) para o procedimento
 manual e os resultados esperados.
+
+Os testes `PlayableCharacterTests` cobrem o registry, a definição do Goku,
+multiplicadores acima e abaixo de 100%, arredondamento para baixo, BattlePower
+compartilhado e saturação numérica. O teste Godot dos comandos também verifica Goku
+como personagem padrão, stats derivados após Level Up e preservação de
+`ActiveCharacterId` na reconexão.
 
 ## Casos de autenticação
 

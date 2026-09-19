@@ -51,6 +51,7 @@ ser exposto sem a chave e proteção de rede.
 
 - dono, nome, `TotalXp` histórico (`bigint`), `Level` (0 a 199), `Reset` (`bigint`)
   e `BaseBattlePower` (`bigint`);
+- `ActiveCharacterId`, que referencia a definição jogável ativa;
 - vida atual e máxima;
 - mapa e posição persistida;
 - datas de criação e atualização.
@@ -129,6 +130,11 @@ Para personagens existentes, a migration executa o backfill
 limita o resultado a `long.MaxValue`. O estado salvo pelo servidor não permite reduzir
 `BaseBattlePower`, e o banco rejeita valores abaixo de 10.
 
+`AddActivePlayableCharacter` adiciona `ActiveCharacterId` como texto obrigatório com
+valor padrão `goku`. O default não nulo faz o backfill dos personagens existentes. O
+banco valida que o identificador não seja vazio; a existência da definição é validada
+pelo servidor do jogo, que possui o registry de dados de gameplay.
+
 ## Inspecionar PostgreSQL
 
 ```bash
@@ -143,7 +149,8 @@ Comandos úteis no `psql`:
 \dt
 SELECT * FROM "__EFMigrationsHistory";
 SELECT "Id", "Username", "Email" FROM users;
-SELECT "Id", "Name", "CurrentHealth", "MapId" FROM characters;
+SELECT "Id", "Name", "ActiveCharacterId", "BaseBattlePower", "CurrentHealth", "MapId"
+FROM characters;
 ```
 
 Não publique a porta `5432` em produção sem necessidade.

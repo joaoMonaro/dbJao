@@ -211,6 +211,17 @@ public partial class NetworkManager
         }
 
         AuthenticatedCharacterData character = result.Character;
+        CharacterDefinition activeDefinition = CharacterRegistry.ResolveOrDefault(
+            character.ActiveCharacterId,
+            out bool usedCharacterFallback);
+        if (usedCharacterFallback)
+        {
+            GD.PushError(
+                $"[CHARACTER] Id persistido inválido '{character.ActiveCharacterId}' "
+                + $"para {character.CharacterId}; usando '{activeDefinition.Id}'.");
+            character.ActiveCharacterId = activeDefinition.Id;
+        }
+
         if (_onlineCharacters.ContainsKey(character.CharacterId))
         {
             GD.Print($"[AUTH] Personagem já online rejeitado: {character.CharacterId}");

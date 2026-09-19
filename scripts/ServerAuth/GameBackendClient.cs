@@ -65,6 +65,8 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             || payload.Reset is null
             || payload.TotalXp is null
             || payload.BaseBattlePower is null
+            || string.IsNullOrWhiteSpace(payload.ActiveCharacterId)
+            || payload.ActiveCharacterId.Length > 64
             || payload.Level is < 0 or >= 200
             || payload.Reset < 0
             || payload.TotalXp < 0
@@ -88,6 +90,7 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             Reset = payload.Reset.Value,
             TotalXp = payload.TotalXp.Value,
             BaseBattlePower = payload.BaseBattlePower.Value,
+            ActiveCharacterId = payload.ActiveCharacterId.Trim(),
             CurrentHealth = payload.CurrentHealth.Value,
             MaxHealth = payload.MaxHealth.Value,
             MapId = payload.MapId,
@@ -112,6 +115,7 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
                 state.Reset,
                 state.TotalXp,
                 state.BaseBattlePower,
+                state.ActiveCharacterId,
                 state.MapId,
                 state.PositionX,
                 state.PositionY),

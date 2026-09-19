@@ -81,6 +81,7 @@ public sealed class GameSessionServiceTests
         Assert.Equal(0, result.Reset);
         Assert.Equal(0, result.TotalXp);
         Assert.Equal(12310, result.BaseBattlePower);
+        Assert.Equal("goku", result.ActiveCharacterId);
     }
 
     [Fact]
@@ -283,6 +284,7 @@ public sealed class GameSessionServiceTests
             long reset,
             long totalXp,
             long baseBattlePower,
+            string activeCharacterId,
             string mapId,
             float positionX,
             float positionY,

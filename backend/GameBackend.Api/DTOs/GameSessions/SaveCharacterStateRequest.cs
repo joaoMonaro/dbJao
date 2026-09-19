@@ -9,6 +9,7 @@ public sealed record SaveCharacterStateRequest(
     [Range(0, long.MaxValue)] long Reset,
     [Range(0, long.MaxValue)] long TotalXp,
     [Range(10, long.MaxValue)] long BaseBattlePower,
+    [Required, MaxLength(64)] string ActiveCharacterId,
     [Required, MaxLength(64)] string MapId,
     float PositionX,
     float PositionY

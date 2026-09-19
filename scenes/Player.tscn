@@ -159,6 +159,9 @@ properties/7/replication_mode = 1
 properties/8/path = NodePath(".:BaseBattlePower")
 properties/8/spawn = true
 properties/8/replication_mode = 1
+properties/9/path = NodePath(".:ActiveCharacterId")
+properties/9/spawn = true
+properties/9/replication_mode = 1
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_player_health"]
 properties/0/path = NodePath(".:CurrentHealth")
@@ -171,7 +174,7 @@ properties/2/path = NodePath(".:IsRespawning")
 properties/2/spawn = true
 properties/2/replication_mode = 1
 
-[node name="Goku" type="CharacterBody2D" unique_id=1028236600 groups=["player"]]
+[node name="Player" type="CharacterBody2D" unique_id=1028236600 groups=["player"]]
 script = ExtResource("1_script")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]

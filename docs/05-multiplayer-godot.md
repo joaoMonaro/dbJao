@@ -124,6 +124,41 @@ mesmo snapshot de persistência do personagem e é replicado pelo
 `MultiplayerSynchronizer`. O sinal `BattlePowerChanged` atualiza o HUD do jogador
 local. Sincronização, reconexão e eventos de apresentação não concedem poder.
 
+### Personagem jogável ativo e atributos derivados
+
+`scripts/Characters/CharacterRegistry.cs` é a fonte central das definições jogáveis.
+Cada `CharacterDefinition` contém ID, nome, multiplicadores de Attack, Defense e
+KiAttack e o caminho da cena do jogador. O primeiro registro é `goku`, com os três
+multiplicadores em `1.00` e a cena `res://scenes/Player.tscn`.
+Na inicialização, o `NetworkManager` registra no `MultiplayerSpawner` todas as cenas
+expostas pelo registry; o caminho não fica repetido na lógica de spawn.
+
+O registro persistido mantém somente `ActiveCharacterId`; os multiplicadores e os
+atributos calculados não são persistidos. Após autenticar, o servidor resolve esse ID
+no registry e instancia a cena configurada. Um ID inexistente gera erro no log e é
+normalizado para `goku`; o snapshot salvo na desconexão persiste o fallback. O cliente
+não possui RPC para escolher ou alterar o personagem ativo.
+
+`CombatStatsCalculator` recebe o `BaseBattlePower`, que nesta etapa também representa
+o Poder de Luta efetivo, e a definição ativa. Ele calcula separadamente:
+
+```text
+Attack   = floor(BaseBattlePower * AttackMultiplier)
+Defense  = floor(BaseBattlePower * DefenseMultiplier)
+KiAttack = floor(BaseBattlePower * KiAttackMultiplier)
+```
+
+Os resultados usam `long`, são saturados em `long.MaxValue` quando necessário e são
+recalculados após mudança de Poder de Luta ou personagem ativo. `ActiveCharacterId`
+é replicado pelo `MultiplayerSynchronizer`; cada cliente resolve a mesma definição e
+exibe o nome e os stats no HUD. O BattlePower permanece no Player e não é copiado
+para a definição.
+
+Attack e Defense ainda não substituem o dano plano atual. O combate possui
+`AttackDamage`, limites de dano e vida em `int`, mas ainda não há regra definida para
+converter stats de escala `long` em dano nem fórmula de mitigação. Os stats ficam
+disponíveis no servidor em `Player.CurrentCombatStats` para essa integração futura.
+
 O Sidra é a primeira fonte de XP integrada. Sua propriedade exportada `XpReward`
 vale 25. Quando `HealthComponent` aceita o golpe fatal, `NpcBase` encaminha o
 `DamageInfo` para `Sidra.OnKilled`. O Sidra valida que a origem é um jogador,
