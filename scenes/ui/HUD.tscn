@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/Hud.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/player_hub/bag_icon.png" id="2_bag_icon"]
@@ -87,6 +87,102 @@ font_size = 13
 font_color = Color(1, 1, 1, 1)
 outline_size = 3
 outline_color = Color(0, 0, 0, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phase_panel"]
+bg_color = Color(0.025, 0.035, 0.055, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.64, 0.25, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phase_detail"]
+bg_color = Color(0.055, 0.07, 0.1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.3, 0.4, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stage_marker"]
+bg_color = Color(0.08, 0.115, 0.17, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.63, 0.72, 0.86, 1)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stage_marker_hover"]
+bg_color = Color(0.12, 0.16, 0.23, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.76, 0.24, 1)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stage_marker_pressed"]
+bg_color = Color(0.04, 0.055, 0.085, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.6, 0.18, 1)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phase_action"]
+bg_color = Color(0.86, 0.63, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.84, 0.35, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phase_action_hover"]
+bg_color = Color(0.98, 0.75, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.93, 0.62, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phase_locked"]
+bg_color = Color(0.105, 0.115, 0.14, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.28, 0.3, 0.35, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -218,7 +314,7 @@ offset_left = 20.0
 offset_top = 208.0
 offset_right = 84.0
 offset_bottom = 272.0
-tooltip_text = "Mapa"
+tooltip_text = "Fases"
 texture_normal = ExtResource("3_map_icon")
 ignore_texture_size = true
 stretch_mode = 5
@@ -305,50 +401,466 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -190.0
-offset_right = 220.0
-offset_bottom = 190.0
+offset_left = -560.0
+offset_top = -330.0
+offset_right = 560.0
+offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel = SubResource("StyleBoxFlat_phase_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="MapModal/MapPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer"]
+[node name="Content" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+[node name="Titles" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/Header"]
 layout_mode = 2
-text = "MAPA"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
 
-[node name="Description" type="Label" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/Header/Titles"]
 layout_mode = 2
-text = "Escolha o seu destino"
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+theme_override_font_sizes/font_size = 13
+text = "FASES"
+
+[node name="Saga" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/Header/Titles"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.88, 1)
+theme_override_font_sizes/font_size = 26
+text = "A BUSCA PELAS ESFERAS"
+
+[node name="CloseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/Header"]
+custom_minimum_size = Vector2(42, 38)
+layout_mode = 2
+tooltip_text = "Fechar fases"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "X"
+
+[node name="HeaderDivider" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.64, 0.5, 0.17, 0.8)
+
+[node name="JourneyLabel" type="Label" parent="MapModal/MapPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "SUA JORNADA  •  ESCOLHA O PRÓXIMO ADVERSÁRIO"
 horizontal_alignment = 1
+
+[node name="StageScroll" type="ScrollContainer" parent="MapModal/MapPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 154)
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 0
+
+[node name="StageTrackCenter" type="CenterContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll"]
+custom_minimum_size = Vector2(1030, 145)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StageTrack" type="HBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Stage01" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage01"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Bear Thief"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "01"
+
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage01"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "BEAR THIEF"
+horizontal_alignment = 1
+
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage01"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.72, 0.79, 1)
+theme_override_font_sizes/font_size = 11
+text = "DISPONÍVEL"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage01"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="Connector01" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector01"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Line" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector01"]
+custom_minimum_size = Vector2(48, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.37, 0.46, 0.61, 1)
+
+[node name="Stage02" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage02"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Oolong"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "02"
+
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage02"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "OOLONG"
+horizontal_alignment = 1
+
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage02"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.72, 0.79, 1)
+theme_override_font_sizes/font_size = 11
+text = "DISPONÍVEL"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage02"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="Connector02" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector02"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Line" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector02"]
+custom_minimum_size = Vector2(48, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.25, 0.29, 0.36, 1)
+
+[node name="Stage03" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage03"]
+custom_minimum_size = Vector2(58, 58)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Yamcha"
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "03"
+
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage03"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
 theme_override_font_sizes/font_size = 16
+text = "YAMCHA"
+horizontal_alignment = 1
 
-[node name="CleanPathButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 54)
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage03"]
 layout_mode = 2
-text = "Ir para Clean Path"
+theme_override_colors/font_color = Color(0.5, 0.52, 0.58, 1)
+theme_override_font_sizes/font_size = 11
+text = "BLOQUEADA"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage03"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="Connector03" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector03"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Line" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector03"]
+custom_minimum_size = Vector2(48, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.2, 0.22, 0.27, 1)
+
+[node name="Stage04" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(145, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage04"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Monster Carrot"
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "04"
 
-[node name="KameHouseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 54)
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage04"]
 layout_mode = 2
-text = "Ir para Kame House"
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "MONSTER CARROT"
+horizontal_alignment = 1
 
-[node name="CloseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 42)
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage04"]
 layout_mode = 2
-text = "Fechar"
+theme_override_colors/font_color = Color(0.5, 0.52, 0.58, 1)
+theme_override_font_sizes/font_size = 11
+text = "BLOQUEADA"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage04"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="Connector04" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector04"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Line" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Connector04"]
+custom_minimum_size = Vector2(48, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.2, 0.22, 0.27, 1)
+
+[node name="Stage05" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage05"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Imperador Pilaf"
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "05"
+
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage05"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "IMPERADOR PILAF"
+horizontal_alignment = 1
+
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage05"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.52, 0.58, 1)
+theme_override_font_sizes/font_size = 11
+text = "BLOQUEADA"
+horizontal_alignment = 1
+
+[node name="FinalBadge" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage05"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.72, 0.2, 1)
+theme_override_font_sizes/font_size = 10
+text = "FINAL"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Stage05"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="DetailPanel" type="PanelContainer" parent="MapModal/MapPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_phase_detail")
+
+[node name="Margin" type="MarginContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 18
+
+[node name="DetailContent" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PhaseNumber" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.7, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "FASE 01"
+
+[node name="BossTitle" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.9, 1)
+theme_override_font_sizes/font_size = 28
+text = "BEAR THIEF"
+
+[node name="Subtitle" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.8, 0.91, 1)
+theme_override_font_sizes/font_size = 16
+text = "O Ladrão da Estrada"
+
+[node name="Description" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.86, 0.87, 0.89, 1)
+theme_override_font_sizes/font_size = 14
+text = "Um enorme ladrão bloqueia o caminho.\nDerrote-o para continuar sua jornada."
+autowrap_mode = 2
+
+[node name="DetailDivider" type="ColorRect" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.27, 0.31, 0.39, 1)
+
+[node name="Footer" type="HBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="BossInfo" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Label" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/BossInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.6, 0.69, 1)
+theme_override_font_sizes/font_size = 11
+text = "ADVERSÁRIO PRINCIPAL"
+
+[node name="BossName" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/BossInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+theme_override_font_sizes/font_size = 17
+text = "BEAR THIEF"
+
+[node name="StatusInfo" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Label" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/StatusInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.6, 0.69, 1)
+theme_override_font_sizes/font_size = 11
+text = "STATUS"
+
+[node name="Status" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/StatusInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.84, 0.96, 1)
+theme_override_font_sizes/font_size = 17
+text = "DISPONÍVEL"
+
+[node name="ActionArea" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="CleanPathButton" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/ActionArea"]
+visible = false
+custom_minimum_size = Vector2(210, 48)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_color = Color(0.08, 0.065, 0.035, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.04, 0.02, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.56, 0.59, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_phase_action")
+theme_override_styles/hover = SubResource("StyleBoxFlat_phase_action_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_phase_locked")
+text = "VIAJAR"
+
+[node name="KameHouseButton" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/ActionArea"]
+custom_minimum_size = Vector2(210, 48)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_color = Color(0.08, 0.065, 0.035, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.04, 0.02, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.56, 0.59, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_phase_action")
+theme_override_styles/hover = SubResource("StyleBoxFlat_phase_action_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_phase_locked")
+text = "VIAJAR"
+
+[node name="LockedActionButton" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/DetailPanel/Margin/DetailContent/Footer/ActionArea"]
+visible = false
+custom_minimum_size = Vector2(210, 48)
+layout_mode = 2
+size_flags_horizontal = 8
+disabled = true
+theme_override_colors/font_disabled_color = Color(0.55, 0.56, 0.59, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/disabled = SubResource("StyleBoxFlat_phase_locked")
+text = "BLOQUEADA"

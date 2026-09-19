@@ -93,7 +93,9 @@ public partial class HudProfileIntegrationTest : Node
             });
             Assert(!modal.Visible, "Tecla Esc não fechou o modal.");
 
-            GD.Print("[PASS] HUD compacto e modal de perfil validados.");
+            ValidateStageSelector();
+
+            GD.Print("[PASS] HUD, perfil e seletor de fases validados.");
             GetTree().Quit(0);
         }
         catch (Exception exception)
@@ -106,6 +108,91 @@ public partial class HudProfileIntegrationTest : Node
     private Label ProfileLabel(string relativePath) =>
         _hud.GetNode<Label>(
             $"PlayerProfileModal/ProfilePanel/MarginContainer/Content/{relativePath}");
+
+    private void ValidateStageSelector()
+    {
+        const string modalRoot = "MapModal/MapPanel/MarginContainer/Content";
+        const string track = $"{modalRoot}/StageScroll/StageTrackCenter/StageTrack";
+        const string detail = $"{modalRoot}/DetailPanel/Margin/DetailContent";
+
+        TextureButton phaseButton = _hud.GetNode<TextureButton>("MapButton");
+        Control phaseModal = _hud.GetNode<Control>("MapModal");
+        Assert(phaseButton.TooltipText == "Fases" && !phaseModal.Visible,
+            "Acesso lateral de fases está inconsistente.");
+
+        phaseButton.EmitSignal(TextureButton.SignalName.Pressed);
+        Assert(phaseModal.Visible && !GetTree().Paused,
+            "Seletor de fases não abriu como camada de UI multiplayer.");
+        Assert(_hud.GetNode<Label>($"{modalRoot}/Header/Titles/Title").Text == "FASES"
+            && _hud.GetNode<Label>($"{modalRoot}/Header/Titles/Saga").Text
+                == "A BUSCA PELAS ESFERAS",
+            "Cabeçalho narrativo do seletor está incorreto.");
+
+        string[] expectedNames =
+        [
+            "BEAR THIEF",
+            "OOLONG",
+            "YAMCHA",
+            "MONSTER CARROT",
+            "IMPERADOR PILAF",
+        ];
+        for (int index = 0; index < expectedNames.Length; index++)
+        {
+            string stage = $"{track}/Stage{index + 1:00}";
+            Assert(_hud.GetNode<Label>($"{stage}/Name").Text == expectedNames[index],
+                $"Fase {index + 1} não apresentou o boss esperado.");
+        }
+
+        Assert(_hud.GetNode<Label>($"{track}/Stage01/State").Text == "ATUAL"
+            && _hud.GetNode<Label>($"{track}/Stage01/Selection").Visible,
+            "Fase ligada ao mapa atual não recebeu estado e seleção corretos.");
+        Button kameHouseAction = _hud.GetNode<Button>(
+            $"{detail}/Footer/ActionArea/KameHouseButton");
+        Assert(kameHouseAction.Visible && kameHouseAction.Disabled
+            && kameHouseAction.Text == "LOCAL ATUAL",
+            "Ação da fase atual não preservou o bloqueio de viagem existente.");
+
+        _hud.GetNode<Button>($"{track}/Stage02/Marker").EmitSignal(Button.SignalName.Pressed);
+        Assert(_hud.GetNode<Label>($"{detail}/BossTitle").Text == "OOLONG"
+            && _hud.GetNode<Label>($"{detail}/Subtitle").Text == "O Terror da Vila"
+            && _hud.GetNode<Label>($"{detail}/Description").Text.Contains(
+                "diferentes formas", StringComparison.Ordinal)
+            && _hud.GetNode<Label>($"{detail}/Footer/BossInfo/BossName").Text == "OOLONG",
+            "Painel narrativo não atualizou para Oolong.");
+        Button cleanPathAction = _hud.GetNode<Button>(
+            $"{detail}/Footer/ActionArea/CleanPathButton");
+        Assert(cleanPathAction.Visible && !cleanPathAction.Disabled
+            && cleanPathAction.Text == "VIAJAR"
+            && _player.MapId == WorldMaps.KameHouse,
+            "Selecionar Oolong viajou imediatamente ou alterou a ação existente.");
+
+        _hud.GetNode<Button>($"{track}/Stage03/Marker").EmitSignal(Button.SignalName.Pressed);
+        Button lockedAction = _hud.GetNode<Button>(
+            $"{detail}/Footer/ActionArea/LockedActionButton");
+        Assert(_hud.GetNode<Label>($"{detail}/BossTitle").Text == "YAMCHA"
+            && _hud.GetNode<Label>($"{detail}/Footer/StatusInfo/Status").Text == "BLOQUEADA"
+            && lockedAction.Visible && lockedAction.Disabled
+            && _player.MapId == WorldMaps.KameHouse,
+            "Fase futura não preservou seu estado apenas visual e bloqueado.");
+
+        _hud.GetNode<Button>($"{track}/Stage05/Marker").EmitSignal(Button.SignalName.Pressed);
+        Assert(_hud.GetNode<Label>($"{track}/Stage05/FinalBadge").Text == "FINAL"
+            && _hud.GetNode<Label>($"{detail}/BossTitle").Text == "IMPERADOR PILAF"
+            && _hud.GetNode<Label>($"{detail}/Subtitle").Text == "O Castelo de Pilaf",
+            "Final da saga não recebeu a apresentação do Imperador Pilaf.");
+
+        _hud.GetNode<Button>($"{modalRoot}/Header/CloseButton")
+            .EmitSignal(Button.SignalName.Pressed);
+        Assert(!phaseModal.Visible, "Botão X não fechou o seletor de fases.");
+
+        phaseButton.EmitSignal(TextureButton.SignalName.Pressed);
+        _hud._UnhandledInput(new InputEventKey
+        {
+            Keycode = Key.Escape,
+            Pressed = true,
+        });
+        Assert(!phaseModal.Visible, "Tecla Esc não fechou o seletor de fases.");
+    }
 
     private static void Assert(bool condition, string message)
     {

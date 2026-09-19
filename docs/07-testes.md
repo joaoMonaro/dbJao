@@ -134,7 +134,9 @@ manual e os resultados esperados.
 O teste `tests/godot/HudProfileIntegrationTest.tscn` valida o portrait configurável,
 as barras permanentes de HP/Ki/XP, ausência de stats detalhados no HUD, abertura pelo
 portrait, atualização do modal por signals, quatro multiplicadores, fechamento por X
-e Esc e ausência de pausa na árvore.
+e Esc e ausência de pausa na árvore. Ele também cobre o seletor horizontal de cinco
+fases, conteúdo narrativo, estados atual/disponível/bloqueada, destaque do final da
+saga e garante que selecionar uma fase não inicia a viagem.
 
 Os testes `PlayableCharacterTests` cobrem o registry, a definição do Goku,
 multiplicadores acima e abaixo de 100%, arredondamento para baixo, BattlePower

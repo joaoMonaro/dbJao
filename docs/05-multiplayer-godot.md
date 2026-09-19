@@ -77,6 +77,13 @@ do jogador e o destino permitido; então define `MapId`, posição e ponto de re
 `MultiplayerSynchronizer` replica `MapId` e posição. A câmera local usa os limites
 do mapa atual. Na reconexão, posição e mapa salvos são validados antes do spawn.
 
+O botão lateral `Fases` abre um seletor narrativo horizontal para o arco A Busca
+pelas Esferas. Bear Thief e Oolong apresentam, respectivamente, as viagens já
+existentes para Kame House e Clean Path; Yamcha, Monster Carrot e Imperador Pilaf
+aparecem como prévias bloqueadas, sem mapa ou regra nova. Selecionar um marcador
+somente atualiza a ficha da fase. A viagem continua exigindo o botão `VIAJAR` e usa
+os mesmos handlers e validações autoritativas anteriores.
+
 ## NPCs
 
 `Sidra`, `Pilaf` e os três Pilafs de Clean Path ficam diretamente em
