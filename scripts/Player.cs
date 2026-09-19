@@ -28,7 +28,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Dead,
     }
 
-    private const int MaximumServerDamage = 100;
+    private const decimal BasicPhysicalAttackMultiplier = 1.0m;
     private const float MinimumFacingDot = 0.15f;
     private const ulong RejectionLogIntervalMsec = 1000;
     private const ulong TravelCooldownMsec = 500;
@@ -45,6 +45,8 @@ public partial class Player : CharacterBody2D, IDamageable
     private static readonly BattlePowerProgression BattlePowerProgression =
         new(BattlePowerSettings.Default);
     private static readonly CombatStatsCalculator CombatStatsCalculator = new();
+    private static readonly IPhysicalDamageCalculator PhysicalDamageCalculator =
+        new PhysicalDamageCalculator();
 
     [Export] public float MoveSpeed { get; set; } = 200.0f;
     [Export] public int OwnerPeerId { get; set; }
@@ -116,7 +118,6 @@ public partial class Player : CharacterBody2D, IDamageable
             UpdateLocalCameraLimits();
         }
     }
-    [Export] public int AttackDamage { get; set; } = 20;
     [Export] public float AttackRange { get; set; } = 80.0f;
     [Export] public float AttackCooldown { get; set; } = 0.5f;
     [Export] public float AttackActionDuration { get; set; } = 0.6f;
@@ -162,6 +163,7 @@ public partial class Player : CharacterBody2D, IDamageable
     public long CurrentExperience => Progression.FromTotalXp(TotalXp).XpIntoLevel;
     public long MaxExperience => Progression.FromTotalXp(TotalXp).XpRequiredForNextLevel;
     public CombatStats CurrentCombatStats => _combatStats;
+    public long Defense => CurrentCombatStats.Defense;
     public CharacterDefinition ActiveCharacterDefinition => CharacterRegistry.Get(ActiveCharacterId);
     public bool IsDead => _health?.IsDead ?? false;
     public bool IsRespawning => _health?.IsRespawning ?? false;
@@ -704,12 +706,6 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
         }
 
-        if (AttackDamage <= 0 || AttackDamage > MaximumServerDamage)
-        {
-            GD.PushError($"[SERVER][COMBAT] Dano configurado inválido: {AttackDamage}");
-            return;
-        }
-
         if (AttackRange <= 0.0f || AttackRange > 300.0f)
         {
             GD.PushError($"[SERVER][COMBAT] Alcance configurado inválido: {AttackRange}");
@@ -766,12 +762,12 @@ public partial class Player : CharacterBody2D, IDamageable
         IsAttacking = true;
         GD.Print($"[SERVER][COMBAT] Ataque aceito: peer {senderId}");
 
-        int hitCount = ApplyDamageToNpcsInRange(senderId);
+        int hitCount = ApplyDamageToNpcsInRange();
         if (hitCount == 0)
             GD.Print($"[SERVER][COMBAT] Peer {senderId}: nenhum NPC válido no alcance.");
     }
 
-    private int ApplyDamageToNpcsInRange(int senderId)
+    private int ApplyDamageToNpcsInRange()
     {
         Node? npcs = GetParent()?.GetParent()?.GetNodeOrNull("NPCs");
         if (npcs is null)
@@ -804,19 +800,58 @@ public partial class Player : CharacterBody2D, IDamageable
             if (!hitInstanceIds.Add(instanceId))
                 continue;
 
-            DamageInfo damageInfo = new(
-                DamageSourceType.Player,
-                $"peer {senderId}",
-                AttackDamage,
-                GlobalPosition,
-                senderId
-            );
-
-            if (npc.ApplyServerDamage(damageInfo))
+            if (TryApplyServerPhysicalAttack(
+                    npc,
+                    BasicPhysicalAttackMultiplier,
+                    out _))
                 hitCount++;
         }
 
         return hitCount;
+    }
+
+    internal bool TryApplyServerPhysicalAttack(
+        NpcBase target,
+        decimal attackMultiplier,
+        out long damage)
+    {
+        damage = 0;
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer()
+            || !CanAct || target is null || !target.CanAct)
+        {
+            return false;
+        }
+
+        long attack = CurrentCombatStats.Attack;
+        try
+        {
+            damage = PhysicalDamageCalculator.Calculate(
+                attack,
+                target.Defense,
+                attackMultiplier);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            GD.PushError(
+                $"[SERVER][COMBAT] Stats físicos inválidos no ataque de {CharacterId}: "
+                + exception.Message);
+            return false;
+        }
+
+#if DEBUG
+        GD.Print(
+            $"[COMBAT] Atacante {CharacterId} | Attack: {attack} | "
+            + $"Defense do alvo: {target.Defense} | Multiplicador: {attackMultiplier} | "
+            + $"Dano: {damage}");
+#endif
+
+        DamageInfo damageInfo = new(
+            DamageSourceType.Player,
+            $"peer {OwnerPeerId}",
+            damage,
+            GlobalPosition,
+            OwnerPeerId);
+        return target.ApplyServerDamage(damageInfo);
     }
 
     private void LogAttackRejection(int senderId, string reason)

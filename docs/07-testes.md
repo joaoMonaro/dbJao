@@ -105,6 +105,9 @@ nome e stats iguais, e que o servidor instancia somente cenas registradas em
 
 O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 
+- o ataque do jogador usa Attack derivado contra a Defense 10 do Sidra;
+- o ataque de contato do Pilaf usa Attack 17 contra a Defense derivada do jogador;
+- o RPC de ataque não aceita um dano final informado pelo cliente;
 - dano não fatal não concede XP;
 - o peer do golpe fatal recebe a recompensa de XP aplicada pelo Sidra;
 - dano repetido durante a mesma morte não duplica a recompensa;
@@ -124,6 +127,10 @@ multiplicadores acima e abaixo de 100%, arredondamento para baixo, BattlePower
 compartilhado e saturação numérica. O teste Godot dos comandos também verifica Goku
 como personagem padrão, stats derivados após Level Up e preservação de
 `ActiveCharacterId` na reconexão.
+
+Os testes `PhysicalDamageCalculatorTests` cobrem Attack igual, maior e menor que a
+Defense, multiplicador do golpe, arredondamento para baixo, dano mínimo, integração
+com os stats do Goku, entradas inválidas e saturação numérica.
 
 ## Casos de autenticação
 
@@ -179,6 +186,8 @@ Valide:
 - cliente não movimenta jogador remoto;
 - servidor limita direção e velocidade;
 - ataque fora do alcance não causa dano;
+- ataque físico do jogador usa seu Attack derivado e a Defense configurada do NPC;
+- contato do Pilaf usa o Attack do NPC contra a Defense derivada do jogador;
 - cooldown rejeita spam;
 - morto não anda nem ataca;
 - respawn aplica snap, sem atravessar o mapa;

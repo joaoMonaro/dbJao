@@ -154,10 +154,29 @@ recalculados após mudança de Poder de Luta ou personagem ativo. `ActiveCharact
 exibe o nome e os stats no HUD. O BattlePower permanece no Player e não é copiado
 para a definição.
 
-Attack e Defense ainda não substituem o dano plano atual. O combate possui
-`AttackDamage`, limites de dano e vida em `int`, mas ainda não há regra definida para
-converter stats de escala `long` em dano nem fórmula de mitigação. Os stats ficam
-disponíveis no servidor em `Player.CurrentCombatStats` para essa integração futura.
+Ataques físicos usam `PhysicalDamageCalculator`, que recebe o Attack efetivo do
+atacante, a Defense efetiva do alvo e o multiplicador do golpe:
+
+```text
+Damage = floor(Attack * (Attack / (Attack + Defense)) * AttackMultiplier)
+```
+
+Depois que alcance, direção, cooldown e estado confirmam um acerto, o dano mínimo é
+1. O cálculo usa `decimal`, valida stats e multiplicador, evita soma inteira com
+overflow e satura em `long.MaxValue` se o resultado exceder o tipo. `DamageInfo`
+transporta o resultado como `long`; `HealthComponent` mantém HP como `int` e elimina
+o alvo com segurança quando o dano é maior ou igual à vida restante.
+
+O jogador obtém Attack e Defense de `CurrentCombatStats`. O RPC `RequestAttack` não
+recebe dano, Attack ou Defense: ele continua sendo somente a intenção de atacar, e o
+servidor calcula o valor após validar o remetente e o alvo. O ataque básico usa
+multiplicador `1.0`.
+
+NPCs possuem Attack e Defense configuráveis diretamente em `NpcBase`, sem usar
+BattlePower ou `CharacterDefinition`. O Sidra começa com Defense 10. O Pilaf começa
+com Attack 17 e Defense 10; seu contato também usa `PhysicalDamageCalculator` contra
+a Defense derivada do jogador, com multiplicador `1.0`. `KiAttack` permanece fora do
+combate físico.
 
 O Sidra é a primeira fonte de XP integrada. Sua propriedade exportada `XpReward`
 vale 25. Quando `HealthComponent` aceita o golpe fatal, `NpcBase` encaminha o
@@ -188,11 +207,14 @@ Instruções de uso, respostas, validações e solução de problemas estão no 
 - cliente solicita ataque;
 - servidor valida peer, estado, cooldown, direção e alcance;
 - servidor identifica NPCs atingidos;
+- servidor resolve Attack e Defense e calcula o dano físico;
 - dano e vida só mudam no servidor;
 - morte bloqueia movimento, IA e ataque;
 - respawn é controlado pelo servidor.
 
-`HealthComponent` é reutilizado por jogadores e NPCs.
+`CombatStatsCalculator` calcula os stats do jogador, `PhysicalDamageCalculator`
+calcula somente o dano, e `HealthComponent` aplica esse dano. Morte e recompensa
+continuam fora dos calculadores. `HealthComponent` é reutilizado por jogadores e NPCs.
 
 ## Interpolação
 

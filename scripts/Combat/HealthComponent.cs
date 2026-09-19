@@ -7,8 +7,6 @@ public partial class HealthComponent : Node
     [Signal] public delegate void DiedEventHandler();
     [Signal] public delegate void RespawnReadyEventHandler();
 
-    private const int MaximumAcceptedDamage = 1000;
-
     [Export] public int MaxHealth { get; set; } = 100;
     [Export] public float RespawnDelay { get; set; } = 5.0f;
 
@@ -117,7 +115,7 @@ public partial class HealthComponent : Node
             return false;
         }
 
-        if (damageInfo.Amount <= 0 || damageInfo.Amount > MaximumAcceptedDamage)
+        if (damageInfo.Amount <= 0)
         {
             GD.PushWarning(
                 $"[SERVER][COMBAT] Dano inválido rejeitado para {_entityName}: {damageInfo.Amount}"
@@ -128,7 +126,9 @@ public partial class HealthComponent : Node
         if (!CanAct)
             return false;
 
-        CurrentHealth = Mathf.Max(CurrentHealth - damageInfo.Amount, 0);
+        CurrentHealth = damageInfo.Amount >= CurrentHealth
+            ? 0
+            : CurrentHealth - checked((int)damageInfo.Amount);
         GD.Print(
             $"[SERVER][COMBAT] {_entityName} recebeu {damageInfo.Amount} de dano "
             + $"de {damageInfo.AttackerId}."

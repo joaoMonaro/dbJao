@@ -1,11 +1,13 @@
 using Godot;
 using System;
+using System.Reflection;
 
 public partial class SidraXpIntegrationTest : NetworkManager
 {
     private Player _firstPlayer = null!;
     private Player _secondPlayer = null!;
     private Sidra _sidra = null!;
+    private Pilaf _pilaf = null!;
 
     public override void _Ready()
     {
@@ -22,6 +24,11 @@ public partial class SidraXpIntegrationTest : NetworkManager
         _sidra.Name = "Sidra";
         npcs.AddChild(_sidra);
 
+        _pilaf = GD.Load<PackedScene>("res://scenes/Pilaf.tscn").Instantiate<Pilaf>();
+        _pilaf.Name = "Pilaf";
+        _pilaf.Position = new Vector2(500, 500);
+        npcs.AddChild(_pilaf);
+
         CallDeferred(MethodName.RunTests);
     }
 
@@ -31,16 +38,53 @@ public partial class SidraXpIntegrationTest : NetworkManager
         {
             Assert(RunningAsServer && Multiplayer.IsServer(),
                 "O teste precisa executar como servidor.");
-            DamageInfo firstHit = PlayerDamage(_firstPlayer, _sidra.MaxHealth - 1);
-            Assert(_sidra.ApplyServerDamage(firstHit), "Dano não fatal deveria ser aceito.");
+            Assert(_sidra.Defense == 10,
+                "Defense inicial do Sidra não corresponde à configuração da cena.");
+            MethodInfo? attackRequest = typeof(Player).GetMethod(
+                "RequestAttack",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert(attackRequest is not null && attackRequest.GetParameters().Length == 0,
+                "O RPC de ataque não deve aceitar dano informado pelo cliente.");
+
+            int playerHealthBeforeNpcAttack = _firstPlayer.CurrentHealth;
+            long expectedNpcDamage = new PhysicalDamageCalculator().Calculate(
+                _pilaf.Attack,
+                _firstPlayer.Defense,
+                1.0m);
+            Assert(_pilaf.Attack == 17 && _pilaf.Defense == 10,
+                "Attack/Defense iniciais do Pilaf não correspondem à configuração da cena.");
+            Assert(_pilaf.TryDealServerPhysicalContactDamage(
+                    _firstPlayer,
+                    out long npcDamage)
+                && npcDamage == expectedNpcDamage
+                && _firstPlayer.CurrentHealth == playerHealthBeforeNpcAttack - npcDamage,
+                "Pilaf Attack vs Player Defense não utilizou o calculador físico.");
+            Assert(_firstPlayer.Health.Heal(checked((int)npcDamage)),
+                "Não foi possível restaurar a vida após validar o ataque do Pilaf.");
+
+            long expectedFirstDamage = new PhysicalDamageCalculator().Calculate(
+                _firstPlayer.CurrentCombatStats.Attack,
+                _sidra.Defense,
+                1.0m);
+            int healthBeforeFirstHit = _sidra.Health.CurrentHealth;
+            Assert(_firstPlayer.TryApplyServerPhysicalAttack(_sidra, 1.0m, out long firstDamage),
+                "Ataque físico válido do jogador deveria ser aplicado ao Sidra.");
+            Assert(firstDamage == expectedFirstDamage
+                && _sidra.Health.CurrentHealth == healthBeforeFirstHit - firstDamage,
+                "Player Attack vs Sidra Defense não utilizou o calculador físico.");
             Assert(!_sidra.IsDead, "Sidra morreu antes do golpe fatal.");
             Assert(_firstPlayer.TotalXp == 0 && _secondPlayer.TotalXp == 0,
                 "Sidra concedeu XP enquanto ainda estava vivo.");
             Assert(_firstPlayer.BaseBattlePower == 10 && _secondPlayer.BaseBattlePower == 10,
                 "Sidra vivo alterou o Poder de Luta.");
 
-            DamageInfo killingBlow = PlayerDamage(_secondPlayer, 1);
-            Assert(_sidra.ApplyServerDamage(killingBlow), "Golpe fatal deveria ser aceito.");
+            _sidra.Health.CurrentHealth = checked((int)expectedFirstDamage);
+            Assert(_secondPlayer.TryApplyServerPhysicalAttack(
+                    _sidra,
+                    1.0m,
+                    out long killingDamage)
+                && killingDamage == expectedFirstDamage,
+                "Golpe físico fatal deveria ser calculado e aceito.");
             Assert(_sidra.IsDead, "Servidor não confirmou a morte do Sidra.");
             Assert(_firstPlayer.TotalXp == 0, "XP foi concedido ao jogador incorreto.");
             long grantedXp = _secondPlayer.TotalXp;
@@ -49,7 +93,7 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 _secondPlayer.Reset, _secondPlayer.Level);
             Assert(_secondPlayer.BaseBattlePower == 10 + firstCompletedLevels * 100,
                 "XP do Sidra alterou incorretamente o Poder de Luta.");
-            Assert(!_sidra.ApplyServerDamage(killingBlow),
+            Assert(!_secondPlayer.TryApplyServerPhysicalAttack(_sidra, 1.0m, out _),
                 "Dano repetido em Sidra morto deveria ser rejeitado.");
             Assert(_secondPlayer.TotalXp == grantedXp,
                 "Uma morte concedeu XP mais de uma vez.");
@@ -65,7 +109,7 @@ public partial class SidraXpIntegrationTest : NetworkManager
             long battlePowerBeforeLevelUp = _secondPlayer.BaseBattlePower;
             long globalBeforeLevelUp = Player.GetGlobalLevel(
                 _secondPlayer.Reset, _secondPlayer.Level);
-            Assert(_sidra.ApplyServerDamage(PlayerDamage(_secondPlayer, _sidra.MaxHealth)),
+            Assert(KillSidraWithPhysicalAttack(_secondPlayer),
                 "Golpe fatal para Level Up foi rejeitado.");
             Assert(_secondPlayer.TotalXp == expectedAfterLevelUp.State.TotalXp
                 && _secondPlayer.Level == expectedAfterLevelUp.State.Level
@@ -90,7 +134,7 @@ public partial class SidraXpIntegrationTest : NetworkManager
                 _secondPlayer.Reset, _secondPlayer.Level);
             Assert(_secondPlayer.Level == 199 && _secondPlayer.Reset == 0,
                 "Preparação do cenário de Reset falhou.");
-            Assert(_sidra.ApplyServerDamage(PlayerDamage(_secondPlayer, _sidra.MaxHealth)),
+            Assert(KillSidraWithPhysicalAttack(_secondPlayer),
                 "Golpe fatal para Reset foi rejeitado.");
             Assert(_secondPlayer.Level == expectedAfterReset.State.Level
                 && _secondPlayer.Reset == expectedAfterReset.State.Reset,
@@ -127,9 +171,18 @@ public partial class SidraXpIntegrationTest : NetworkManager
         return player;
     }
 
-    private static DamageInfo PlayerDamage(Player player, int amount) =>
-        new(DamageSourceType.Player, $"peer {player.OwnerPeerId}", amount,
-            player.GlobalPosition, player.OwnerPeerId);
+    private bool KillSidraWithPhysicalAttack(Player player)
+    {
+        long damage = new PhysicalDamageCalculator().Calculate(
+            player.CurrentCombatStats.Attack,
+            _sidra.Defense,
+            1.0m);
+        if (damage < _sidra.Health.CurrentHealth)
+            _sidra.Health.CurrentHealth = checked((int)damage);
+
+        return player.TryApplyServerPhysicalAttack(_sidra, 1.0m, out long appliedDamage)
+            && appliedDamage == damage;
+    }
 
     private void RespawnSidra()
     {

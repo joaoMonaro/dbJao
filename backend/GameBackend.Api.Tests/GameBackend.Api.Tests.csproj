@@ -19,5 +19,6 @@
     <ProjectReference Include="../GameBackend.Api/GameBackend.Api.csproj" />
     <Compile Include="../../scripts/Progression/*.cs" Link="Progression/%(Filename)%(Extension)" />
     <Compile Include="../../scripts/Characters/*.cs" Link="Characters/%(Filename)%(Extension)" />
+    <Compile Include="../../scripts/Combat/PhysicalDamageCalculator.cs" Link="Combat/PhysicalDamageCalculator.cs" />
   </ItemGroup>
 </Project>

@@ -12,7 +12,7 @@ public readonly struct DamageInfo
     public DamageInfo(
         DamageSourceType sourceType,
         string attackerId,
-        int amount,
+        long amount,
         Vector2 attackOrigin,
         long attackerPeerId = 0
     )
@@ -26,7 +26,7 @@ public readonly struct DamageInfo
 
     public DamageSourceType SourceType { get; }
     public string AttackerId { get; }
-    public int Amount { get; }
+    public long Amount { get; }
     public Vector2 AttackOrigin { get; }
     public long AttackerPeerId { get; }
 }

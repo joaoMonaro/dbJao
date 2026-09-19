@@ -10,6 +10,8 @@ public partial class NpcBase : CharacterBody2D, IDamageable
 
     [Export] public float MoveSpeed { get; set; } = 40.0f;
     [Export] public int MaxHealth { get; set; } = 100;
+    [Export] public long Attack { get; set; } = 10;
+    [Export] public long Defense { get; set; } = 10;
     [Export] public float RespawnDelay { get; set; } = 5.0f;
     [Export] public Vector2 MovementDirection { get; set; } = Vector2.Zero;
     [Export(PropertyHint.Enum, "Idle,Moving")] public int AiState { get; set; } = IdleAiState;

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 public partial class Pilaf : NpcBase
 {
+    private const decimal ContactAttackMultiplier = 1.0m;
     private static readonly StringName AttackAnimation = new("attack");
     private static readonly StringName IdleAnimation = new("idle");
     private static readonly StringName WalkAnimation = new("walk");
 
     [Export] public StringName TargetGroup { get; set; } = new("player");
-    [Export] public int ContactDamage { get; set; } = 10;
     [Export] public float ContactDamageInterval { get; set; } = 3.0f;
     [Export] public float AttackVisualDuration { get; set; } = 0.6f;
 
@@ -17,6 +17,8 @@ public partial class Pilaf : NpcBase
     private Timer? _damageTimer;
     private Node2D? _target;
     private readonly HashSet<Player> _contactTargets = new();
+    private static readonly IPhysicalDamageCalculator PhysicalDamageCalculator =
+        new PhysicalDamageCalculator();
     private float _attackVisualRemaining;
     private bool _combatSignalsConnected;
 
@@ -148,7 +150,7 @@ public partial class Pilaf : NpcBase
             return;
 
         _contactTargets.Add(player);
-        DealContactDamage(player);
+        TryDealServerPhysicalContactDamage(player, out _);
         _damageTimer?.Start(Mathf.Max(ContactDamageInterval, 0.05f));
     }
 
@@ -174,7 +176,7 @@ public partial class Pilaf : NpcBase
             return;
         }
 
-        DealContactDamage(target);
+        TryDealServerPhysicalContactDamage(target, out _);
     }
 
     private Player? GetNearestContactTarget()
@@ -206,30 +208,48 @@ public partial class Pilaf : NpcBase
         return nearestPlayer;
     }
 
-    private void DealContactDamage(Player target)
+    internal bool TryDealServerPhysicalContactDamage(Player target, out long damage)
     {
+        damage = 0;
         if (!CanRunServerAi() || !CanAct || !target.CanAct)
-            return;
+            return false;
 
-        if (ContactDamage <= 0 || ContactDamage > 100)
+        try
         {
-            GD.PushError($"[SERVER][COMBAT] Dano de contato inválido no Pilaf: {ContactDamage}");
-            return;
+            damage = PhysicalDamageCalculator.Calculate(
+                Attack,
+                target.Defense,
+                ContactAttackMultiplier);
         }
+        catch (System.ArgumentOutOfRangeException exception)
+        {
+            GD.PushError(
+                $"[SERVER][COMBAT] Stats físicos inválidos no ataque de {Name}: "
+                + exception.Message);
+            return false;
+        }
+
+#if DEBUG
+        GD.Print(
+            $"[COMBAT] Atacante {Name} | Attack: {Attack} | "
+            + $"Defense do alvo: {target.Defense} | "
+            + $"Multiplicador: {ContactAttackMultiplier} | Dano: {damage}");
+#endif
 
         DamageInfo damageInfo = new(
             DamageSourceType.Npc,
             Name,
-            ContactDamage,
+            damage,
             GlobalPosition
         );
 
         if (!target.ApplyServerDamage(damageInfo))
-            return;
+            return false;
 
         SetServerAttacking(true);
         _attackVisualRemaining = Mathf.Max(AttackVisualDuration, 0.05f);
         UpdateAttackPresentation();
+        return true;
     }
 
     private void UpdateServerAttackState(float delta)
