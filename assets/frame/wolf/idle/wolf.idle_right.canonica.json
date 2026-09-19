@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "wolf",
+    "name": "Lobo",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_right.png",
+    "reference_sha256": "54f2189da695d68b50c80f91767f85743a78fa7d8145da548169870671ea38de"
+  },
+  "classification": {
+    "size": "small_quadruped",
+    "rationale": "Maior largura horizontal que um humanoide pequeno, mantendo altura visual abaixo de um personagem normal."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "paws_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "right",
+    "pose": "idle_standing_side",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 61,
+      "y_min": 115,
+      "x_max": 130,
+      "y_max": 159,
+      "width": 70,
+      "height": 45
+    },
+    "paws_baseline_y": 159
+  },
+  "appearance": {
+    "species": "wolf",
+    "fur": "blue-gray",
+    "markings": "pale gray cream muzzle, chest and belly",
+    "eyes": "amber",
+    "nose_and_claws": "dark charcoal",
+    "accessories": []
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        214,
+        204,
+        193
+      ],
+      [
+        212,
+        202,
+        191
+      ],
+      [
+        211,
+        200,
+        190
+      ],
+      [
+        197,
+        187,
+        178
+      ],
+      [
+        171,
+        165,
+        159
+      ],
+      [
+        160,
+        156,
+        155
+      ],
+      [
+        141,
+        140,
+        144
+      ],
+      [
+        110,
+        118,
+        137
+      ],
+      [
+        103,
+        113,
+        136
+      ],
+      [
+        101,
+        111,
+        135
+      ],
+      [
+        101,
+        109,
+        132
+      ],
+      [
+        99,
+        109,
+        134
+      ],
+      [
+        95,
+        105,
+        130
+      ],
+      [
+        71,
+        82,
+        107
+      ],
+      [
+        62,
+        73,
+        99
+      ],
+      [
+        59,
+        70,
+        96
+      ],
+      [
+        51,
+        60,
+        83
+      ],
+      [
+        23,
+        30,
+        47
+      ],
+      [
+        9,
+        15,
+        27
+      ],
+      [
+        4,
+        6,
+        14
+      ],
+      [
+        15,
+        20,
+        32
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "source_prompts": "canonical idle, four-frame walk cycle, four-frame physical attack cycle",
+    "normalization": "Pillow resize, shared 20-color palette, 1px outline, binary alpha, 192x192 anchoring"
+  }
+}
