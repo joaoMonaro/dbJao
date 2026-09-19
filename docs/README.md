@@ -26,6 +26,7 @@ um projeto separado e não executa física, IA, movimento ou combate.
 10. [Continuar o desenvolvimento](10-guia-desenvolvimento.md)
 11. [Configurar Rider e editor Godot](11-rider-godot.md)
 12. [Solução de problemas](12-troubleshooting.md)
+13. [Comandos de debug de XP](13-comandos-debug-xp.md)
 
 ### Arte
 

@@ -125,6 +125,9 @@ variável por padrão; ela permanece desabilitada quando ausente. `/addxp` e
 `/addxpnext` chamam `Player.AddXp`, preservando a mesma progressão usada pelo Sidra.
 `/xpinfo` apenas consulta o snapshot reconstruído de `TotalXp`.
 
+Instruções de uso, respostas, validações e solução de problemas estão no guia
+[Comandos de debug de XP](13-comandos-debug-xp.md).
+
 ## Combate e vida
 
 - cliente solicita ataque;

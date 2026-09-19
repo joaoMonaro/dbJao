@@ -109,6 +109,8 @@ O teste `tests/godot/SidraXpIntegrationTest.tscn` valida automaticamente que:
 O teste `tests/godot/DebugXpCommandsIntegrationTest.tscn` valida `/addxp`, entradas
 inválidas, bloqueio quando os comandos estão desabilitados, XP exato do
 `/addxpnext`, Reset no Level 199 e leitura sem mutação do `/xpinfo`.
+Consulte [Comandos de debug de XP](13-comandos-debug-xp.md) para o procedimento
+manual e os resultados esperados.
 
 ## Casos de autenticação
 
