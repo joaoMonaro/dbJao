@@ -151,8 +151,18 @@ KiAttack = floor(BaseBattlePower * KiAttackMultiplier)
 Os resultados usam `long`, são saturados em `long.MaxValue` quando necessário e são
 recalculados após mudança de Poder de Luta ou personagem ativo. `ActiveCharacterId`
 é replicado pelo `MultiplayerSynchronizer`; cada cliente resolve a mesma definição e
-exibe o nome e os stats no HUD. O BattlePower permanece no Player e não é copiado
-para a definição.
+exibe os detalhes no modal de perfil. O BattlePower permanece no Player e não é
+copiado para a definição.
+
+O HUD permanente mostra somente o portrait clicável e as barras de HP, Ki e XP. O
+portrait vem de `CharacterDefinition.PortraitTexturePath`; sua moldura usa estilos
+separados para normal, hover e pressionado, permitindo trocar a aparência futuramente.
+O clique abre `PlayerProfileModal.tscn`, uma camada de UI centralizada que não pausa a
+árvore. O modal mostra Level, Reset, BattlePower, XP, CombatStats, MaxHealth e os
+multiplicadores da definição ativa. HUD e modal reagem aos signals do Player, sem
+polling por frame. O MaxHealth exibido continua vindo do estado autoritativo existente;
+seu multiplicador configurável é metadado da definição e não altera gameplay nesta
+etapa.
 
 Ataques físicos usam `PhysicalDamageCalculator`, que recebe o Attack efetivo do
 atacante, a Defense efetiva do alvo e o multiplicador do golpe:

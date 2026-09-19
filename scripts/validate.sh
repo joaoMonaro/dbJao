@@ -132,6 +132,28 @@ if GODOT_EXECUTABLE="$(find_godot)"; then
       echo "[FAIL] Teste dos comandos de debug de XP não confirmou o fluxo esperado." >&2
       exit 1
     fi
+
+    : > "${GODOT_LOG}"
+    echo "[GODOT] Teste do HUD e modal de perfil"
+    if ! "${GODOT_EXECUTABLE}" \
+      --headless \
+      --path "${PROJECT_DIR}" \
+      --quit-after 10 \
+      res://tests/godot/HudProfileIntegrationTest.tscn \
+      2>&1 | tee "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do HUD e perfil encerrou com código de erro." >&2
+      exit 1
+    fi
+
+    if rg -n 'ERROR:|SCRIPT ERROR:|Unhandled exception|Failed to load' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do HUD e perfil registrou erro grave." >&2
+      exit 1
+    fi
+
+    if ! rg -F '[PASS] HUD compacto e modal de perfil validados.' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste do HUD e perfil não confirmou o fluxo esperado." >&2
+      exit 1
+    fi
   fi
 else
   GODOT_STATUS=$?

@@ -8,10 +8,11 @@ public partial class Hud : CanvasLayer
     private ProgressBar _manaBar = null!;
     private ProgressBar _experienceBar = null!;
     private Label _experienceLabel = null!;
-    private Label _progressionLabel = null!;
-    private Label _battlePowerLabel = null!;
-    private Label _combatStatsLabel = null!;
     private Label _healthLabel = null!;
+    private Label _manaLabel = null!;
+    private Button _portraitButton = null!;
+    private TextureRect _portrait = null!;
+    private PlayerProfileModal _profileModal = null!;
     private TextureButton _mapButton = null!;
     private Control _mapModal = null!;
     private Button _closeMapButton = null!;
@@ -22,33 +23,35 @@ public partial class Hud : CanvasLayer
     private Label _debugCommandOutput = null!;
     private LineEdit _debugCommandInput = null!;
     private Player? _boundPlayer;
+    private string _portraitCharacterId = string.Empty;
 
     public override void _Ready()
     {
         _healthBar = GetNode<ProgressBar>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/HealthBar"
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/HealthBar"
         );
         _manaBar = GetNode<ProgressBar>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/ManaBar"
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ManaBar"
         );
         _experienceBar = GetNode<ProgressBar>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/ExperienceBar"
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ExperienceBar"
         );
         _experienceLabel = GetNode<Label>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/ExperienceBar/Label"
-        );
-        _progressionLabel = GetNode<Label>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/ProgressionLabel"
-        );
-        _battlePowerLabel = GetNode<Label>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/BattlePowerLabel"
-        );
-        _combatStatsLabel = GetNode<Label>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/CombatStatsLabel"
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ExperienceBar/Label"
         );
         _healthLabel = GetNode<Label>(
-            "MarginContainer/PanelContainer/HBoxContainer/Bars/HealthBar/Label"
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/HealthBar/Label"
         );
+        _manaLabel = GetNode<Label>(
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ManaBar/Label"
+        );
+        _portraitButton = GetNode<Button>(
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/PortraitButton"
+        );
+        _portrait = GetNode<TextureRect>(
+            "PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/PortraitButton/Portrait"
+        );
+        _profileModal = GetNode<PlayerProfileModal>("PlayerProfileModal");
         _mapButton = GetNode<TextureButton>("MapButton");
         _mapModal = GetNode<Control>("MapModal");
         _closeMapButton = GetNode<Button>(
@@ -73,6 +76,7 @@ public partial class Hud : CanvasLayer
         _closeMapButton.Pressed += CloseMapModal;
         _cleanPathButton.Pressed += TravelToCleanPath;
         _kameHouseButton.Pressed += TravelToKameHouse;
+        _portraitButton.Pressed += OpenProfileModal;
         _debugCommandsToggle.Pressed += ToggleDebugCommands;
         _debugCommandInput.TextSubmitted += SubmitDebugCommand;
         _debugCommandsToggle.Visible = OS.IsDebugBuild();
@@ -85,6 +89,7 @@ public partial class Hud : CanvasLayer
     public override void _ExitTree()
     {
         GetTree().NodeAdded -= OnNodeAdded;
+        _portraitButton.Pressed -= OpenProfileModal;
         _debugCommandsToggle.Pressed -= ToggleDebugCommands;
         _debugCommandInput.TextSubmitted -= SubmitDebugCommand;
         UnbindPlayer();
@@ -92,6 +97,9 @@ public partial class Hud : CanvasLayer
 
     public override void _UnhandledInput(InputEvent input)
     {
+        if (_profileModal.IsOpen)
+            return;
+
         if (!_debugCommandsToggle.Visible || input is not InputEventKey key
             || !key.Pressed || key.Echo)
             return;
@@ -132,17 +140,14 @@ public partial class Hud : CanvasLayer
             player.HealthChanged += OnHealthChanged;
             player.ManaChanged += OnManaChanged;
             player.ExperienceChanged += OnExperienceChanged;
-            player.ProgressionChanged += OnProgressionChanged;
-            player.BattlePowerChanged += OnBattlePowerChanged;
             player.CombatStatsChanged += OnCombatStatsChanged;
             player.DebugCommandResult += OnDebugCommandResult;
             player.TreeExiting += OnBoundPlayerExiting;
+            _profileModal.Bind(player);
 
             OnHealthChanged(player.CurrentHealth, player.MaxHealth);
             OnManaChanged(player.CurrentMana, player.MaxMana);
             OnExperienceChanged(player.CurrentExperience, player.MaxExperience);
-            OnProgressionChanged(player.Level, player.Reset);
-            OnBattlePowerChanged(player.BaseBattlePower);
             CombatStats stats = player.CurrentCombatStats;
             OnCombatStatsChanged(
                 player.ActiveCharacterDefinition.Name,
@@ -162,6 +167,9 @@ public partial class Hud : CanvasLayer
     {
         if (!GodotObject.IsInstanceValid(_boundPlayer))
         {
+            _profileModal.Bind(null);
+            _portrait.Texture = null;
+            _portraitCharacterId = string.Empty;
             _boundPlayer = null;
             return;
         }
@@ -169,11 +177,12 @@ public partial class Hud : CanvasLayer
         _boundPlayer!.HealthChanged -= OnHealthChanged;
         _boundPlayer.ManaChanged -= OnManaChanged;
         _boundPlayer.ExperienceChanged -= OnExperienceChanged;
-        _boundPlayer.ProgressionChanged -= OnProgressionChanged;
-        _boundPlayer.BattlePowerChanged -= OnBattlePowerChanged;
         _boundPlayer.CombatStatsChanged -= OnCombatStatsChanged;
         _boundPlayer.DebugCommandResult -= OnDebugCommandResult;
         _boundPlayer.TreeExiting -= OnBoundPlayerExiting;
+        _profileModal.Bind(null);
+        _portrait.Texture = null;
+        _portraitCharacterId = string.Empty;
         _boundPlayer = null;
     }
 
@@ -181,30 +190,21 @@ public partial class Hud : CanvasLayer
     {
         _healthBar.MaxValue = Mathf.Max(maximum, 1);
         _healthBar.Value = current;
-        _healthLabel.Text = $"{current}/{maximum}";
+        _healthLabel.Text = $"HP {current:N0} / {maximum:N0}";
     }
 
     private void OnManaChanged(int current, int maximum)
     {
         _manaBar.MaxValue = Mathf.Max(maximum, 1);
         _manaBar.Value = current;
+        _manaLabel.Text = $"KI {current:N0} / {maximum:N0}";
     }
 
     private void OnExperienceChanged(long current, long maximum)
     {
         _experienceBar.MaxValue = maximum > 0 ? maximum : 1;
         _experienceBar.Value = current;
-        _experienceLabel.Text = $"{current}/{maximum} XP";
-    }
-
-    private void OnProgressionChanged(int level, long reset)
-    {
-        _progressionLabel.Text = $"Nível {level} | Reset {reset}";
-    }
-
-    private void OnBattlePowerChanged(long baseBattlePower)
-    {
-        _battlePowerLabel.Text = $"Poder de Luta: {baseBattlePower:N0}";
+        _experienceLabel.Text = $"XP {current:N0} / {maximum:N0}";
     }
 
     private void OnCombatStatsChanged(
@@ -213,8 +213,31 @@ public partial class Hud : CanvasLayer
         long defense,
         long kiAttack)
     {
-        _combatStatsLabel.Text =
-            $"Personagem: {characterName}\nATQ {attack:N0} | DEF {defense:N0} | KI {kiAttack:N0}";
+        if (GodotObject.IsInstanceValid(_boundPlayer))
+            LoadPortrait(_boundPlayer!.ActiveCharacterDefinition);
+    }
+
+    private void LoadPortrait(CharacterDefinition definition)
+    {
+        if (_portraitCharacterId == definition.Id && _portrait.Texture is not null)
+            return;
+
+        _portraitCharacterId = definition.Id;
+        if (!ResourceLoader.Exists(definition.PortraitTexturePath))
+        {
+            GD.PushError(
+                $"[HUD] Portrait não encontrado para {definition.Id}: "
+                + definition.PortraitTexturePath);
+            _portrait.Texture = null;
+            return;
+        }
+
+        _portrait.Texture = GD.Load<Texture2D>(definition.PortraitTexturePath);
+    }
+
+    private void OpenProfileModal()
+    {
+        _profileModal.Open();
     }
 
     private void SubmitDebugCommand(string command)

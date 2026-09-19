@@ -14,7 +14,9 @@ public static class CharacterRegistry
                 1.00m,
                 1.00m,
                 1.00m,
-                "res://scenes/Player.tscn"),
+                1.00m,
+                "res://scenes/Player.tscn",
+                "res://assets/player_hub/goku_portrait.tres"),
         };
 
     public static CharacterDefinition Default => Definitions[DefaultCharacterId];

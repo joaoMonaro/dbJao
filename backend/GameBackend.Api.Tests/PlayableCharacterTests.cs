@@ -17,7 +17,11 @@ public sealed class PlayableCharacterTests
         Assert.Equal(1.00m, goku.AttackMultiplier);
         Assert.Equal(1.00m, goku.DefenseMultiplier);
         Assert.Equal(1.00m, goku.KiAttackMultiplier);
+        Assert.Equal(1.00m, goku.MaxHealthMultiplier);
         Assert.Equal("res://scenes/Player.tscn", goku.PlayerScenePath);
+        Assert.Equal(
+            "res://assets/player_hub/goku_portrait.tres",
+            goku.PortraitTexturePath);
     }
 
     [Fact]
@@ -90,5 +94,13 @@ public sealed class PlayableCharacterTests
         decimal attack,
         decimal defense,
         decimal kiAttack) =>
-        new("test", "Test", attack, defense, kiAttack, "res://test.tscn");
+        new(
+            "test",
+            "Test",
+            attack,
+            defense,
+            kiAttack,
+            1.00m,
+            "res://test.tscn",
+            "res://test.png");
 }

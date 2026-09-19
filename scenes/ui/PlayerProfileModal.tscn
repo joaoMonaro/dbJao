@@ -1,0 +1,329 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PlayerProfileModal.cs" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.025, 0.04, 0.065, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.68, 0.73, 0.82, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait"]
+bg_color = Color(0.055, 0.075, 0.11, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.86, 0.67, 0.22, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab"]
+bg_color = Color(0.12, 0.15, 0.21, 1)
+border_width_bottom = 2
+border_color = Color(0.92, 0.72, 0.2, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_background"]
+bg_color = Color(0.025, 0.025, 0.035, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.2, 0.25, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_experience"]
+bg_color = Color(0.92, 0.68, 0.08, 1)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+[sub_resource type="LabelSettings" id="LabelSettings_bar"]
+font_size = 14
+font_color = Color(1, 1, 1, 1)
+outline_size = 3
+outline_color = Color(0, 0, 0, 0.95)
+
+[node name="PlayerProfileModal" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.62)
+
+[node name="ProfilePanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfilePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 18
+
+[node name="Content" type="VBoxContainer" parent="ProfilePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Header" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="Identity" type="VBoxContainer" parent="ProfilePanel/MarginContainer/Content/Header"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="CharacterName" type="Label" parent="ProfilePanel/MarginContainer/Content/Header/Identity"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "GOKU"
+
+[node name="ActiveLabel" type="Label" parent="ProfilePanel/MarginContainer/Content/Header/Identity"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "PERSONAGEM ATIVO"
+
+[node name="Spacer" type="Control" parent="ProfilePanel/MarginContainer/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseButton" type="Button" parent="ProfilePanel/MarginContainer/Content/Header"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+tooltip_text = "Fechar perfil"
+text = "X"
+theme_override_font_sizes/font_size = 18
+
+[node name="StatusTab" type="PanelContainer" parent="ProfilePanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(110, 30)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_tab")
+
+[node name="Label" type="Label" parent="ProfilePanel/MarginContainer/Content/StatusTab"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+text = "STATUS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TopSeparator" type="HSeparator" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="Overview" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 155)
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="PortraitFrame" type="PanelContainer" parent="ProfilePanel/MarginContainer/Content/Overview"]
+custom_minimum_size = Vector2(150, 155)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_portrait")
+
+[node name="Portrait" type="TextureRect" parent="ProfilePanel/MarginContainer/Content/Overview/PortraitFrame"]
+layout_mode = 2
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Progression" type="VBoxContainer" parent="ProfilePanel/MarginContainer/Content/Overview"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="BattlePowerTitle" type="Label" parent="ProfilePanel/MarginContainer/Content/Overview/Progression"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.77, 0.84, 1)
+theme_override_font_sizes/font_size = 15
+text = "PODER DE LUTA"
+horizontal_alignment = 1
+
+[node name="BattlePowerValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Overview/Progression"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.2, 1)
+theme_override_font_sizes/font_size = 36
+text = "10"
+horizontal_alignment = 1
+
+[node name="LevelReset" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Content/Overview/Progression"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 34
+
+[node name="LevelValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Overview/Progression/LevelReset"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.96, 1)
+theme_override_font_sizes/font_size = 16
+text = "LEVEL 0"
+
+[node name="ResetValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Overview/Progression/LevelReset"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.96, 1)
+theme_override_font_sizes/font_size = 16
+text = "RESET 0"
+
+[node name="AttributesSeparator" type="HSeparator" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="AttributesTitle" type="Label" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+theme_override_font_sizes/font_size = 16
+text = "ATRIBUTOS DO PERSONAGEM"
+
+[node name="Attributes" type="GridContainer" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 7
+columns = 3
+
+[node name="NameHeader" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.58, 0.62, 0.7, 1)
+text = "ATRIBUTO"
+
+[node name="ValueHeader" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.62, 0.7, 1)
+text = "VALOR"
+horizontal_alignment = 2
+
+[node name="MultiplierHeader" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.62, 0.7, 1)
+text = "MULT."
+horizontal_alignment = 2
+
+[node name="AttackName" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "Ataque"
+
+[node name="AttackValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "10"
+horizontal_alignment = 2
+
+[node name="AttackMultiplier" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="DefenseName" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "Defesa"
+
+[node name="DefenseValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "10"
+horizontal_alignment = 2
+
+[node name="DefenseMultiplier" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="KiAttackName" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "Ataque de Ki"
+
+[node name="KiAttackValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "10"
+horizontal_alignment = 2
+
+[node name="KiAttackMultiplier" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="MaxHealthName" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "Vida Máxima"
+
+[node name="MaxHealthValue" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+text = "100"
+horizontal_alignment = 2
+
+[node name="MaxHealthMultiplier" type="Label" parent="ProfilePanel/MarginContainer/Content/Attributes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="ExperienceSeparator" type="HSeparator" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="ExperienceTitle" type="Label" parent="ProfilePanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.79, 0.32, 1)
+theme_override_font_sizes/font_size = 16
+text = "PROGRESSÃO DE XP"
+
+[node name="ExperienceBar" type="ProgressBar" parent="ProfilePanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_experience")
+show_percentage = false
+
+[node name="Label" type="Label" parent="ProfilePanel/MarginContainer/Content/ExperienceBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "0 / 100 XP"
+label_settings = SubResource("LabelSettings_bar")
+horizontal_alignment = 1
+vertical_alignment = 1

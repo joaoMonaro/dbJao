@@ -1,8 +1,9 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/Hud.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/player_hub/bag_icon.png" id="2_bag_icon"]
 [ext_resource type="Texture2D" path="res://assets/player_hub/map_icon.png" id="3_map_icon"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PlayerProfileModal.tscn" id="4_profile"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.035, 0.045, 0.065, 0.9)
@@ -36,6 +37,30 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait_hover"]
+bg_color = Color(0.14, 0.16, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.96, 0.79, 0.32, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait_pressed"]
+bg_color = Color(0.07, 0.08, 0.11, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.74, 0.58, 0.2, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health"]
 bg_color = Color(0.82, 0.08, 0.1, 1)
 corner_radius_top_left = 2
@@ -66,106 +91,123 @@ outline_color = Color(0, 0, 0, 0.9)
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_script")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-offset_right = 360.0
-offset_bottom = 200.0
+[node name="PlayerHudMargin" type="MarginContainer" parent="."]
+offset_right = 370.0
+offset_bottom = 124.0
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
-custom_minimum_size = Vector2(340, 180)
+[node name="PlayerHudPanel" type="PanelContainer" parent="PlayerHudMargin"]
+custom_minimum_size = Vector2(350, 104)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer"]
-theme_override_constants/separation = 12
+[node name="InnerMargin" type="MarginContainer" parent="PlayerHudMargin/PlayerHudPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
-[node name="Portrait" type="PanelContainer" parent="MarginContainer/PanelContainer/HBoxContainer"]
-custom_minimum_size = Vector2(80, 80)
-theme_override_styles/panel = SubResource("StyleBoxFlat_portrait")
+[node name="Content" type="HBoxContainer" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="Photo" type="TextureRect" parent="MarginContainer/PanelContainer/HBoxContainer/Portrait"]
+[node name="PortraitButton" type="Button" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Abrir perfil do personagem"
+theme_override_styles/normal = SubResource("StyleBoxFlat_portrait")
+theme_override_styles/hover = SubResource("StyleBoxFlat_portrait_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_portrait_pressed")
+
+[node name="Portrait" type="TextureRect" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/PortraitButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+texture_filter = 1
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Bars" type="VBoxContainer" parent="MarginContainer/PanelContainer/HBoxContainer"]
+[node name="Bars" type="VBoxContainer" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
 theme_override_constants/separation = 5
 
-[node name="HealthBar" type="ProgressBar" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-custom_minimum_size = Vector2(220, 20)
+[node name="HealthBar" type="ProgressBar" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars"]
+custom_minimum_size = Vector2(250, 22)
+layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_health")
 value = 100.0
 show_percentage = false
 
-[node name="Label" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars/HealthBar"]
+[node name="Label" type="Label" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/HealthBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "100/100"
+text = "HP 100 / 100"
 label_settings = SubResource("LabelSettings_bar")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ManaBar" type="ProgressBar" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-custom_minimum_size = Vector2(220, 20)
+[node name="ManaBar" type="ProgressBar" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars"]
+custom_minimum_size = Vector2(250, 22)
+layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_mana")
 value = 100.0
 show_percentage = false
 
-[node name="Label" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars/ManaBar"]
+[node name="Label" type="Label" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ManaBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "MANA"
+text = "KI 100 / 100"
 label_settings = SubResource("LabelSettings_bar")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ProgressionLabel" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-text = "Nível 0 | Reset 0"
-horizontal_alignment = 1
-
-[node name="BattlePowerLabel" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-text = "Poder de Luta: 10"
-horizontal_alignment = 1
-
-[node name="CombatStatsLabel" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-text = "Personagem: Goku\nATQ 10 | DEF 10 | KI 10"
-horizontal_alignment = 1
-
-[node name="ExperienceBar" type="ProgressBar" parent="MarginContainer/PanelContainer/HBoxContainer/Bars"]
-custom_minimum_size = Vector2(220, 20)
+[node name="ExperienceBar" type="ProgressBar" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars"]
+custom_minimum_size = Vector2(250, 22)
+layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_bar_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_experience")
 show_percentage = false
 
-[node name="Label" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/Bars/ExperienceBar"]
+[node name="Label" type="Label" parent="PlayerHudMargin/PlayerHudPanel/InnerMargin/Content/Bars/ExperienceBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "XP"
+text = "XP 0 / 100"
 label_settings = SubResource("LabelSettings_bar")
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BagButton" type="TextureButton" parent="."]
 offset_left = 20.0
-offset_top = 210.0
+offset_top = 134.0
 offset_right = 84.0
-offset_bottom = 274.0
+offset_bottom = 198.0
 tooltip_text = "Mochila"
 texture_normal = ExtResource("2_bag_icon")
 ignore_texture_size = true
@@ -173,9 +215,9 @@ stretch_mode = 5
 
 [node name="MapButton" type="TextureButton" parent="."]
 offset_left = 20.0
-offset_top = 284.0
+offset_top = 208.0
 offset_right = 84.0
-offset_bottom = 348.0
+offset_bottom = 272.0
 tooltip_text = "Mapa"
 texture_normal = ExtResource("3_map_icon")
 ignore_texture_size = true
@@ -233,6 +275,8 @@ autowrap_mode = 2
 layout_mode = 2
 placeholder_text = "/addxp 100"
 clear_button_enabled = true
+
+[node name="PlayerProfileModal" parent="." instance=ExtResource("4_profile")]
 
 [node name="MapModal" type="Control" parent="."]
 visible = false

@@ -17,6 +17,7 @@ dotnet test backend/GameBackend.sln
 importação de assets e cena principal em Godot headless, quando disponível
 teste headless da integração Sidra → killer → progressão, quando Godot está disponível
 teste headless dos comandos de debug de XP, quando Godot está disponível
+teste headless do HUD compacto e modal de perfil, quando Godot está disponível
 git diff --check e git diff --cached --check
 ```
 
@@ -121,6 +122,11 @@ inválidas, bloqueio quando os comandos estão desabilitados, XP exato do
 proteção contra overflow e leitura sem mutação do `/xpinfo`.
 Consulte [Comandos de debug de XP](13-comandos-debug-xp.md) para o procedimento
 manual e os resultados esperados.
+
+O teste `tests/godot/HudProfileIntegrationTest.tscn` valida o portrait configurável,
+as barras permanentes de HP/Ki/XP, ausência de stats detalhados no HUD, abertura pelo
+portrait, atualização do modal por signals, quatro multiplicadores, fechamento por X
+e Esc e ausência de pausa na árvore.
 
 Os testes `PlayableCharacterTests` cobrem o registry, a definição do Goku,
 multiplicadores acima e abaixo de 100%, arredondamento para baixo, BattlePower
