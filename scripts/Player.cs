@@ -1030,6 +1030,8 @@ public partial class Player : CharacterBody2D, IDamageable
         if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer() || _health is null)
             return;
 
+        MapId = WorldMaps.KameHouse;
+        _spawnPosition = WorldMaps.GetArrivalPosition(MapId);
         GlobalPosition = _spawnPosition;
         Velocity = Vector2.Zero;
         _serverInputDirection = Vector2.Zero;
@@ -1038,6 +1040,7 @@ public partial class Player : CharacterBody2D, IDamageable
         IsAttacking = false;
         _health.CompleteRespawn();
         ClampToViewport();
+        GD.Print($"[SERVER][RESPAWN] Peer {OwnerPeerId} retornou ao spawn em {MapId}.");
     }
 
     private void ApplyHealthState()

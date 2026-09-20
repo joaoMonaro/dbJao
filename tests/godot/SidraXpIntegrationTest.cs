@@ -174,6 +174,8 @@ public partial class SidraXpIntegrationTest : NetworkManager
                     == battlePowerBeforeReset + levelsAcrossReset * 100,
                 "Sidra concedeu bônus incorreto na travessia de Reset.");
 
+            AssertPlayerReturnsToWorldSpawnAfterDeath();
+
             GD.Print("[PASS] Integração Sidra -> killer -> progressão validada.");
             GetTree().Quit(0);
         }
@@ -256,6 +258,30 @@ public partial class SidraXpIntegrationTest : NetworkManager
         _sidra.Health.CompleteRespawn();
         Assert(!_sidra.IsDead && _sidra.Health.CurrentHealth == _sidra.MaxHealth,
             "Respawn do Sidra falhou durante o teste.");
+    }
+
+    private void AssertPlayerReturnsToWorldSpawnAfterDeath()
+    {
+        _firstPlayer.MapId = WorldMaps.BearThiefBoss;
+        _firstPlayer.GlobalPosition = WorldMaps.BearThiefBossBounds.GetCenter();
+        _firstPlayer.Health.Kill();
+
+        MethodInfo respawnReady = typeof(Player).GetMethod(
+            "OnRespawnReady",
+            BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException(
+                "Handler autoritativo de respawn do jogador não foi encontrado.");
+        respawnReady.Invoke(_firstPlayer, null);
+
+        Vector2 expectedSpawn = WorldMaps.GetArrivalPosition(WorldMaps.KameHouse);
+        Assert(_firstPlayer.MapId == WorldMaps.KameHouse,
+            "Jogador morto não retornou ao mapa de spawn Kame House.");
+        Assert(_firstPlayer.GlobalPosition.IsEqualApprox(expectedSpawn),
+            "Jogador morto não retornou à posição oficial do spawn.");
+        Assert(!_firstPlayer.IsDead
+            && !_firstPlayer.IsRespawning
+            && _firstPlayer.CurrentHealth == _firstPlayer.MaxHealth,
+            "Jogador não concluiu o respawn com a vida restaurada.");
     }
 
     private static void SetProgression(Player player, long totalXp)

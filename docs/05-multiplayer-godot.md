@@ -76,6 +76,9 @@ O HUD envia somente o ID do destino. O servidor valida o peer autenticado, o est
 do jogador e o destino permitido; então define `MapId`, posição e ponto de respawn.
 `MultiplayerSynchronizer` replica `MapId` e posição. A câmera local usa os limites
 do mapa atual. Na reconexão, posição e mapa salvos são validados antes do spawn.
+Quando o jogador morre, o servidor aguarda o tempo de respawn, restaura a vida e
+define `MapId` e posição para o ponto de chegada oficial de `kame_house`, que é o
+spawn global. O cliente apenas recebe esse estado replicado.
 
 O botão lateral `Fases` abre um seletor narrativo horizontal para o arco A Busca
 pelas Esferas. Um marcador `Kame House` aparece isolado no início da trilha como
