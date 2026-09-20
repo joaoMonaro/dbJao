@@ -1,0 +1,260 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "oolong",
+    "name": "Oolong",
+    "variant": "classic_original_pig_form",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "8bdfe4043753cfa4dc56bc3813520b690ad3c6f672b0dafd405a04a4c47954be"
+  },
+  "classification": {
+    "size": "small",
+    "rationale": "Short compact character using the 68 px height standard; broad pig ears widen the visible bounds without changing vertical scale."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 68,
+      "y_min": 92,
+      "x_max": 122,
+      "y_max": 159,
+      "width": 55,
+      "height": 68
+    },
+    "feet_baseline_y": 159
+  },
+  "appearance": {
+    "form": "original anthropomorphic pig",
+    "skin": "pink",
+    "face": "broad ears, pig snout, narrow unimpressed eyes and grumpy frown",
+    "clothing": "dark olive-green Mao-style military jacket and loose trousers",
+    "headwear": "matching soft military cap with centered red star",
+    "shoes": "dark blue"
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        253,
+        61,
+        68
+      ],
+      [
+        68,
+        115,
+        193
+      ],
+      [
+        188,
+        192,
+        131
+      ],
+      [
+        82,
+        103,
+        53
+      ],
+      [
+        0,
+        37,
+        119
+      ],
+      [
+        143,
+        180,
+        229
+      ],
+      [
+        162,
+        36,
+        27
+      ],
+      [
+        173,
+        108,
+        88
+      ],
+      [
+        255,
+        137,
+        114
+      ],
+      [
+        255,
+        204,
+        184
+      ],
+      [
+        71,
+        29,
+        23
+      ],
+      [
+        228,
+        7,
+        20
+      ],
+      [
+        129,
+        160,
+        103
+      ],
+      [
+        28,
+        73,
+        164
+      ],
+      [
+        29,
+        74,
+        34
+      ],
+      [
+        1,
+        23,
+        58
+      ],
+      [
+        133,
+        74,
+        63
+      ],
+      [
+        103,
+        107,
+        106
+      ],
+      [
+        152,
+        153,
+        152
+      ],
+      [
+        194,
+        69,
+        56
+      ],
+      [
+        201,
+        194,
+        182
+      ],
+      [
+        225,
+        105,
+        85
+      ],
+      [
+        194,
+        142,
+        125
+      ],
+      [
+        239,
+        171,
+        149
+      ],
+      [
+        101,
+        148,
+        207
+      ],
+      [
+        114,
+        54,
+        24
+      ],
+      [
+        23,
+        40,
+        5
+      ],
+      [
+        64,
+        64,
+        63
+      ],
+      [
+        108,
+        135,
+        73
+      ],
+      [
+        253,
+        231,
+        218
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right",
+      "action": "short_physical_punch"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true,
+    "no_transformations": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "identity_reference": "Dragon Ball Official Site World Collectable Figure classic Oolong",
+    "source_prompts": "canonical idle, four-frame right-facing heavy walk cycle, four-frame right-facing short physical punch cycle",
+    "normalization": "Pillow component extraction, nearest-neighbor resize, shared 32-color palette, binary alpha, 192x192 cells anchored at feet (96,159)"
+  }
+}

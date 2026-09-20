@@ -172,8 +172,31 @@ if GODOT_EXECUTABLE="$(find_godot)"; then
       exit 1
     fi
 
-    if ! rg -F '[PASS] HUD compacto e modal de perfil validados.' "${GODOT_LOG}"; then
+    if ! rg -F '[PASS] HUD, perfil e seletor de fases validados.' "${GODOT_LOG}"; then
       echo "[FAIL] Teste do HUD e perfil não confirmou o fluxo esperado." >&2
+      exit 1
+    fi
+
+    : > "${GODOT_LOG}"
+    echo "[GODOT] Teste de integração da fase Bear Thief"
+    if ! "${GODOT_EXECUTABLE}" \
+      --headless \
+      --path "${PROJECT_DIR}" \
+      --quit-after 600 \
+      res://tests/godot/BearThiefStageIntegrationTest.tscn \
+      -- \
+      --server 2>&1 | tee "${GODOT_LOG}"; then
+      echo "[FAIL] Teste da fase Bear Thief encerrou com código de erro." >&2
+      exit 1
+    fi
+
+    if rg -n 'ERROR:|SCRIPT ERROR:|Unhandled exception|Failed to load' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste da fase Bear Thief registrou erro grave." >&2
+      exit 1
+    fi
+
+    if ! rg -F '[PASS] Fase Bear Thief validada.' "${GODOT_LOG}"; then
+      echo "[FAIL] Teste da fase Bear Thief não confirmou o fluxo esperado." >&2
       exit 1
     fi
   fi

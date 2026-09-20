@@ -22,6 +22,7 @@ public sealed record CharacterApiResponse(
     long TotalXp,
     long BaseBattlePower,
     string ActiveCharacterId,
+    IReadOnlyList<string> CompletedStages,
     int CurrentHealth,
     string MapId,
     float PositionX,
@@ -52,6 +53,7 @@ public sealed class ValidateGameSessionApiResponse
     public long? TotalXp { get; init; }
     public long? BaseBattlePower { get; init; }
     public string? ActiveCharacterId { get; init; }
+    public IReadOnlyList<string>? CompletedStages { get; init; }
     public int? CurrentHealth { get; init; }
     public int? MaxHealth { get; init; }
     public string? MapId { get; init; }
@@ -67,6 +69,7 @@ public sealed record SaveCharacterStateApiRequest(
     long TotalXp,
     long BaseBattlePower,
     string ActiveCharacterId,
+    IReadOnlyList<string> CompletedStages,
     string MapId,
     float PositionX,
     float PositionY);

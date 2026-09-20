@@ -7,12 +7,18 @@ public partial class NetworkManager : Node2D
     [Export] public NodePath PlayersPath { get; set; } = new("Players");
     [Export] public NodePath SpawnerPath { get; set; } = new("MultiplayerSpawner");
     [Export] public NodePath NpcsPath { get; set; } = new("NPCs");
+    [Export] public NodePath StageNpcsPath { get; set; } = new("StageNPCs");
+    [Export] public NodePath StageNpcSpawnerPath { get; set; } = new("StageNpcSpawner");
+    [Export] public NodePath BearThiefStagePath { get; set; } = new("BearThiefStage");
 
     public static bool RunningAsServer { get; private set; }
 
     private Node2D? _players;
     private MultiplayerSpawner? _spawner;
     private Node2D? _npcs;
+    private Node2D? _stageNpcs;
+    private MultiplayerSpawner? _stageNpcSpawner;
+    private BearThiefStage? _bearThiefStage;
     private ENetMultiplayerPeer? _clientPeer;
     private LineEdit? _addressInput;
     private Button? _connectButton;
@@ -30,6 +36,9 @@ public partial class NetworkManager : Node2D
         _players = GetNodeOrNull<Node2D>(PlayersPath);
         _spawner = GetNodeOrNull<MultiplayerSpawner>(SpawnerPath);
         _npcs = GetNodeOrNull<Node2D>(NpcsPath);
+        _stageNpcs = GetNodeOrNull<Node2D>(StageNpcsPath);
+        _stageNpcSpawner = GetNodeOrNull<MultiplayerSpawner>(StageNpcSpawnerPath);
+        _bearThiefStage = GetNodeOrNull<BearThiefStage>(BearThiefStagePath);
 
         if (_players is null)
         {
@@ -46,6 +55,12 @@ public partial class NetworkManager : Node2D
         }
 
         if (!ConfigurePlayableCharacterScenes())
+        {
+            StopDedicatedServerAfterStartupError();
+            return;
+        }
+
+        if (!ConfigureStageEnemyScenes())
         {
             StopDedicatedServerAfterStartupError();
             return;
@@ -254,6 +269,7 @@ public partial class NetworkManager : Node2D
         player.Reset = progression.State.Reset;
         player.BaseBattlePower = character.BaseBattlePower;
         player.ActiveCharacterId = definition.Id;
+        player.SetCompletedStages(character.CompletedStages);
         bool knownMap = WorldMaps.TryGetBounds(character.MapId, out Rect2 mapBounds);
         player.MapId = knownMap ? character.MapId : WorldMaps.KameHouse;
         if (!knownMap)
@@ -263,9 +279,11 @@ public partial class NetworkManager : Node2D
             float.IsFinite(character.PositionX) && float.IsFinite(character.PositionY)
                 && mapBounds.HasPoint(new Vector2(character.PositionX, character.PositionY))
                 ? new Vector2(character.PositionX, character.PositionY)
-                : player.MapId == WorldMaps.CleanPath
-                    ? WorldMaps.GetArrivalPosition(player.MapId)
-                    : GetNextSpawnPosition();
+                : WorldMaps.IsBearThiefArea(player.MapId)
+                    ? ResolveStageArrivalPosition(player.MapId, StageEntrySide.Left)
+                    : player.MapId == WorldMaps.CleanPath
+                        ? WorldMaps.GetArrivalPosition(player.MapId)
+                        : GetNextSpawnPosition();
         _players.AddChild(player);
         player.ApplyAuthenticatedInitialState(character);
         GD.Print(
@@ -293,6 +311,70 @@ public partial class NetworkManager : Node2D
 
         return true;
     }
+
+    private bool ConfigureStageEnemyScenes()
+    {
+        if (_stageNpcs is null || _stageNpcSpawner is null || _bearThiefStage is null)
+        {
+            GD.PushError("[STAGE] Containers ou spawner da fase Bear Thief ausentes.");
+            return false;
+        }
+
+        string[] scenePaths =
+        {
+            "res://scenes/enemies/Wolf.tscn",
+            "res://scenes/enemies/BearThief.tscn",
+        };
+        foreach (string scenePath in scenePaths)
+        {
+            if (!ResourceLoader.Exists(scenePath, "PackedScene"))
+            {
+                GD.PushError($"[STAGE] Cena de inimigo ausente: {scenePath}.");
+                return false;
+            }
+
+            _stageNpcSpawner.AddSpawnableScene(scenePath);
+        }
+
+        return true;
+    }
+
+    public bool TryGetStageEntryPosition(
+        string areaId,
+        StageEntrySide side,
+        out Vector2 position)
+    {
+        if (_bearThiefStage is not null)
+            return _bearThiefStage.TryGetEntryPosition(areaId, side, out position);
+
+        position = default;
+        return false;
+    }
+
+    public bool CompleteStageForPlayer(Player player, string stageId)
+    {
+        if (!RunningAsServer || !Multiplayer.IsServer() || _players is null
+            || player.GetParent() != _players || !StageIds.IsValid(stageId))
+        {
+            return false;
+        }
+
+        if (!player.TryCompleteStage(stageId))
+            return player.HasCompletedStage(stageId);
+
+        if (player.TryCaptureAuthenticatedState(out AuthenticatedPlayerState? state)
+            && state is not null)
+        {
+            _ = PersistDisconnectedPlayerAsync(state);
+        }
+
+        return true;
+    }
+
+    private Vector2 ResolveStageArrivalPosition(string areaId, StageEntrySide side) =>
+        TryGetStageEntryPosition(areaId, side, out Vector2 position)
+            ? position
+            : WorldMaps.GetArrivalPosition(areaId);
 
     private void RemovePlayer(int peerId)
     {

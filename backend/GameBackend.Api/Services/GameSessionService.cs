@@ -143,6 +143,10 @@ public sealed class GameSessionService(
             TotalXp: character.TotalXp,
             BaseBattlePower: character.BaseBattlePower,
             ActiveCharacterId: character.ActiveCharacterId,
+            CompletedStages: character.CompletedStages
+                .Select(completion => completion.StageId)
+                .Order(StringComparer.Ordinal)
+                .ToArray(),
             CurrentHealth: character.CurrentHealth,
             MaxHealth: character.MaxHealth,
             MapId: character.MapId,

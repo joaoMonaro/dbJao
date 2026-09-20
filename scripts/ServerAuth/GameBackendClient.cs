@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,6 +92,10 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
             TotalXp = payload.TotalXp.Value,
             BaseBattlePower = payload.BaseBattlePower.Value,
             ActiveCharacterId = payload.ActiveCharacterId.Trim(),
+            CompletedStages = payload.CompletedStages?
+                .Where(StageIds.IsValid)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray() ?? [],
             CurrentHealth = payload.CurrentHealth.Value,
             MaxHealth = payload.MaxHealth.Value,
             MapId = payload.MapId,
@@ -116,6 +121,7 @@ public sealed class GameBackendClient : IGameBackendClient, IDisposable
                 state.TotalXp,
                 state.BaseBattlePower,
                 state.ActiveCharacterId,
+                state.CompletedStages,
                 state.MapId,
                 state.PositionX,
                 state.PositionY),

@@ -1,0 +1,261 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "bear_thief",
+    "name": "Bear Thief",
+    "variant": "classic_road_bandit",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "cfa684397e0c41154b09b345cf8944b445693f71ba56e77fac4e4ed49820731b"
+  },
+  "classification": {
+    "size": "large",
+    "rationale": "Towering, broad boss silhouette using the 256 px large-character canvas and shared feet anchor."
+  },
+  "canvas": {
+    "width": 256,
+    "height": 256,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 128,
+      "y": 223
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 42,
+      "y_min": 36,
+      "x_max": 214,
+      "y_max": 223,
+      "width": 173,
+      "height": 188
+    },
+    "feet_baseline_y": 223
+  },
+  "appearance": {
+    "species": "anthropomorphic bear",
+    "fur": "orange-russet",
+    "hair": "short bright red mohawk",
+    "face": "dark nose, visible fangs and scar over one eye",
+    "armor": "dark charcoal shoulder and chest armor with red trim and gold details",
+    "clothing": "red tunic and sash, wide decorated belt, loose white trousers, dark bracers and boots",
+    "weapon": "large curved sword carried at the hip and drawn for the attack animation"
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        245,
+        101,
+        49
+      ],
+      [
+        252,
+        249,
+        241
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        197,
+        14,
+        15
+      ],
+      [
+        186,
+        181,
+        173
+      ],
+      [
+        249,
+        30,
+        23
+      ],
+      [
+        226,
+        221,
+        209
+      ],
+      [
+        147,
+        82,
+        40
+      ],
+      [
+        37,
+        36,
+        35
+      ],
+      [
+        19,
+        18,
+        17
+      ],
+      [
+        60,
+        21,
+        14
+      ],
+      [
+        223,
+        84,
+        42
+      ],
+      [
+        187,
+        68,
+        36
+      ],
+      [
+        52,
+        48,
+        45
+      ],
+      [
+        29,
+        28,
+        26
+      ],
+      [
+        9,
+        6,
+        5
+      ],
+      [
+        232,
+        16,
+        15
+      ],
+      [
+        27,
+        22,
+        20
+      ],
+      [
+        200,
+        81,
+        42
+      ],
+      [
+        235,
+        95,
+        46
+      ],
+      [
+        130,
+        42,
+        24
+      ],
+      [
+        244,
+        241,
+        235
+      ],
+      [
+        143,
+        13,
+        13
+      ],
+      [
+        220,
+        122,
+        57
+      ],
+      [
+        22,
+        8,
+        6
+      ],
+      [
+        146,
+        130,
+        109
+      ],
+      [
+        91,
+        75,
+        60
+      ],
+      [
+        240,
+        100,
+        49
+      ],
+      [
+        3,
+        3,
+        3
+      ],
+      [
+        252,
+        251,
+        246
+      ],
+      [
+        218,
+        29,
+        24
+      ],
+      [
+        217,
+        194,
+        151
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right",
+      "action": "curved_sword_slash"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true,
+    "no_transformations": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "identity_reference": "Dragon Ball Official Site Bear Thief manga feature",
+    "source_prompts": "canonical front idle, four-frame right-facing heavy walk cycle, four-frame right-facing curved-sword slash",
+    "normalization": "Pillow component extraction, nearest-neighbor resize, shared 32-color palette, binary alpha, 256x256 cells anchored at feet (128,223)"
+  }
+}

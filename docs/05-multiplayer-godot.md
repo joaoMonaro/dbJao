@@ -78,11 +78,13 @@ do jogador e o destino permitido; então define `MapId`, posição e ponto de re
 do mapa atual. Na reconexão, posição e mapa salvos são validados antes do spawn.
 
 O botão lateral `Fases` abre um seletor narrativo horizontal para o arco A Busca
-pelas Esferas. Bear Thief e Oolong apresentam, respectivamente, as viagens já
-existentes para Kame House e Clean Path; Yamcha, Monster Carrot e Imperador Pilaf
-aparecem como prévias bloqueadas, sem mapa ou regra nova. Selecionar um marcador
-somente atualiza a ficha da fase. A viagem continua exigindo o botão `VIAJAR` e usa
-os mesmos handlers e validações autoritativas anteriores.
+pelas Esferas. Um marcador `Kame House` aparece isolado no início da trilha como
+ponto de partida e destino de retorno; ele não recebe número de fase nem conector
+com a progressão de bosses. A Fase 01, Bear Thief, envia o jogador somente para
+`bear_thief_01`. Oolong, Yamcha, Monster Carrot e Imperador Pilaf aparecem como prévias
+bloqueadas, sem mapa ou regra nova. Selecionar um marcador somente atualiza a ficha
+da fase. A viagem continua exigindo o botão `VIAJAR` e usa os mesmos handlers e
+validações autoritativas anteriores.
 
 ## NPCs
 
@@ -236,6 +238,21 @@ Instruções de uso, respostas, validações e solução de problemas estão no 
 - dano e vida só mudam no servidor;
 - morte bloqueia movimento, IA e ataque;
 - respawn é controlado pelo servidor.
+
+## Fases compartilhadas
+
+A primeira fase completa é Bear Thief. Os `MapId`s `bear_thief_01`,
+`bear_thief_02`, `bear_thief_03` e `bear_thief_boss` ocupam áreas distintas do mesmo
+mundo do servidor e reutilizam `CleanPath.tscn`. O seletor envia o jogador para a
+Área 01; os limites laterais avançam ou retornam usando spawn points explícitos.
+
+`StageNPCs` possui um `MultiplayerSpawner` próprio. Somente o servidor instancia
+Wolves e Bear Thief, executa IA, resolve dano e controla os timers. Todos os jogadores
+na mesma área observam as mesmas instâncias. O boss registra peers que causaram dano
+e filtra os participantes pelo `MapId` da arena no momento da morte.
+
+Consulte [Fase Bear Thief](15-fase-bear-thief.md) para conteúdo, configurações e
+ciclo de respawn.
 
 `CombatStatsCalculator` calcula os stats do jogador, `PhysicalDamageCalculator`
 calcula somente o dano, e `HealthComponent` aplica esse dano. Morte e recompensa

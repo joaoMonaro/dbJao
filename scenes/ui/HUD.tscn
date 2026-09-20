@@ -461,7 +461,7 @@ color = Color(0.64, 0.5, 0.17, 0.8)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.75, 0.82, 1)
 theme_override_font_sizes/font_size = 13
-text = "SUA JORNADA  •  ESCOLHA O PRÓXIMO ADVERSÁRIO"
+text = "SUA JORNADA  •  ESCOLHA UM DESTINO"
 horizontal_alignment = 1
 
 [node name="StageScroll" type="ScrollContainer" parent="MapModal/MapPanel/MarginContainer/Content"]
@@ -471,13 +471,56 @@ size_flags_vertical = 3
 vertical_scroll_mode = 0
 
 [node name="StageTrackCenter" type="CenterContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll"]
-custom_minimum_size = Vector2(1030, 145)
+custom_minimum_size = Vector2(1190, 145)
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="StageTrack" type="HBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter"]
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="Spawn" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Marker" type="Button" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Spawn"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+tooltip_text = "Spawn — Kame House"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_stage_marker")
+theme_override_styles/hover = SubResource("StyleBoxFlat_stage_marker_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_stage_marker_pressed")
+text = "S"
+
+[node name="Name" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Spawn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "SPAWN"
+horizontal_alignment = 1
+
+[node name="State" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Spawn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 11
+text = "ATUAL"
+horizontal_alignment = 1
+
+[node name="Selection" type="Label" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack/Spawn"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.76, 0.22, 1)
+theme_override_font_sizes/font_size = 15
+text = "▲"
+horizontal_alignment = 1
+
+[node name="SpawnGap" type="Control" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Stage01" type="VBoxContainer" parent="MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack"]
 custom_minimum_size = Vector2(150, 0)

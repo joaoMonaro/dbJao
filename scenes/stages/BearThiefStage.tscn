@@ -1,0 +1,162 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/Stages/BearThiefStage.cs" id="1_stage"]
+[ext_resource type="Script" path="res://scripts/Stages/StageArea.cs" id="2_area"]
+[ext_resource type="Script" path="res://scripts/Stages/WolfSpawner.cs" id="3_wolf_spawner"]
+[ext_resource type="Script" path="res://scripts/Stages/BossSpawner.cs" id="4_boss_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/CleanPath.tscn" id="5_clean_path"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Wolf.tscn" id="6_wolf"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/BearThief.tscn" id="7_bear"]
+
+[node name="BearThiefStage" type="Node2D"]
+script = ExtResource("1_stage")
+
+[node name="BearThief01" type="Node2D" parent="."]
+position = Vector2(4096, 0)
+script = ExtResource("2_area")
+AreaId = "bear_thief_01"
+
+[node name="CleanPath" parent="BearThief01" instance=ExtResource("5_clean_path")]
+
+[node name="LeftEntrySpawnPoint" type="Marker2D" parent="BearThief01"]
+position = Vector2(140, 640)
+
+[node name="RightEntrySpawnPoint" type="Marker2D" parent="BearThief01"]
+position = Vector2(1460, 640)
+
+[node name="LeftBoundary" type="Marker2D" parent="BearThief01"]
+position = Vector2(64, 450)
+
+[node name="RightBoundary" type="Marker2D" parent="BearThief01"]
+position = Vector2(1536, 450)
+
+[node name="WolfSpawnPoints" type="Node2D" parent="BearThief01"]
+
+[node name="WolfSpawnPoint01" type="Marker2D" parent="BearThief01/WolfSpawnPoints"]
+position = Vector2(340, 610)
+
+[node name="WolfSpawnPoint02" type="Marker2D" parent="BearThief01/WolfSpawnPoints"]
+position = Vector2(570, 690)
+
+[node name="WolfSpawnPoint03" type="Marker2D" parent="BearThief01/WolfSpawnPoints"]
+position = Vector2(800, 590)
+
+[node name="WolfSpawnPoint04" type="Marker2D" parent="BearThief01/WolfSpawnPoints"]
+position = Vector2(1040, 700)
+
+[node name="WolfSpawnPoint05" type="Marker2D" parent="BearThief01/WolfSpawnPoints"]
+position = Vector2(1280, 620)
+
+[node name="WolfSpawner" type="Node" parent="BearThief01"]
+script = ExtResource("3_wolf_spawner")
+AreaId = "bear_thief_01"
+WolfScene = ExtResource("6_wolf")
+
+[node name="BearThief02" type="Node2D" parent="."]
+position = Vector2(6144, 0)
+script = ExtResource("2_area")
+AreaId = "bear_thief_02"
+
+[node name="CleanPath" parent="BearThief02" instance=ExtResource("5_clean_path")]
+
+[node name="LeftEntrySpawnPoint" type="Marker2D" parent="BearThief02"]
+position = Vector2(140, 640)
+
+[node name="RightEntrySpawnPoint" type="Marker2D" parent="BearThief02"]
+position = Vector2(1460, 640)
+
+[node name="LeftBoundary" type="Marker2D" parent="BearThief02"]
+position = Vector2(64, 450)
+
+[node name="RightBoundary" type="Marker2D" parent="BearThief02"]
+position = Vector2(1536, 450)
+
+[node name="WolfSpawnPoints" type="Node2D" parent="BearThief02"]
+
+[node name="WolfSpawnPoint01" type="Marker2D" parent="BearThief02/WolfSpawnPoints"]
+position = Vector2(310, 680)
+
+[node name="WolfSpawnPoint02" type="Marker2D" parent="BearThief02/WolfSpawnPoints"]
+position = Vector2(540, 590)
+
+[node name="WolfSpawnPoint03" type="Marker2D" parent="BearThief02/WolfSpawnPoints"]
+position = Vector2(790, 690)
+
+[node name="WolfSpawnPoint04" type="Marker2D" parent="BearThief02/WolfSpawnPoints"]
+position = Vector2(1060, 600)
+
+[node name="WolfSpawnPoint05" type="Marker2D" parent="BearThief02/WolfSpawnPoints"]
+position = Vector2(1320, 670)
+
+[node name="WolfSpawner" type="Node" parent="BearThief02"]
+script = ExtResource("3_wolf_spawner")
+AreaId = "bear_thief_02"
+WolfScene = ExtResource("6_wolf")
+
+[node name="BearThief03" type="Node2D" parent="."]
+position = Vector2(8192, 0)
+script = ExtResource("2_area")
+AreaId = "bear_thief_03"
+
+[node name="CleanPath" parent="BearThief03" instance=ExtResource("5_clean_path")]
+
+[node name="LeftEntrySpawnPoint" type="Marker2D" parent="BearThief03"]
+position = Vector2(140, 640)
+
+[node name="RightEntrySpawnPoint" type="Marker2D" parent="BearThief03"]
+position = Vector2(1460, 640)
+
+[node name="LeftBoundary" type="Marker2D" parent="BearThief03"]
+position = Vector2(64, 450)
+
+[node name="RightBoundary" type="Marker2D" parent="BearThief03"]
+position = Vector2(1536, 450)
+
+[node name="WolfSpawnPoints" type="Node2D" parent="BearThief03"]
+
+[node name="WolfSpawnPoint01" type="Marker2D" parent="BearThief03/WolfSpawnPoints"]
+position = Vector2(330, 600)
+
+[node name="WolfSpawnPoint02" type="Marker2D" parent="BearThief03/WolfSpawnPoints"]
+position = Vector2(580, 700)
+
+[node name="WolfSpawnPoint03" type="Marker2D" parent="BearThief03/WolfSpawnPoints"]
+position = Vector2(820, 610)
+
+[node name="WolfSpawnPoint04" type="Marker2D" parent="BearThief03/WolfSpawnPoints"]
+position = Vector2(1050, 690)
+
+[node name="WolfSpawnPoint05" type="Marker2D" parent="BearThief03/WolfSpawnPoints"]
+position = Vector2(1300, 600)
+
+[node name="WolfSpawner" type="Node" parent="BearThief03"]
+script = ExtResource("3_wolf_spawner")
+AreaId = "bear_thief_03"
+WolfScene = ExtResource("6_wolf")
+
+[node name="BearThiefBoss" type="Node2D" parent="."]
+position = Vector2(10240, 0)
+script = ExtResource("2_area")
+AreaId = "bear_thief_boss"
+
+[node name="CleanPath" parent="BearThiefBoss" instance=ExtResource("5_clean_path")]
+
+[node name="LeftEntrySpawnPoint" type="Marker2D" parent="BearThiefBoss"]
+position = Vector2(140, 640)
+
+[node name="RightEntrySpawnPoint" type="Marker2D" parent="BearThiefBoss"]
+position = Vector2(1460, 640)
+
+[node name="LeftBoundary" type="Marker2D" parent="BearThiefBoss"]
+position = Vector2(64, 450)
+
+[node name="RightBoundary" type="Marker2D" parent="BearThiefBoss"]
+position = Vector2(1536, 450)
+
+[node name="BossSpawnPoint" type="Marker2D" parent="BearThiefBoss"]
+position = Vector2(960, 620)
+
+[node name="BossSpawner" type="Node" parent="BearThiefBoss"]
+script = ExtResource("4_boss_spawner")
+AreaId = "bear_thief_boss"
+BossScene = ExtResource("7_bear")

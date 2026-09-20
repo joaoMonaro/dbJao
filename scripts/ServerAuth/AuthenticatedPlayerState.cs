@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public sealed record AuthenticatedPlayerState(
     Guid UserId,
@@ -9,6 +10,7 @@ public sealed record AuthenticatedPlayerState(
     long TotalXp,
     long BaseBattlePower,
     string ActiveCharacterId,
+    IReadOnlyList<string> CompletedStages,
     string MapId,
     float PositionX,
     float PositionY);

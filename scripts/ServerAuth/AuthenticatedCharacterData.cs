@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public sealed class AuthenticatedCharacterData
 {
@@ -11,6 +12,7 @@ public sealed class AuthenticatedCharacterData
     public long TotalXp { get; init; }
     public long BaseBattlePower { get; init; }
     public string ActiveCharacterId { get; set; } = CharacterRegistry.DefaultCharacterId;
+    public IReadOnlyList<string> CompletedStages { get; init; } = [];
     public int CurrentHealth { get; init; }
     public int MaxHealth { get; init; }
     public string MapId { get; init; } = string.Empty;

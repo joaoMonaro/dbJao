@@ -1,0 +1,261 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "yamcha",
+    "name": "Yamcha",
+    "variant": "classic_desert_bandit",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "f346957811a56a114f8b7a0df9d140c3c0898e755c7adc161e00f0da455face7"
+  },
+  "classification": {
+    "size": "normal",
+    "rationale": "Adult humanoid using the normal 128 px height standard; hair and sheathed sword are included in visible bounds."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 68,
+      "y_min": 32,
+      "x_max": 125,
+      "y_max": 159,
+      "width": 58,
+      "height": 128
+    },
+    "feet_baseline_y": 159
+  },
+  "appearance": {
+    "era": "early classic Dragon Ball desert bandit",
+    "hair": "very long wild layered black hair with cool blue highlights",
+    "face": "young adult, sharp confident eyes, no facial scars",
+    "clothing": "green sleeveless tunic with red trim and chest emblem, orange scarf, wide white sash, loose orange pants",
+    "guards_and_boots": "purple-blue forearm guards with red trim and blue martial-arts boots",
+    "accessories": [
+      "brown sheathed sword with gold fittings"
+    ]
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        255,
+        115,
+        1
+      ],
+      [
+        94,
+        99,
+        192
+      ],
+      [
+        152,
+        2,
+        30
+      ],
+      [
+        233,
+        151,
+        148
+      ],
+      [
+        52,
+        107,
+        65
+      ],
+      [
+        167,
+        188,
+        232
+      ],
+      [
+        163,
+        117,
+        66
+      ],
+      [
+        4,
+        39,
+        139
+      ],
+      [
+        236,
+        37,
+        65
+      ],
+      [
+        240,
+        190,
+        61
+      ],
+      [
+        87,
+        32,
+        99
+      ],
+      [
+        146,
+        157,
+        154
+      ],
+      [
+        74,
+        44,
+        7
+      ],
+      [
+        251,
+        235,
+        145
+      ],
+      [
+        187,
+        71,
+        4
+      ],
+      [
+        222,
+        0,
+        0
+      ],
+      [
+        16,
+        32,
+        66
+      ],
+      [
+        107,
+        108,
+        114
+      ],
+      [
+        239,
+        201,
+        207
+      ],
+      [
+        225,
+        102,
+        99
+      ],
+      [
+        126,
+        70,
+        38
+      ],
+      [
+        62,
+        67,
+        147
+      ],
+      [
+        210,
+        144,
+        31
+      ],
+      [
+        246,
+        54,
+        0
+      ],
+      [
+        192,
+        182,
+        179
+      ],
+      [
+        181,
+        62,
+        68
+      ],
+      [
+        102,
+        19,
+        47
+      ],
+      [
+        136,
+        62,
+        118
+      ],
+      [
+        189,
+        140,
+        107
+      ],
+      [
+        11,
+        81,
+        46
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right",
+      "action": "wolf_fang_fist_physical_melee"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "identity_reference": "Dragon Ball Official Site History Box classic desert-bandit Yamcha figure",
+    "source_prompts": "canonical idle, four-frame right-facing walk cycle, four-frame right-facing Wolf Fang Fist cycle",
+    "normalization": "Pillow nearest-neighbor resize, shared 32-color palette, binary alpha, 192x192 cells anchored at feet (96,159)"
+  }
+}

@@ -21,4 +21,5 @@ public sealed class Character : IAuditableEntity
     public DateTimeOffset UpdatedAt { get; set; }
     public User User { get; set; } = null!;
     public ICollection<GameSession> GameSessions { get; set; } = [];
+    public ICollection<CharacterCompletedStage> CompletedStages { get; set; } = [];
 }

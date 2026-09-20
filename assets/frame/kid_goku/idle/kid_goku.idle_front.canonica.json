@@ -1,0 +1,256 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "kid_goku",
+    "name": "Kid Goku",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "baf2fecb599c8c70912988e361f57971df53debfcba9d85bd9e4ce985cca661b"
+  },
+  "classification": {
+    "size": "small",
+    "rationale": "Child-scale humanoid using the small 68 px height standard; the tail widens the visible bounds without changing body scale."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 74,
+      "y_min": 92,
+      "x_max": 116,
+      "y_max": 159,
+      "width": 43,
+      "height": 68
+    },
+    "feet_baseline_y": 159
+  },
+  "appearance": {
+    "hair": "wild spiky black hair with cool blue highlights",
+    "face": "young child, large dark eyes, determined friendly expression",
+    "clothing": "orange martial-arts gi with dark blue undershirt, belt, wristbands and shoes",
+    "accessories": [
+      "brown monkey tail"
+    ]
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        247,
+        136,
+        1
+      ],
+      [
+        141,
+        141,
+        138
+      ],
+      [
+        1,
+        51,
+        157
+      ],
+      [
+        152,
+        15,
+        2
+      ],
+      [
+        255,
+        202,
+        118
+      ],
+      [
+        69,
+        66,
+        67
+      ],
+      [
+        255,
+        31,
+        0
+      ],
+      [
+        175,
+        97,
+        54
+      ],
+      [
+        0,
+        21,
+        80
+      ],
+      [
+        74,
+        24,
+        3
+      ],
+      [
+        231,
+        142,
+        79
+      ],
+      [
+        117,
+        76,
+        8
+      ],
+      [
+        217,
+        81,
+        10
+      ],
+      [
+        117,
+        32,
+        49
+      ],
+      [
+        249,
+        182,
+        38
+      ],
+      [
+        253,
+        213,
+        176
+      ],
+      [
+        41,
+        48,
+        115
+      ],
+      [
+        32,
+        36,
+        34
+      ],
+      [
+        204,
+        21,
+        8
+      ],
+      [
+        167,
+        65,
+        15
+      ],
+      [
+        143,
+        115,
+        96
+      ],
+      [
+        236,
+        112,
+        42
+      ],
+      [
+        178,
+        152,
+        110
+      ],
+      [
+        83,
+        29,
+        87
+      ],
+      [
+        75,
+        27,
+        46
+      ],
+      [
+        1,
+        31,
+        120
+      ],
+      [
+        202,
+        119,
+        14
+      ],
+      [
+        112,
+        7,
+        0
+      ],
+      [
+        0,
+        9,
+        41
+      ],
+      [
+        255,
+        174,
+        86
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "source_prompts": "canonical idle, four-frame right-facing walk cycle, four-frame right-facing physical punch cycle",
+    "normalization": "Pillow nearest-neighbor resize, shared 32-color palette, binary alpha, 192x192 cells anchored at feet (96,159)"
+  }
+}

@@ -7,10 +7,19 @@ public partial class Hud : CanvasLayer
         string Subtitle,
         string Description,
         string BossName,
-        string? MapId);
+        string? MapId,
+        bool IsSpawn = false);
 
     private static readonly StagePresentation[] Stages =
     [
+        new(
+            "KAME HOUSE",
+            "O Ponto de Partida",
+            "A jornada começa na ilha do Mestre Kame.\n\n"
+                + "Use este local como ponto de encontro, preparação e retorno antes de partir para as fases.",
+            "KAME HOUSE",
+            WorldMaps.KameHouse,
+            IsSpawn: true),
         new(
             "BEAR THIEF",
             "O Ladrão da Estrada",
@@ -18,14 +27,14 @@ public partial class Hud : CanvasLayer
                 + "Um enorme ladrão bloqueia o caminho e ataca qualquer viajante que se aproxima.\n\n"
                 + "Derrote Bear Thief e continue sua aventura.",
             "BEAR THIEF",
-            WorldMaps.KameHouse),
+            WorldMaps.BearThief01),
         new(
             "OOLONG",
             "O Terror da Vila",
             "Uma pequena comunidade vive com medo de uma criatura capaz de assumir diferentes formas.\n\n"
                 + "Descubra quem está por trás dos ataques e enfrente Oolong.",
             "OOLONG",
-            WorldMaps.CleanPath),
+            null),
         new(
             "YAMCHA",
             "O Bandido do Deserto",
@@ -73,6 +82,7 @@ public partial class Hud : CanvasLayer
     private Label _phaseBossTitle = null!;
     private Label _phaseSubtitle = null!;
     private Label _phaseDescription = null!;
+    private Label _phaseEncounterLabel = null!;
     private Label _phaseBossName = null!;
     private Label _phaseStatus = null!;
     private Button _debugCommandsToggle = null!;
@@ -131,6 +141,7 @@ public partial class Hud : CanvasLayer
             "MapModal/MapPanel/MarginContainer/Content/StageScroll/StageTrackCenter/StageTrack";
         _stageButtons =
         [
+            GetNode<Button>($"{stageTrack}/Spawn/Marker"),
             GetNode<Button>($"{stageTrack}/Stage01/Marker"),
             GetNode<Button>($"{stageTrack}/Stage02/Marker"),
             GetNode<Button>($"{stageTrack}/Stage03/Marker"),
@@ -139,6 +150,7 @@ public partial class Hud : CanvasLayer
         ];
         _stageStateLabels =
         [
+            GetNode<Label>($"{stageTrack}/Spawn/State"),
             GetNode<Label>($"{stageTrack}/Stage01/State"),
             GetNode<Label>($"{stageTrack}/Stage02/State"),
             GetNode<Label>($"{stageTrack}/Stage03/State"),
@@ -147,6 +159,7 @@ public partial class Hud : CanvasLayer
         ];
         _stageSelectionLabels =
         [
+            GetNode<Label>($"{stageTrack}/Spawn/Selection"),
             GetNode<Label>($"{stageTrack}/Stage01/Selection"),
             GetNode<Label>($"{stageTrack}/Stage02/Selection"),
             GetNode<Label>($"{stageTrack}/Stage03/Selection"),
@@ -159,6 +172,7 @@ public partial class Hud : CanvasLayer
         _phaseBossTitle = GetNode<Label>($"{detail}/BossTitle");
         _phaseSubtitle = GetNode<Label>($"{detail}/Subtitle");
         _phaseDescription = GetNode<Label>($"{detail}/Description");
+        _phaseEncounterLabel = GetNode<Label>($"{detail}/Footer/BossInfo/Label");
         _phaseBossName = GetNode<Label>($"{detail}/Footer/BossInfo/BossName");
         _phaseStatus = GetNode<Label>($"{detail}/Footer/StatusInfo/Status");
         _debugCommandsToggle = GetNode<Button>("DebugCommandsToggle");
@@ -174,11 +188,12 @@ public partial class Hud : CanvasLayer
         _closeMapButton.Pressed += CloseMapModal;
         _cleanPathButton.Pressed += TravelToCleanPath;
         _kameHouseButton.Pressed += TravelToKameHouse;
-        _stageButtons[0].Pressed += SelectStage01;
-        _stageButtons[1].Pressed += SelectStage02;
-        _stageButtons[2].Pressed += SelectStage03;
-        _stageButtons[3].Pressed += SelectStage04;
-        _stageButtons[4].Pressed += SelectStage05;
+        _stageButtons[0].Pressed += SelectSpawn;
+        _stageButtons[1].Pressed += SelectStage01;
+        _stageButtons[2].Pressed += SelectStage02;
+        _stageButtons[3].Pressed += SelectStage03;
+        _stageButtons[4].Pressed += SelectStage04;
+        _stageButtons[5].Pressed += SelectStage05;
         _portraitButton.Pressed += OpenProfileModal;
         _debugCommandsToggle.Pressed += ToggleDebugCommands;
         _debugCommandInput.TextSubmitted += SubmitDebugCommand;
@@ -197,11 +212,12 @@ public partial class Hud : CanvasLayer
         _closeMapButton.Pressed -= CloseMapModal;
         _cleanPathButton.Pressed -= TravelToCleanPath;
         _kameHouseButton.Pressed -= TravelToKameHouse;
-        _stageButtons[0].Pressed -= SelectStage01;
-        _stageButtons[1].Pressed -= SelectStage02;
-        _stageButtons[2].Pressed -= SelectStage03;
-        _stageButtons[3].Pressed -= SelectStage04;
-        _stageButtons[4].Pressed -= SelectStage05;
+        _stageButtons[0].Pressed -= SelectSpawn;
+        _stageButtons[1].Pressed -= SelectStage01;
+        _stageButtons[2].Pressed -= SelectStage02;
+        _stageButtons[3].Pressed -= SelectStage03;
+        _stageButtons[4].Pressed -= SelectStage04;
+        _stageButtons[5].Pressed -= SelectStage05;
         _debugCommandsToggle.Pressed -= ToggleDebugCommands;
         _debugCommandInput.TextSubmitted -= SubmitDebugCommand;
         UnbindPlayer();
@@ -403,7 +419,7 @@ public partial class Hud : CanvasLayer
 
     private void OpenMapModal()
     {
-        _selectedStageIndex = GetCurrentStageIndex();
+        _selectedStageIndex = Mathf.Max(GetCurrentStageIndex(), 0);
         RefreshStageSelection();
         _mapModal.Visible = true;
     }
@@ -413,15 +429,17 @@ public partial class Hud : CanvasLayer
         _mapModal.Visible = false;
     }
 
-    private void SelectStage01() => SelectStage(0);
+    private void SelectSpawn() => SelectStage(0);
 
-    private void SelectStage02() => SelectStage(1);
+    private void SelectStage01() => SelectStage(1);
 
-    private void SelectStage03() => SelectStage(2);
+    private void SelectStage02() => SelectStage(2);
 
-    private void SelectStage04() => SelectStage(3);
+    private void SelectStage03() => SelectStage(3);
 
-    private void SelectStage05() => SelectStage(4);
+    private void SelectStage04() => SelectStage(4);
+
+    private void SelectStage05() => SelectStage(5);
 
     private void SelectStage(int index)
     {
@@ -453,13 +471,18 @@ public partial class Hud : CanvasLayer
 
         StagePresentation selected = Stages[_selectedStageIndex];
         bool selectedIsCurrent = _boundPlayer is not null
-            && selected.MapId == _boundPlayer.MapId;
+            && IsSameStageLocation(selected.MapId, _boundPlayer.MapId);
         bool selectedIsLocked = selected.MapId is null;
 
-        _phaseNumberLabel.Text = $"FASE {_selectedStageIndex + 1:00}";
+        _phaseNumberLabel.Text = selected.IsSpawn
+            ? "PONTO DE PARTIDA"
+            : $"FASE {_selectedStageIndex:00}";
         _phaseBossTitle.Text = selected.Title;
         _phaseSubtitle.Text = selected.Subtitle;
         _phaseDescription.Text = selected.Description;
+        _phaseEncounterLabel.Text = selected.IsSpawn
+            ? "LOCAL INICIAL"
+            : "ADVERSÁRIO PRINCIPAL";
         _phaseBossName.Text = selected.BossName;
         _phaseStatus.Text = selectedIsLocked
             ? "BLOQUEADA"
@@ -468,13 +491,13 @@ public partial class Hud : CanvasLayer
             ? new Color("858892")
             : selectedIsCurrent ? new Color("f4c23b") : new Color("b8d7f2");
 
-        _cleanPathButton.Visible = selected.MapId == WorldMaps.CleanPath;
+        _cleanPathButton.Visible = selected.MapId == WorldMaps.BearThief01;
         _kameHouseButton.Visible = selected.MapId == WorldMaps.KameHouse;
         _lockedActionButton.Visible = selectedIsLocked;
 
         Button? travelButton = selected.MapId switch
         {
-            WorldMaps.CleanPath => _cleanPathButton,
+            WorldMaps.BearThief01 => _cleanPathButton,
             WorldMaps.KameHouse => _kameHouseButton,
             _ => null,
         };
@@ -487,15 +510,20 @@ public partial class Hud : CanvasLayer
 
     private int GetCurrentStageIndex()
     {
-        if (_boundPlayer?.MapId == WorldMaps.CleanPath)
+        if (WorldMaps.IsBearThiefArea(_boundPlayer?.MapId))
             return 1;
-
-        return 0;
+        if (_boundPlayer?.MapId == WorldMaps.KameHouse)
+            return 0;
+        return -1;
     }
+
+    private static bool IsSameStageLocation(string? selectedMapId, string currentMapId) =>
+        selectedMapId == currentMapId
+        || selectedMapId == WorldMaps.BearThief01 && WorldMaps.IsBearThiefArea(currentMapId);
 
     private void TravelToCleanPath()
     {
-        _boundPlayer?.TravelToMap(WorldMaps.CleanPath);
+        _boundPlayer?.TravelToMap(WorldMaps.BearThief01);
         CloseMapModal();
     }
 

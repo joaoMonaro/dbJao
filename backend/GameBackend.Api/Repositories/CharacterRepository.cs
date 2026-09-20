@@ -13,6 +13,7 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
     {
         return await dbContext.Characters
             .AsNoTracking()
+            .Include(character => character.CompletedStages)
             .Where(character => character.UserId == userId)
             .OrderBy(character => character.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -26,6 +27,7 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
     {
         return dbContext.Characters
             .AsNoTracking()
+            .Include(character => character.CompletedStages)
             .SingleOrDefaultAsync(
                 character => character.Id == id && character.UserId == userId,
                 cancellationToken
@@ -67,11 +69,14 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
         long totalXp,
         long baseBattlePower,
         string activeCharacterId,
+        IReadOnlyCollection<string> completedStages,
         string mapId,
         float positionX,
         float positionY,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            cancellationToken);
         int affectedRows = await dbContext.Characters
             .Where(character =>
                 character.Id == characterId
@@ -93,6 +98,33 @@ public sealed class CharacterRepository(GameDbContext dbContext) : ICharacterRep
                     .SetProperty(character => character.UpdatedAt, DateTimeOffset.UtcNow),
                 cancellationToken);
 
-        return affectedRows == 1;
+        if (affectedRows != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return false;
+        }
+
+        string[] existingStages = await dbContext.CharacterCompletedStages
+            .Where(completion => completion.CharacterId == characterId)
+            .Select(completion => completion.StageId)
+            .ToArrayAsync(cancellationToken);
+        HashSet<string> existing = new(existingStages, StringComparer.Ordinal);
+        DateTimeOffset completedAt = DateTimeOffset.UtcNow;
+        foreach (string stageId in completedStages)
+        {
+            if (!existing.Add(stageId))
+                continue;
+
+            dbContext.CharacterCompletedStages.Add(new CharacterCompletedStage
+            {
+                CharacterId = characterId,
+                StageId = stageId,
+                CompletedAt = completedAt,
+            });
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
     }
 }

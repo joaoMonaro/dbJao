@@ -10,6 +10,7 @@ public sealed record SaveCharacterStateRequest(
     [Range(0, long.MaxValue)] long TotalXp,
     [Range(10, long.MaxValue)] long BaseBattlePower,
     [Required, MaxLength(64)] string ActiveCharacterId,
+    [MaxLength(256)] IReadOnlyList<string>? CompletedStages,
     [Required, MaxLength(64)] string MapId,
     float PositionX,
     float PositionY

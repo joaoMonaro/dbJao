@@ -22,6 +22,19 @@ public sealed class CharacterStateService(
         if (string.IsNullOrWhiteSpace(activeCharacterId))
             return false;
 
+        IReadOnlyList<string> requestedStages = request.CompletedStages ?? [];
+        if (requestedStages.Count > 256)
+            return false;
+        string[] completedStages = requestedStages
+            .Select(stageId => stageId?.Trim() ?? string.Empty)
+            .ToArray();
+        if (completedStages.Any(stageId => !IsValidStageId(stageId)))
+            return false;
+        completedStages = completedStages
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
         string mapId = request.MapId.Trim();
         if (string.IsNullOrWhiteSpace(mapId))
             return false;
@@ -35,6 +48,7 @@ public sealed class CharacterStateService(
             request.TotalXp,
             request.BaseBattlePower,
             activeCharacterId,
+            completedStages,
             mapId,
             request.PositionX,
             request.PositionY,
@@ -46,5 +60,15 @@ public sealed class CharacterStateService(
             logger.LogWarning("[PERSISTENCE] Personagem {CharacterId} não encontrado", characterId);
 
         return saved;
+    }
+
+    private static bool IsValidStageId(string stageId)
+    {
+        if (stageId.Length is < 1 or > 64)
+            return false;
+
+        return stageId.All(character => character is >= 'a' and <= 'z'
+            || character is >= '0' and <= '9'
+            || character == '_');
     }
 }

@@ -10,6 +10,7 @@ public sealed record CharacterResponse(
     long TotalXp,
     long BaseBattlePower,
     string ActiveCharacterId,
+    IReadOnlyList<string> CompletedStages,
     int CurrentHealth,
     string MapId,
     float PositionX,
@@ -28,6 +29,9 @@ public sealed record CharacterResponse(
             character.TotalXp,
             character.BaseBattlePower,
             character.ActiveCharacterId,
+            character.CompletedStages.Select(completion => completion.StageId)
+                .Order(StringComparer.Ordinal)
+                .ToArray(),
             character.CurrentHealth,
             character.MapId,
             character.PositionX,

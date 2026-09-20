@@ -120,6 +120,26 @@ namespace GameBackend.Api.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameBackend.Api.Entities.CharacterCompletedStage", b =>
+                {
+                    b.Property<Guid>("CharacterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StageId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CharacterId", "StageId");
+
+                    b.ToTable("character_completed_stages", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_character_completed_stages_stage_id", "length(btrim(\"StageId\")) > 0");
+                        });
+                });
+
             modelBuilder.Entity("GameBackend.Api.Entities.GameSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -260,6 +280,17 @@ namespace GameBackend.Api.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameBackend.Api.Entities.CharacterCompletedStage", b =>
+                {
+                    b.HasOne("GameBackend.Api.Entities.Character", "Character")
+                        .WithMany("CompletedStages")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("GameBackend.Api.Entities.GameSession", b =>
                 {
                     b.HasOne("GameBackend.Api.Entities.Character", "Character")
@@ -292,6 +323,8 @@ namespace GameBackend.Api.Data.Migrations
 
             modelBuilder.Entity("GameBackend.Api.Entities.Character", b =>
                 {
+                    b.Navigation("CompletedStages");
+
                     b.Navigation("GameSessions");
                 });
 

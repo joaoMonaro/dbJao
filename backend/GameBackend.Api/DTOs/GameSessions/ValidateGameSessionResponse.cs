@@ -12,6 +12,7 @@ public sealed record ValidateGameSessionResponse(
     long? TotalXp = null,
     long? BaseBattlePower = null,
     string? ActiveCharacterId = null,
+    IReadOnlyList<string>? CompletedStages = null,
     int? CurrentHealth = null,
     int? MaxHealth = null,
     string? MapId = null,

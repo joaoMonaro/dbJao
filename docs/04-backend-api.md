@@ -63,6 +63,14 @@ ser exposto sem a chave e proteção de rede.
 - criação, expiração e consumo;
 - servidor que consumiu.
 
+### CharacterCompletedStage
+
+- relação genérica entre personagem e identificador de fase concluída;
+- chave composta por `CharacterId` e `StageId`, impedindo duplicação;
+- `CompletedAt` registra a primeira conclusão;
+- a lista é carregada na validação da sessão e salva de forma monotônica no snapshot
+  autoritativo do personagem.
+
 O token puro só é retornado uma vez e nunca é salvo.
 
 ## Configuração
@@ -134,6 +142,9 @@ limita o resultado a `long.MaxValue`. O estado salvo pelo servidor não permite 
 valor padrão `goku`. O default não nulo faz o backfill dos personagens existentes. O
 banco valida que o identificador não seja vazio; a existência da definição é validada
 pelo servidor do jogo, que possui o registry de dados de gameplay.
+
+`AddCharacterStageCompletions` cria `character_completed_stages` com chave composta e
+remoção em cascata junto ao personagem. Não há colunas específicas por fase.
 
 ## Inspecionar PostgreSQL
 

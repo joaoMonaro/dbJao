@@ -1,0 +1,254 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "monster_carrot",
+    "name": "Monster Carrot",
+    "variant": "classic_rabbit_gang_boss",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "08289cea66cd6c7a8df5d4e28553e4277d021081e3b707299bff82a093bc5aa0"
+  },
+  "classification": {
+    "size": "normal",
+    "rationale": "Adult humanoid silhouette using the normal 128 px visible-height standard; the long ears are included in the reference bounds."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 64,
+      "y_min": 32,
+      "x_max": 127,
+      "y_max": 159,
+      "width": 64,
+      "height": 128
+    },
+    "feet_baseline_y": 159
+  },
+  "appearance": {
+    "species": "anthropomorphic white rabbit",
+    "face": "long ears, rabbit muzzle, whisker marks and bright green sunglasses",
+    "collar": "large pale-pink fan-shaped collar",
+    "clothing": "lime-green Chinese-style patterned tunic, purple sleeves and loose trousers, red cuffs and dark purple shoes",
+    "emblem": "white chest disk with a dark-red rabbit symbol"
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        250,
+        249,
+        246
+      ],
+      [
+        246,
+        3,
+        69
+      ],
+      [
+        252,
+        194,
+        241
+      ],
+      [
+        4,
+        2,
+        3
+      ],
+      [
+        152,
+        74,
+        180
+      ],
+      [
+        247,
+        245,
+        241
+      ],
+      [
+        188,
+        199,
+        18
+      ],
+      [
+        43,
+        25,
+        65
+      ],
+      [
+        241,
+        198,
+        172
+      ],
+      [
+        197,
+        209,
+        12
+      ],
+      [
+        138,
+        9,
+        26
+      ],
+      [
+        126,
+        58,
+        151
+      ],
+      [
+        253,
+        253,
+        252
+      ],
+      [
+        8,
+        8,
+        9
+      ],
+      [
+        235,
+        230,
+        230
+      ],
+      [
+        215,
+        3,
+        55
+      ],
+      [
+        161,
+        86,
+        182
+      ],
+      [
+        249,
+        172,
+        185
+      ],
+      [
+        120,
+        43,
+        117
+      ],
+      [
+        232,
+        11,
+        56
+      ],
+      [
+        240,
+        134,
+        185
+      ],
+      [
+        113,
+        111,
+        60
+      ],
+      [
+        37,
+        46,
+        50
+      ],
+      [
+        26,
+        2,
+        8
+      ],
+      [
+        39,
+        14,
+        38
+      ],
+      [
+        250,
+        251,
+        249
+      ],
+      [
+        248,
+        242,
+        246
+      ],
+      [
+        167,
+        172,
+        50
+      ],
+      [
+        226,
+        29,
+        62
+      ],
+      [
+        1,
+        1,
+        2
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right",
+      "action": "signature_open_palm_touch"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true,
+    "no_transformations": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "identity_reference": "Dragon Ball Official Site Weekly Character Showcase #82",
+    "source_prompts": "canonical front idle, four-frame right-facing walk cycle, four-frame right-facing open-palm touch attack",
+    "normalization": "Pillow component extraction, nearest-neighbor resize, shared 32-color palette, binary alpha, 192x192 cells anchored at feet (96,159)"
+  }
+}

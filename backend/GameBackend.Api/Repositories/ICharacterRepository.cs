@@ -33,6 +33,7 @@ public interface ICharacterRepository
         long totalXp,
         long baseBattlePower,
         string activeCharacterId,
+        IReadOnlyCollection<string> completedStages,
         string mapId,
         float positionX,
         float positionY,

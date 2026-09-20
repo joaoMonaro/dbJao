@@ -20,5 +20,10 @@
     <Compile Include="../../scripts/Progression/*.cs" Link="Progression/%(Filename)%(Extension)" />
     <Compile Include="../../scripts/Characters/*.cs" Link="Characters/%(Filename)%(Extension)" />
     <Compile Include="../../scripts/Combat/PhysicalDamageCalculator.cs" Link="Combat/PhysicalDamageCalculator.cs" />
+    <Compile Include="../../scripts/Stages/StageIds.cs" Link="Stages/StageIds.cs" />
+    <Compile Include="../../scripts/Stages/StageRoute.cs" Link="Stages/StageRoute.cs" />
+    <Compile Include="../../scripts/Stages/StageSpawnRules.cs" Link="Stages/StageSpawnRules.cs" />
+    <Compile Include="../../scripts/Enemies/EnemyDefinition.cs" Link="Enemies/EnemyDefinition.cs" />
+    <Compile Include="../../scripts/Enemies/EnemyRegistry.cs" Link="Enemies/EnemyRegistry.cs" />
   </ItemGroup>
 </Project>

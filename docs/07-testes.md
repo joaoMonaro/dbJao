@@ -19,6 +19,7 @@ teste headless da integração Sidra → killer → progressão, quando Godot es
 teste headless do feedback visual de dano, quando Godot está disponível
 teste headless dos comandos de debug de XP, quando Godot está disponível
 teste headless do HUD compacto e modal de perfil, quando Godot está disponível
+teste headless da fase Bear Thief, quando Godot está disponível
 git diff --check e git diff --cached --check
 ```
 
@@ -134,9 +135,10 @@ manual e os resultados esperados.
 O teste `tests/godot/HudProfileIntegrationTest.tscn` valida o portrait configurável,
 as barras permanentes de HP/Ki/XP, ausência de stats detalhados no HUD, abertura pelo
 portrait, atualização do modal por signals, quatro multiplicadores, fechamento por X
-e Esc e ausência de pausa na árvore. Ele também cobre o seletor horizontal de cinco
-fases, conteúdo narrativo, estados atual/disponível/bloqueada, destaque do final da
-saga e garante que selecionar uma fase não inicia a viagem.
+e Esc e ausência de pausa na árvore. Ele também cobre o spawn isolado da Kame House,
+o seletor horizontal de cinco fases, conteúdo narrativo, estados
+atual/disponível/bloqueada, destaque do final da saga e garante que selecionar um
+destino não inicia a viagem.
 
 Os testes `PlayableCharacterTests` cobrem o registry, a definição do Goku,
 multiplicadores acima e abaixo de 100%, arredondamento para baixo, BattlePower
@@ -147,6 +149,13 @@ como personagem padrão, stats derivados após Level Up e preservação de
 Os testes `PhysicalDamageCalculatorTests` cobrem Attack igual, maior e menor que a
 Defense, multiplicador do golpe, arredondamento para baixo, dano mínimo, integração
 com os stats do Goku, entradas inválidas e saturação numérica.
+
+`BearThiefStageRulesTests` cobre limite e reposição gradual de Wolves, pausa sem
+jogadores, unicidade e cooldown do boss, participação, rota bidirecional e stats das
+definições. `BearThiefStageIntegrationTest.tscn` valida as quatro áreas e seus pontos
+de entrada, reutilização de Clean Path, spawn condicionado, XP de Wolf, boss único,
+participantes presentes, conclusão idempotente e respawn após cooldown reduzido no
+ambiente de teste.
 
 ## Casos de autenticação
 

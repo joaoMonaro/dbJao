@@ -82,6 +82,7 @@ public sealed class GameSessionServiceTests
         Assert.Equal(0, result.TotalXp);
         Assert.Equal(12310, result.BaseBattlePower);
         Assert.Equal("goku", result.ActiveCharacterId);
+        Assert.Contains("bear_thief", result.CompletedStages!);
     }
 
     [Fact]
@@ -198,6 +199,14 @@ public sealed class GameSessionServiceTests
                 PositionX = 100,
                 PositionY = 200,
                 User = user!,
+                CompletedStages =
+                [
+                    new CharacterCompletedStage
+                    {
+                        CharacterId = CharacterId,
+                        StageId = "bear_thief",
+                    },
+                ],
             }
             : null;
 
@@ -285,6 +294,7 @@ public sealed class GameSessionServiceTests
             long totalXp,
             long baseBattlePower,
             string activeCharacterId,
+            IReadOnlyCollection<string> completedStages,
             string mapId,
             float positionX,
             float positionY,
@@ -362,6 +372,14 @@ public sealed class GameSessionServiceTests
                     MapId = "kame_house",
                     PositionX = 100,
                     PositionY = 200,
+                    CompletedStages =
+                    [
+                        new CharacterCompletedStage
+                        {
+                            CharacterId = CharacterId,
+                            StageId = "bear_thief",
+                        },
+                    ],
                 };
                 return Task.FromResult(new ConsumeGameSessionResult(
                     ConsumeGameSessionStatus.Consumed,

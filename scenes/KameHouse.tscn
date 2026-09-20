@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Texture2D" uid="uid://c1s4fwyq08bj6" path="res://assets/maps/kame_house.png" id="1_map"]
 [ext_resource type="PackedScene" path="res://scenes/Sidra.tscn" id="3_sidra"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/Network/NetworkManager.cs" id="6_network"]
 [ext_resource type="PackedScene" path="res://scenes/CleanPath.tscn" id="7_clean_path"]
+[ext_resource type="PackedScene" path="res://scenes/stages/BearThiefStage.tscn" id="8_bear_stage"]
 
 [node name="KameHouse" type="Node2D"]
 script = ExtResource("6_network")
@@ -24,6 +25,13 @@ position = Vector2(2048, 0)
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
 spawn_path = NodePath("../Players")
+
+[node name="StageNPCs" type="Node2D" parent="."]
+
+[node name="StageNpcSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../StageNPCs")
+
+[node name="BearThiefStage" parent="." instance=ExtResource("8_bear_stage")]
 
 [node name="NPCs" type="Node2D" parent="."]
 

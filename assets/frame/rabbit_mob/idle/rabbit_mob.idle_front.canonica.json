@@ -1,0 +1,249 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "id": "rabbit_mob",
+    "name": "Rabbit Mob Patrolman",
+    "variant": "classic_slim_henchman",
+    "reference_status": "canonical_initial",
+    "reference_file": "idle_front.png",
+    "reference_sha256": "cd6eb8291a6c8c4098e78b9c7d7a1510859207ceff12d188ed045923d97409ce"
+  },
+  "classification": {
+    "size": "normal",
+    "rationale": "Tall adult human silhouette using the lower 60 px width of the normal-size reference range; helmet ears are included in the 128 px height."
+  },
+  "canvas": {
+    "width": 192,
+    "height": 192,
+    "coordinate_origin": "top_left",
+    "transparent_background": true,
+    "placement_anchor": {
+      "name": "feet_center",
+      "x": 96,
+      "y": 159
+    }
+  },
+  "reference_frame": {
+    "animation": "idle",
+    "frame_index": 0,
+    "direction": "front",
+    "pose": "idle_standing",
+    "character_bounds": {
+      "coordinate_mode": "inclusive",
+      "x_min": 66,
+      "y_min": 32,
+      "x_max": 125,
+      "y_max": 159,
+      "width": 60,
+      "height": 128
+    },
+    "feet_baseline_y": 159
+  },
+  "appearance": {
+    "archetype": "slim human Rabbit Mob patrolman",
+    "headgear": "brown aviator helmet with tall black rabbit ears and oversized blue-black goggles",
+    "uniform": "dark navy long military coat with gold buttons and red-gold shoulder tabs",
+    "equipment": "brown utility belt, pouch, gloves, boots and short wooden baton",
+    "insignia": "small white rabbit-head badge on the left chest"
+  },
+  "style": {
+    "type": "pixel_art",
+    "outline": "dark_consistent_1px",
+    "shading": "simple_high_contrast_blocks",
+    "palette_rgb": [
+      [
+        5,
+        19,
+        48
+      ],
+      [
+        5,
+        20,
+        52
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        11,
+        30
+      ],
+      [
+        4,
+        19,
+        47
+      ],
+      [
+        114,
+        67,
+        56
+      ],
+      [
+        79,
+        43,
+        36
+      ],
+      [
+        120,
+        72,
+        62
+      ],
+      [
+        3,
+        14,
+        37
+      ],
+      [
+        1,
+        2,
+        9
+      ],
+      [
+        61,
+        35,
+        29
+      ],
+      [
+        1,
+        8,
+        23
+      ],
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        93,
+        55,
+        47
+      ],
+      [
+        176,
+        107,
+        47
+      ],
+      [
+        45,
+        9,
+        7
+      ],
+      [
+        234,
+        176,
+        108
+      ],
+      [
+        3,
+        7,
+        17
+      ],
+      [
+        2,
+        13,
+        35
+      ],
+      [
+        3,
+        20,
+        50
+      ],
+      [
+        5,
+        14,
+        35
+      ],
+      [
+        5,
+        21,
+        54
+      ],
+      [
+        4,
+        13,
+        33
+      ],
+      [
+        7,
+        11,
+        24
+      ],
+      [
+        5,
+        23,
+        55
+      ],
+      [
+        6,
+        19,
+        47
+      ],
+      [
+        7,
+        21,
+        51
+      ],
+      [
+        14,
+        20,
+        41
+      ],
+      [
+        14,
+        24,
+        47
+      ],
+      [
+        4,
+        21,
+        50
+      ]
+    ],
+    "alpha_mode": "binary",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "animations": {
+    "idle": {
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "direction": "front"
+    },
+    "walk": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "direction": "right"
+    },
+    "attack": {
+      "frames": 4,
+      "fps": 10,
+      "loop": false,
+      "direction": "right",
+      "action": "short_baton_strike"
+    }
+  },
+  "rendering_constraints": {
+    "single_character": true,
+    "full_body": true,
+    "no_cropping": true,
+    "no_ground": true,
+    "no_shadow": true,
+    "no_scenery": true,
+    "no_text": true,
+    "no_effects": true,
+    "no_firearm": true
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "identity_reference": "Dragon Ball Official Site Rabbit Mob manga panels and classic anime color appearance",
+    "source_prompts": "canonical front idle, four-frame right-facing patrol walk, four-frame right-facing short baton strike",
+    "normalization": "Pillow component extraction, nearest-neighbor resize, shared 32-color palette, binary alpha, 192x192 cells anchored at feet (96,159)"
+  }
+}

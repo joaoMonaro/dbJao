@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class Player : CharacterBody2D, IDamageable
 {
@@ -12,6 +13,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Signal] public delegate void LevelUpEventHandler(int level, long reset);
     [Signal] public delegate void ResetCompletedEventHandler(long reset);
     [Signal] public delegate void BattlePowerChangedEventHandler(long baseBattlePower);
+    [Signal] public delegate void StageCompletedEventHandler(string stageId);
     [Signal]
     public delegate void CombatStatsChangedEventHandler(
         string characterName,
@@ -59,6 +61,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public string AuthenticatedUserId { get; set; } = string.Empty;
     [Export] public string CharacterId { get; set; } = string.Empty;
     [Export] public string CharacterName { get; set; } = string.Empty;
+    [Export] public string CompletedStageIds { get; set; } = string.Empty;
     [Export]
     public long TotalXp
     {
@@ -343,6 +346,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Reset = progression.State.Reset;
         BaseBattlePower = data.BaseBattlePower;
         ActiveCharacterId = data.ActiveCharacterId;
+        SetCompletedStages(data.CompletedStages);
         MapId = WorldMaps.TryGetBounds(data.MapId, out _)
             ? data.MapId : WorldMaps.KameHouse;
         MaxHealth = Mathf.Max(data.MaxHealth, 1);
@@ -375,6 +379,7 @@ public partial class Player : CharacterBody2D, IDamageable
             TotalXp,
             BaseBattlePower,
             ActiveCharacterId,
+            GetCompletedStages(),
             MapId,
             GlobalPosition.X,
             GlobalPosition.Y);
@@ -435,6 +440,44 @@ public partial class Player : CharacterBody2D, IDamageable
         }
 
         return true;
+    }
+
+    public bool HasCompletedStage(string stageId) =>
+        GetCompletedStages().Contains(stageId, StringComparer.Ordinal);
+
+    public bool TryCompleteStage(string stageId)
+    {
+        if (!NetworkManager.RunningAsServer || !Multiplayer.IsServer()
+            || !StageIds.IsValid(stageId))
+        {
+            return false;
+        }
+
+        SortedSet<string> completed = new(GetCompletedStages(), StringComparer.Ordinal);
+        if (!completed.Add(stageId))
+            return false;
+
+        CompletedStageIds = string.Join(',', completed);
+        EmitSignal(SignalName.StageCompleted, stageId);
+        GD.Print($"[STAGE] {CharacterId} concluiu '{stageId}'.");
+        return true;
+    }
+
+    public IReadOnlyList<string> GetCompletedStages() =>
+        CompletedStageIds.Split(',', StringSplitOptions.RemoveEmptyEntries
+                | StringSplitOptions.TrimEntries)
+            .Where(StageIds.IsValid)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+    public void SetCompletedStages(IEnumerable<string>? stageIds)
+    {
+        CompletedStageIds = stageIds is null
+            ? string.Empty
+            : string.Join(',', stageIds.Where(StageIds.IsValid)
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal));
     }
 
     private void RefreshProgressionPresentation()
@@ -511,6 +554,8 @@ public partial class Player : CharacterBody2D, IDamageable
 
         UpdateMovementPresentation(Velocity);
         MoveAndSlide();
+        if (TryTransitionAtStageBoundary())
+            return;
         ClampToViewport();
     }
 
@@ -637,6 +682,7 @@ public partial class Player : CharacterBody2D, IDamageable
             return;
 
         if (mapId is null || mapId.Length > 32
+            || !WorldMaps.IsSelectableDestination(mapId)
             || !WorldMaps.TryGetBounds(mapId, out _) || mapId == MapId)
         {
             GD.PushWarning($"[SERVER] Destino inválido para o peer {senderId}.");
@@ -654,7 +700,7 @@ public partial class Player : CharacterBody2D, IDamageable
         _attackActionRemaining = 0.0f;
         DisableAttackArea();
         MapId = mapId;
-        GlobalPosition = WorldMaps.GetArrivalPosition(mapId);
+        GlobalPosition = ResolveArrivalPosition(mapId, StageEntrySide.Left);
         _spawnPosition = GlobalPosition;
         GD.Print($"[SERVER] Peer {senderId} viajou para {mapId}.");
     }
@@ -781,13 +827,6 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private int ApplyDamageToNpcsInRange()
     {
-        Node? npcs = GetParent()?.GetParent()?.GetNodeOrNull("NPCs");
-        if (npcs is null)
-        {
-            GD.PushError("[SERVER][COMBAT] Node NPCs não encontrado durante o ataque.");
-            return 0;
-        }
-
         Vector2 officialFacing = FacingDirection.LimitLength(1.0f);
         if (officialFacing == Vector2.Zero)
             officialFacing = Vector2.Right;
@@ -795,9 +834,9 @@ public partial class Player : CharacterBody2D, IDamageable
         HashSet<ulong> hitInstanceIds = new();
         int hitCount = 0;
 
-        foreach (Node child in npcs.GetChildren())
+        foreach (Node child in GetTree().GetNodesInGroup("npc"))
         {
-            if (child is not NpcBase npc || !npc.Health.CanAct)
+            if (child is not NpcBase npc || !npc.Health.CanAct || npc.AreaId != MapId)
                 continue;
 
             Vector2 toTarget = npc.GlobalPosition - GlobalPosition;
@@ -1135,4 +1174,45 @@ public partial class Player : CharacterBody2D, IDamageable
 
     private Rect2 GetMapBounds() =>
         WorldMaps.TryGetBounds(MapId, out Rect2 bounds) ? bounds : WorldMaps.KameHouseBounds;
+
+    private bool TryTransitionAtStageBoundary()
+    {
+        if (!WorldMaps.IsBearThiefArea(MapId) || Mathf.Abs(_serverInputDirection.X) < 0.001f)
+            return false;
+
+        Rect2 viewportRect = GetMapBounds();
+        Rect2 bodyBounds = IsAttacking ? AttackViewportBounds : MovementViewportBounds;
+        float minimumX = viewportRect.Position.X - bodyBounds.Position.X;
+        float maximumX = viewportRect.End.X - bodyBounds.End.X;
+        int direction = _serverInputDirection.X > 0 ? 1 : -1;
+        bool reachedBoundary = direction > 0
+            ? GlobalPosition.X >= maximumX - 0.5f
+            : GlobalPosition.X <= minimumX + 0.5f;
+        if (!reachedBoundary
+            || !StageRoute.TryGetTransition(MapId, direction, out StageTransition transition))
+        {
+            return false;
+        }
+
+        MapId = transition.TargetAreaId;
+        GlobalPosition = ResolveArrivalPosition(MapId, transition.EntrySide);
+        _spawnPosition = GlobalPosition;
+        Velocity = Vector2.Zero;
+        _serverInputDirection = Vector2.Zero;
+        GD.Print($"[STAGE] Peer {OwnerPeerId}: área alterada para {MapId}.");
+        return true;
+    }
+
+    private Vector2 ResolveArrivalPosition(string mapId, StageEntrySide side)
+    {
+        NetworkManager? manager = GetTree().CurrentScene as NetworkManager
+            ?? GetParent()?.GetParent() as NetworkManager;
+        if (manager?.TryGetStageEntryPosition(mapId, side, out Vector2 position) == true)
+            return position;
+
+        if (side == StageEntrySide.Right && WorldMaps.TryGetBounds(mapId, out Rect2 bounds))
+            return bounds.Position + new Vector2(1460, 640);
+
+        return WorldMaps.GetArrivalPosition(mapId);
+    }
 }

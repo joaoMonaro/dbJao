@@ -13,6 +13,7 @@ public partial class NpcBase : CharacterBody2D, IDamageable
     [Export] public long Attack { get; set; } = 10;
     [Export] public long Defense { get; set; } = 10;
     [Export] public float RespawnDelay { get; set; } = 5.0f;
+    [Export] public string AreaId { get; set; } = string.Empty;
     [Export] public Vector2 MovementDirection { get; set; } = Vector2.Zero;
     [Export(PropertyHint.Enum, "Idle,Moving")] public int AiState { get; set; } = IdleAiState;
 
@@ -62,6 +63,9 @@ public partial class NpcBase : CharacterBody2D, IDamageable
         _interpolation = GetNodeOrNull<NetworkInterpolation2D>("NetworkInterpolation");
 
         _spawnPosition = GlobalPosition;
+        if (string.IsNullOrWhiteSpace(AreaId))
+            AreaId = WorldMaps.GetMapIdAt(_spawnPosition);
+        AddToGroup("npc");
 
         if (_health is null)
         {
@@ -102,8 +106,12 @@ public partial class NpcBase : CharacterBody2D, IDamageable
             return false;
 
         bool damageApplied = _health.ApplyDamage(damageInfo);
-        if (damageApplied && _health.IsDead)
-            OnKilled(damageInfo);
+        if (damageApplied)
+        {
+            OnDamageApplied(damageInfo);
+            if (_health.IsDead)
+                OnKilled(damageInfo);
+        }
 
         return damageApplied;
     }
@@ -174,6 +182,10 @@ public partial class NpcBase : CharacterBody2D, IDamageable
     }
 
     protected virtual void OnKilled(DamageInfo killingBlow)
+    {
+    }
+
+    protected virtual void OnDamageApplied(DamageInfo damageInfo)
     {
     }
 

@@ -65,6 +65,7 @@ public sealed class GameSessionRepository(GameDbContext dbContext)
                 .AsNoTracking()
                 .Include(session => session.User)
                 .Include(session => session.Character)
+                    .ThenInclude(character => character.CompletedStages)
                 .SingleOrDefaultAsync(
                     session => session.TokenHash == tokenHash,
                     cancellationToken);
